@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>衛生福利部防疫中心興建工程 - 試體管制排程系統</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&display=swap');
+        body { font-family: 'Noto Sans TC', sans-serif; background-color: #f3f4f6; }
+        .table-header { background-color: #1e3a8a; color: white; }
+        .row-hover:hover { background-color: #e0e7ff; transition: background-color 0.2s; }
+        .weekend-row { background-color: #fef3c7; }
+        /* 月曆專用卷軸樣式 */
+        .calendar-scroll::-webkit-scrollbar { width: 4px; }
+        .calendar-scroll::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 4px; }
+        .pile-input { border: 1px solid #cbd5e1; border-radius: 4px; padding: 2px 6px; width: 100px; font-size: 0.875rem; text-align: center; transition: all 0.2s; }
+        .pile-input:focus { border-color: #2563eb; outline: none; box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2); }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+
+    <div class="max-w-7xl mx-auto">
+        <!-- Header -->
+        <div class="bg-white rounded-t-xl shadow-md p-6 border-b-4 border-blue-800 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div>
+                <h1 class="text-2xl md:text-3xl font-bold text-gray-800 flex items-center gap-3">
+                    <i class="fa-solid fa-building-shield text-blue-800"></i>
+                    衛生福利部防疫中心興建工程
+                </h1>
+                <p class="text-gray-500 mt-2 text-sm md:text-base">預壘樁砂漿試體管制排程系統 - 正式雲端版</p>
+            </div>
+            <!-- 雲端連線狀態指示器 -->
+            <div id="sync-status" class="flex items-center gap-2 px-3 py-1.5 bg-gray-100 rounded-full text-sm font-bold text-gray-500 border border-gray-200">
+                <i class="fa-solid fa-spinner fa-spin"></i> 正在連線至專屬資料庫...
+            </div>
+        </div>
+
+        <!-- 工程進度儀表板 (Dashboard) -->
+        <div class="bg-white p-4 md:p-6 shadow-md border-b border-gray-100 flex flex-col gap-3">
+            <div class="flex justify-between items-end">
+                <h3 class="font-bold text-gray-800 text-lg flex items-center gap-2">
+                    <i class="fa-solid fa-chart-pie text-blue-600"></i> 預壘樁打設進度儀表板
+                </h3>
+                <div class="text-right">
+                    <span class="text-sm text-gray-500 mr-2">總數: 613 支</span>
+                    <span class="text-xl font-black text-blue-800 tracking-wide" id="progress-text">0 / 613 (0.0%)</span>
+                </div>
+            </div>
+            <div class="w-full bg-gray-200 rounded-full h-5 md:h-6 overflow-hidden shadow-inner relative">
+                <!-- 動態進度條 -->
+                <div id="progress-bar" class="bg-gradient-to-r from-blue-500 to-blue-700 h-full rounded-full transition-all duration-1000 ease-out flex items-center justify-end pr-2" style="width: 0%">
+                    <i class="fa-solid fa-truck-monster text-white text-xs opacity-70"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Controls -->
+        <div class="bg-white p-4 md:p-6 shadow-md border-b border-gray-100">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <div class="flex flex-wrap gap-2 items-center">
+                    <div class="border-r-2 border-gray-300 pr-4 mr-2 flex gap-2">
+                        <button onclick="toggleView('table')" id="btn-view-table" class="px-4 py-2 rounded-lg font-medium bg-blue-600 text-white transition flex items-center gap-2"><i class="fa-solid fa-list"></i> 列表檢視</button>
+                        <button onclick="toggleView('calendar')" id="btn-view-cal" class="px-4 py-2 rounded-lg font-medium bg-gray-200 text-gray-700 hover:bg-gray-300 transition flex items-center gap-2"><i class="fa-solid fa-calendar-days"></i> 月曆檢視</button>
+                    </div>
+                    <button onclick="filterData('ALL')" id="btn-ALL" class="px-4 py-2 rounded-lg font-medium bg-blue-800 text-white transition">顯示全部</button>
+                    <button onclick="filterData('A')" id="btn-A" class="px-4 py-2 rounded-lg font-medium bg-gray-200 text-gray-700 hover:bg-gray-300 transition">僅顯示 A 車</button>
+                    <button onclick="filterData('B')" id="btn-B" class="px-4 py-2 rounded-lg font-medium bg-gray-200 text-gray-700 hover:bg-gray-300 transition">僅顯示 B 車</button>
+                </div>
+                <button onclick="exportCSV()" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium shadow transition flex items-center gap-2 whitespace-nowrap">
+                    <i class="fa-solid fa-file-csv"></i> 匯出 Excel (CSV)
+                </button>
+            </div>
+
+            <!-- 停工日設定區塊 -->
+            <div class="mt-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                <h3 class="font-bold text-gray-700 mb-2 flex items-center gap-2">
+                    <i class="fa-solid fa-calendar-xmark text-red-500"></i> 例外停工日設定 (當日無施工，取樣編號自動順延)
+                </h3>
+                <div class="flex flex-wrap gap-2 items-center">
+                    <input type="date" id="exception-date-input" class="border border-gray-300 rounded-md px-3 py-1.5 text-gray-700 focus:outline-none focus:border-blue-500" min="2026-05-05" max="2026-07-30">
+                    <button onclick="addExceptionDate()" class="bg-red-600 hover:bg-red-700 text-white px-4 py-1.5 rounded-md text-sm font-medium transition shadow-sm">
+                        <i class="fa-solid fa-plus"></i> 新增停工日
+                    </button>
+                    <span class="text-xs text-gray-500 ml-2">※ 異動將自動同步至所有團隊成員畫面。</span>
+                </div>
+                <div id="exception-list" class="flex flex-wrap gap-2 mt-3 empty:hidden">
+                    <!-- 停工日標籤將顯示於此 -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Table View Container -->
+        <div id="table-view" class="bg-white shadow-md rounded-b-xl overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead class="table-header">
+                        <tr>
+                            <th class="p-3 md:p-4 font-semibold border-b border-blue-900">取樣編號 (T)</th>
+                            <th class="p-3 md:p-4 font-semibold border-b border-blue-900 bg-blue-900/50">對應樁號 <i class="fa-solid fa-pen text-xs"></i></th>
+                            <th class="p-3 md:p-4 font-semibold border-b border-blue-900">取樣日期 (T日)</th>
+                            <th class="p-3 md:p-4 font-semibold border-b border-blue-900">拆模日期 (T+1)</th>
+                            <th class="p-3 md:p-4 font-semibold border-b border-blue-900">實驗室收件 (週二/五)</th>
+                            <th class="p-3 md:p-4 font-semibold border-b border-blue-900">抗壓會驗 (T+28)</th>
+                            <th class="p-3 md:p-4 font-semibold border-b border-blue-900">備註機制</th>
+                        </tr>
+                    </thead>
+                    <tbody id="schedule-body" class="text-gray-700 text-sm md:text-base">
+                        <!-- Data will be populated here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Calendar View Container -->
+        <div id="calendar-view" class="bg-white shadow-md rounded-b-xl p-4 md:p-6 hidden">
+            
+            <!-- 月曆圖例 (Legend) -->
+            <div class="flex flex-wrap gap-4 text-sm mb-4 bg-gray-50 p-3 rounded-lg border border-gray-200">
+                <span class="font-bold text-gray-700 mr-2"><i class="fa-solid fa-circle-info text-blue-500"></i> 月曆圖例：</span>
+                <div class="flex items-center gap-1.5"><span class="w-3.5 h-3.5 rounded bg-blue-100 border border-blue-300"></span> <span class="text-blue-800 font-medium">取樣日</span></div>
+                <div class="flex items-center gap-1.5"><span class="w-3.5 h-3.5 rounded bg-gray-100 border border-gray-300"></span> <span class="text-gray-700 font-medium">拆模日</span></div>
+                <div class="flex items-center gap-1.5"><span class="w-3.5 h-3.5 rounded bg-green-100 border border-green-300"></span> <span class="text-green-800 font-medium">實驗室收件</span></div>
+                <div class="flex items-center gap-1.5"><span class="w-3.5 h-3.5 rounded bg-red-100 border border-red-300"></span> <span class="text-red-800 font-bold">抗壓會驗</span></div>
+            </div>
+
+            <div class="flex justify-between items-center mb-4">
+                <button onclick="changeMonth(-1)" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg text-gray-700 font-bold transition"><i class="fa-solid fa-chevron-left"></i> 上個月</button>
+                <h2 id="calendar-title" class="text-xl md:text-2xl font-bold text-blue-900">民國 115 年 5 月</h2>
+                <button onclick="changeMonth(1)" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg text-gray-700 font-bold transition">下個月 <i class="fa-solid fa-chevron-right"></i></button>
+            </div>
+            
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse table-fixed min-w-[800px]">
+                    <thead class="bg-blue-50">
+                        <tr>
+                            <th class="p-2 border border-gray-200 text-center font-bold text-red-600 w-1/7">週日</th>
+                            <th class="p-2 border border-gray-200 text-center font-bold text-gray-700 w-1/7">週一</th>
+                            <th class="p-2 border border-gray-200 text-center font-bold text-gray-700 w-1/7">週二</th>
+                            <th class="p-2 border border-gray-200 text-center font-bold text-gray-700 w-1/7">週三</th>
+                            <th class="p-2 border border-gray-200 text-center font-bold text-gray-700 w-1/7">週四</th>
+                            <th class="p-2 border border-gray-200 text-center font-bold text-gray-700 w-1/7">週五</th>
+                            <th class="p-2 border border-gray-200 text-center font-bold text-red-600 w-1/7">週六</th>
+                        </tr>
+                    </thead>
+                    <tbody id="calendar-body" class="text-gray-700 text-sm">
+                        <!-- Calendar Days will be populated here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- 專屬客製化警示彈窗 (Modal UI) -->
+    <div id="custom-modal" class="fixed inset-0 z-[100] flex items-center justify-center hidden bg-black/40 backdrop-blur-sm transition-opacity">
+        <div class="bg-white rounded-xl shadow-2xl max-w-sm w-full mx-4 overflow-hidden" id="custom-modal-content">
+            <div class="p-5 border-b border-gray-100 flex items-center gap-3" id="custom-modal-header">
+                <!-- Icon and Title -->
+            </div>
+            <div class="p-5 text-gray-700 text-sm leading-relaxed" id="custom-modal-message">
+                <!-- Message -->
+            </div>
+            <div class="p-4 bg-gray-50 text-right">
+                <button onclick="closeModal()" class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium shadow transition">我知道了</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase 模組化載入 -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // === 您的專屬正式雲端資料庫金鑰 ===
+        const firebaseConfig = {
+            apiKey: "AIzaSyAp1ZVuW95Api3kaQUPgttESZ0RGTEi8H8",
+            authDomain: "cdc-qc-system.firebaseapp.com",
+            projectId: "cdc-qc-system",
+            storageBucket: "cdc-qc-system.firebasestorage.app",
+            messagingSenderId: "745920606237",
+            appId: "1:745920606237:web:7fb9c22a84de208e6e56f4",
+            measurementId: "G-X61VRPB96K"
+        };
+
+        // === 雲端變數初始化 ===
+        window.exceptionDates = []; 
+        window.pileNumbers = {}; 
+        
+        const scheduleData = [];
+        let currentFilter = 'ALL';
+        let currentView = 'table';
+        let currentCalDate = new Date(2026, 4, 1); 
+        const TOTAL_PILES = 613; // 依規範總數
+        
+        // 雲端連線變數
+        let isCloudEnabled = false;
+        let db, auth;
+        
+        // --- 核心共用函數 ---
+        window.toDateString = (date) => {
+            const y = date.getFullYear();
+            const m = String(date.getMonth() + 1).padStart(2, '0');
+            const d = String(date.getDate()).padStart(2, '0');
+            return `${y}-${m}-${d}`;
+        };
+
+        window.formatMinguo = (date) => {
+            const y = date.getFullYear() - 1911;
+            const m = String(date.getMonth() + 1).padStart(2, '0');
+            const d = String(date.getDate()).padStart(2, '0');
+            const dayName = ["日", "一", "二", "三", "四", "五", "六"][date.getDay()];
+            return `${y}/${m}/${d} (週${dayName})`;
+        };
+
+        window.formatMinguoRaw = (date) => {
+            const y = date.getFullYear() - 1911;
+            const m = String(date.getMonth() + 1).padStart(2, '0');
+            const d = String(date.getDate()).padStart(2, '0');
+            return `${y}/${m}/${d}`;
+        };
+
+        const addDays = (date, days) => {
+            let result = new Date(date);
+            result.setDate(result.getDate() + days);
+            return result;
+        };
+
+        // --- 進度儀表板更新邏輯 ---
+        window.updateDashboard = () => {
+            const usedNumbers = new Set();
+            Object.values(window.pileNumbers).forEach(val => {
+                const nums = (val.match(/\d+/g) || []).map(n => parseInt(n, 10));
+                nums.forEach(n => usedNumbers.add(n));
+            });
+
+            const completedCount = usedNumbers.size;
+            let percentage = (completedCount / TOTAL_PILES) * 100;
+            
+            // 防呆上限，確保不超過100%
+            if (percentage > 100) percentage = 100;
+
+            const progressText = document.getElementById('progress-text');
+            const progressBar = document.getElementById('progress-bar');
+
+            if (progressText && progressBar) {
+                progressText.innerText = `${completedCount} / ${TOTAL_PILES} (${percentage.toFixed(1)}%)`;
+                progressBar.style.width = `${percentage}%`;
+            }
+        };
+
+        // --- Firebase 正式雲端同步邏輯 ---
+        const initFirebase = async () => {
+            try {
+                const app = initializeApp(firebaseConfig);
+                auth = getAuth(app);
+                db = getFirestore(app);
+                isCloudEnabled = true;
+
+                // 執行匿名登入，讓您的同事打開網頁就能直接用
+                await signInAnonymously(auth);
+
+                onAuthStateChanged(auth, (user) => {
+                    if (user) {
+                        document.getElementById('sync-status').innerHTML = '<i class="fa-solid fa-cloud text-green-600"></i> 正式雲端已連線，即時同步中';
+                        document.getElementById('sync-status').className = "flex items-center gap-2 px-3 py-1.5 bg-green-50 rounded-full text-sm font-bold text-green-700 border border-green-200 shadow-sm";
+                        
+                        // 正式站儲存路徑
+                        const docRef = doc(db, 'scheduleData', 'mainState');
+                        
+                        onSnapshot(docRef, (snapshot) => {
+                            if (snapshot.exists()) {
+                                const data = snapshot.data();
+                                window.exceptionDates = data.exceptionDates || [];
+                                window.pileNumbers = data.pileNumbers || {};
+                            }
+                            window.updateExceptionUI();
+                            window.refreshAll();
+                            window.updateDashboard(); // 同步更新儀表板
+                        }, (err) => {
+                            console.error("Firestore 同步錯誤:", err);
+                            // 若權限不足(例如未開測試模式)，會跳出此提示
+                            if(err.code === 'permission-denied') {
+                                window.showModal("權限設定提醒", "連線成功，但無法讀取資料。請確認您的 Firebase 資料庫規則是否已設為「以測試模式開始」。", "warning");
+                            }
+                        });
+                    }
+                });
+            } catch (e) {
+                console.error("Firebase 初始化失敗", e);
+                document.getElementById('sync-status').innerHTML = '<i class="fa-solid fa-plug-circle-xmark text-red-500"></i> 無法連線至您的資料庫';
+                document.getElementById('sync-status').className = "flex items-center gap-2 px-3 py-1.5 bg-red-50 rounded-full text-sm font-bold text-red-700 border border-red-200 shadow-sm";
+            }
+        };
+
+        window.saveDataToCloud = async () => {
+            if (isCloudEnabled && auth.currentUser) {
+                try {
+                    const docRef = doc(db, 'scheduleData', 'mainState');
+                    await setDoc(docRef, { 
+                        exceptionDates: window.exceptionDates,
+                        pileNumbers: window.pileNumbers 
+                    }, { merge: true });
+                } catch (err) {
+                    console.error("儲存至雲端失敗:", err);
+                    window.showModal("儲存失敗", "資料無法寫入雲端。請確認您的 Firebase 資料庫規則已設定為測試模式。", "error");
+                }
+            }
+        };
+
+        // --- UI 提示彈窗 (Modal) 邏輯 ---
+        window.showModal = (title, message, type = 'warning') => {
+            const modal = document.getElementById('custom-modal');
+            const header = document.getElementById('custom-modal-header');
+            const msgEl = document.getElementById('custom-modal-message');
+
+            let iconHtml = '';
+            if (type === 'error') {
+                iconHtml = '<div class="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center text-red-600"><i class="fa-solid fa-triangle-exclamation text-xl"></i></div>';
+                header.className = "p-5 border-b border-gray-100 flex items-center gap-3 text-red-800 font-bold text-lg";
+            } else if (type === 'warning') {
+                iconHtml = '<div class="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center text-orange-600"><i class="fa-solid fa-circle-exclamation text-xl"></i></div>';
+                header.className = "p-5 border-b border-gray-100 flex items-center gap-3 text-orange-800 font-bold text-lg";
+            } else {
+                iconHtml = '<div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600"><i class="fa-solid fa-circle-info text-xl"></i></div>';
+                header.className = "p-5 border-b border-gray-100 flex items-center gap-3 text-blue-800 font-bold text-lg";
+            }
+
+            header.innerHTML = `${iconHtml} <span>${title}</span>`;
+            msgEl.innerHTML = message;
+            modal.classList.remove('hidden');
+        };
+
+        window.closeModal = () => {
+            document.getElementById('custom-modal').classList.add('hidden');
+        };
+
+        // --- 功能邏輯 ---
+        
+        window.updatePile = (sampleId, val) => {
+            const trimmedVal = val.trim();
+            
+            if (!trimmedVal) {
+                delete window.pileNumbers[sampleId];
+                window.saveDataToCloud(); 
+                if (currentView === 'calendar') window.renderCalendar();
+                window.updateDashboard(); 
+                return;
+            }
+
+            // 1. 萃取所有數字 (支援 "12, 13", "P12-P13", "12 13" 等多樁號輸入)
+            const nums = (trimmedVal.match(/\d+/g) || []).map(n => parseInt(n, 10));
+            if (nums.length === 0) {
+                window.showModal("格式不符", "查無數字！請輸入正確的樁號格式 (例如: 12 或 12, 13)。", "error");
+                window.renderTable(currentFilter); 
+                return;
+            }
+
+            // 1.5 驗證自身輸入是否有重複 (例如手滑輸入 "12, 12")
+            const uniqueInputNums = new Set(nums);
+            if (uniqueInputNums.size !== nums.length) {
+                window.showModal("輸入重複", "您在此欄位中輸入了重複的樁號數字！請檢查您的輸入。", "error");
+                window.renderTable(currentFilter);
+                return;
+            }
+
+            // 2. 驗證總數量範圍 (本案規範 1 ~ 613 號)
+            const outOfRange = nums.find(n => n < 1 || n > TOTAL_PILES);
+            if (outOfRange !== undefined) {
+                window.showModal("範圍錯誤", `依據規範，本案總樁數為 1 至 ${TOTAL_PILES} 號。<br><br><span class="text-red-500 font-bold">※ 您輸入的異常樁號：${outOfRange}</span>`, "error");
+                window.renderTable(currentFilter);
+                return;
+            }
+
+            // 3. 驗證是否與「其他試體」重複輸入
+            let duplicateNum = undefined;
+            let duplicateSample = null;
+
+            for (const [key, existingVal] of Object.entries(window.pileNumbers)) {
+                if (key === sampleId) continue; // 排除自己
+                
+                const existingNums = (existingVal.match(/\d+/g) || []).map(n => parseInt(n, 10));
+                duplicateNum = nums.find(n => existingNums.includes(n));
+                
+                if (duplicateNum !== undefined) {
+                    duplicateSample = key;
+                    break; // 只要找到一個重複的就中斷檢查並報警
+                }
+            }
+
+            if (duplicateNum !== undefined) {
+                window.showModal("樁號重複警示", `第 <b>${duplicateNum}</b> 號樁的資料，已經登錄於試體「<b class="text-blue-700">${duplicateSample}</b>」了！<br><br>請確認現場是否重複取樣，或是同仁打字誤植，此筆資料不予存檔。`, "warning");
+                window.renderTable(currentFilter);
+                return;
+            }
+
+            // 所有驗證通過，正式存入
+            window.pileNumbers[sampleId] = trimmedVal;
+            window.saveDataToCloud(); 
+            if (currentView === 'calendar') window.renderCalendar(); 
+            window.updateDashboard(); 
+        };
+
+        window.addExceptionDate = () => {
+            const input = document.getElementById('exception-date-input');
+            const val = input.value;
+            if (!val) {
+                window.showModal("操作提醒", "請先點選您要停工的日期。", "warning");
+                return;
+            }
+            if (!window.exceptionDates.includes(val)) {
+                window.exceptionDates.push(val);
+                window.exceptionDates.sort();
+                input.value = "";
+                window.saveDataToCloud();
+            } else {
+                window.showModal("重複設定", "該日期已經設定為停工日了，無需再次新增。", "info");
+            }
+        };
+
+        window.removeExceptionDate = (val) => {
+            window.exceptionDates = window.exceptionDates.filter(d => d !== val);
+            window.saveDataToCloud();
+        };
+
+        window.updateExceptionUI = () => {
+            const container = document.getElementById('exception-list');
+            container.innerHTML = "";
+            window.exceptionDates.forEach(val => {
+                const parts = val.split('-');
+                const minguoStr = `${parseInt(parts[0])-1911}/${parts[1]}/${parts[2]}`;
+                
+                const tag = document.createElement('div');
+                tag.className = "flex items-center gap-1 bg-red-100 text-red-800 border border-red-300 px-2 py-1 rounded text-sm font-medium";
+                tag.innerHTML = `
+                    <span>停工：${minguoStr}</span>
+                    <button onclick="removeExceptionDate('${val}')" class="text-red-500 hover:text-red-700 ml-1 focus:outline-none" title="移除此停工日">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                `;
+                container.appendChild(tag);
+            });
+        };
+
+        window.refreshAll = () => {
+            window.generateSchedule();
+            window.filterData(currentFilter);
+        };
+
+        window.generateSchedule = () => {
+            scheduleData.length = 0; 
+            const startA = new Date(2026, 4, 5); 
+            const startB = new Date(2026, 4, 9); 
+            const endDate = new Date(2026, 6, 30); 
+
+            let countA = 1;
+            let countB = 1;
+
+            for (let d = new Date(2026, 4, 5); d <= endDate; d.setDate(d.getDate() + 1)) {
+                let currentDay = d.getDay();
+                let dateStr = window.toDateString(d);
+                
+                if (currentDay === 0 || window.exceptionDates.includes(dateStr)) continue; 
+
+                const processMachine = (machineName, count, T_date) => {
+                    let remark = "";
+                    let demoldDate = addDays(T_date, 1);
+                    if (demoldDate.getDay() === 0) {
+                        demoldDate = addDays(demoldDate, 1); 
+                        remark += "假日順延拆模; ";
+                    }
+
+                    let collectDate = new Date(demoldDate);
+                    while (collectDate.getDay() !== 2 && collectDate.getDay() !== 5) {
+                        collectDate = addDays(collectDate, 1);
+                    }
+
+                    let testDate = addDays(T_date, 28);
+                    if (testDate.getDay() === 6) {
+                        testDate = addDays(testDate, 2); 
+                        remark += "逢週六順延壓測; ";
+                    } else if (testDate.getDay() === 0) {
+                        testDate = addDays(testDate, 1); 
+                        remark += "逢週日順延壓測; ";
+                    }
+
+                    return {
+                        id: `${machineName}${count}`,
+                        machine: machineName,
+                        sampleDate: new Date(T_date),
+                        demoldDate: demoldDate,
+                        collectDate: collectDate,
+                        testDate: testDate,
+                        remark: remark || "正常排程"
+                    };
+                };
+
+                if (d >= startA) {
+                    scheduleData.push(processMachine('A', countA++, new Date(d)));
+                }
+                if (d >= startB) {
+                    scheduleData.push(processMachine('B', countB++, new Date(d)));
+                }
+            }
+        };
+
+        window.renderTable = (filter) => {
+            const tbody = document.getElementById('schedule-body');
+            tbody.innerHTML = '';
+
+            const filteredData = scheduleData.filter(item => filter === 'ALL' || item.machine === filter);
+
+            filteredData.forEach(item => {
+                const tr = document.createElement('tr');
+                tr.className = `border-b border-gray-200 row-hover ${item.sampleDate.getDay() === 6 ? 'weekend-row' : ''}`;
+                
+                const fullLabel = `${item.id}會驗`;
+                const pileNum = window.pileNumbers[item.id] || "";
+
+                tr.innerHTML = `
+                    <td class="p-3 md:p-4 font-bold text-blue-900"><span title="履歷標籤範例：${fullLabel}">${item.id}</span></td>
+                    <td class="p-3 md:p-4 bg-blue-50/30">
+                        <input type="text" 
+                               inputmode="text" 
+                               autocomplete="off"
+                               class="pile-input w-24 md:w-32" 
+                               placeholder="例: 12, 13" 
+                               value="${pileNum}" 
+                               onchange="updatePile('${item.id}', this.value)" 
+                               title="可輸入多支樁號，請用逗號或空格隔開 (例如: 12, 13)">
+                    </td>
+                    <td class="p-3 md:p-4">${window.formatMinguo(item.sampleDate)}</td>
+                    <td class="p-3 md:p-4">${window.formatMinguo(item.demoldDate)}</td>
+                    <td class="p-3 md:p-4">${window.formatMinguo(item.collectDate)}</td>
+                    <td class="p-3 md:p-4 font-semibold text-red-700">${window.formatMinguo(item.testDate)}</td>
+                    <td class="p-3 md:p-4 text-xs text-gray-500">${item.remark}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            document.querySelectorAll('button[id^="btn-"]').forEach(btn => {
+                btn.classList.remove('bg-blue-800', 'text-white');
+                btn.classList.add('bg-gray-200', 'text-gray-700');
+            });
+            const activeBtn = document.getElementById(`btn-${filter}`);
+            activeBtn.classList.remove('bg-gray-200', 'text-gray-700');
+            activeBtn.classList.add('bg-blue-800', 'text-white');
+        };
+
+        window.filterData = (filter) => {
+            currentFilter = filter;
+            window.renderTable(filter);
+            if (currentView === 'calendar') {
+                window.renderCalendar();
+            }
+        };
+
+        window.toggleView = (view) => {
+            currentView = view;
+            const btnTable = document.getElementById('btn-view-table');
+            const btnCal = document.getElementById('btn-view-cal');
+            const viewTable = document.getElementById('table-view');
+            const viewCal = document.getElementById('calendar-view');
+
+            if (view === 'table') {
+                viewTable.classList.remove('hidden');
+                viewCal.classList.add('hidden');
+                btnTable.className = 'px-4 py-2 rounded-lg font-medium bg-blue-600 text-white transition flex items-center gap-2';
+                btnCal.className = 'px-4 py-2 rounded-lg font-medium bg-gray-200 text-gray-700 hover:bg-gray-300 transition flex items-center gap-2';
+            } else {
+                viewTable.classList.add('hidden');
+                viewCal.classList.remove('hidden');
+                btnCal.className = 'px-4 py-2 rounded-lg font-medium bg-blue-600 text-white transition flex items-center gap-2';
+                btnTable.className = 'px-4 py-2 rounded-lg font-medium bg-gray-200 text-gray-700 hover:bg-gray-300 transition flex items-center gap-2';
+                window.renderCalendar();
+            }
+        };
+
+        window.changeMonth = (offset) => {
+            currentCalDate.setMonth(currentCalDate.getMonth() + offset);
+            window.renderCalendar();
+        };
+
+        window.renderCalendar = () => {
+            const year = currentCalDate.getFullYear();
+            const month = currentCalDate.getMonth();
+            const minguoYear = year - 1911;
+
+            document.getElementById('calendar-title').innerText = `民國 ${minguoYear} 年 ${month + 1} 月`;
+
+            const eventsMap = {};
+            const addEvent = (date, type, label, bgClass) => {
+                if (date.getFullYear() !== year || date.getMonth() !== month) return;
+                const d = date.getDate();
+                if (!eventsMap[d]) eventsMap[d] = { sample: [], demold: [], collect: [], test: [] };
+                eventsMap[d][type].push({ label, bgClass });
+            };
+
+            const filteredData = scheduleData.filter(item => currentFilter === 'ALL' || item.machine === currentFilter);
+
+            filteredData.forEach(item => {
+                addEvent(item.sampleDate, 'sample', item.id, 'bg-blue-100 text-blue-800 border-blue-300');
+                addEvent(item.demoldDate, 'demold', item.id, 'bg-gray-100 text-gray-700 border-gray-300');
+                addEvent(item.collectDate, 'collect', item.id, 'bg-green-100 text-green-800 border-green-300');
+                addEvent(item.testDate, 'test', item.id, 'bg-red-100 text-red-800 border-red-300 font-bold');
+            });
+
+            const firstDay = new Date(year, month, 1).getDay();
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+            const tbody = document.getElementById('calendar-body');
+            tbody.innerHTML = '';
+
+            let date = 1;
+            for (let i = 0; i < 6; i++) {
+                const row = document.createElement('tr');
+                for (let j = 0; j < 7; j++) {
+                    const cell = document.createElement('td');
+                    cell.className = 'border border-gray-200 p-1 md:p-2 align-top h-28 md:h-36 bg-white';
+                    if (j === 0 || j === 6) cell.classList.add('bg-orange-50');
+
+                    if (i === 0 && j < firstDay) {
+                        cell.innerHTML = '';
+                    } else if (date > daysInMonth) {
+                        cell.innerHTML = '';
+                    } else {
+                        const checkDateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(date).padStart(2,'0')}`;
+                        const isException = window.exceptionDates.includes(checkDateStr);
+                        
+                        let isToday = new Date().getFullYear() === year && new Date().getMonth() === month && new Date().getDate() === date;
+                        let dateClass = isToday ? 'bg-blue-800 text-white rounded-full w-6 h-6 flex items-center justify-center' : 'text-gray-600';
+                        
+                        let exceptionHtml = isException ? `<span class="text-xs bg-red-500 text-white px-1.5 py-0.5 rounded ml-1"><i class="fa-solid fa-ban"></i> 停工</span>` : '';
+
+                        let cellHtml = `<div class="font-bold text-sm mb-1 flex justify-between items-center">
+                                            <div class="flex items-center"><span class="${dateClass}">${date}</span> ${exceptionHtml}</div>
+                                        </div>`;
+                        cellHtml += `<div class="flex flex-col gap-1 overflow-y-auto max-h-20 md:max-h-28 calendar-scroll pr-1">`;
+
+                        if (eventsMap[date]) {
+                            const renderBadges = (evtArray, title) => {
+                                if (evtArray.length === 0) return '';
+                                const labels = evtArray.map(e => {
+                                    const pileStr = window.pileNumbers[e.label];
+                                    return pileStr ? `${e.label}(${pileStr})` : e.label;
+                                }).join(', ');
+                                
+                                const bg = evtArray[0].bgClass;
+                                return `<div class="text-[11px] border rounded px-1.5 py-0.5 leading-tight ${bg}" title="${title}: ${labels}">
+                                            <span class="font-bold">${title}:</span> ${labels}
+                                        </div>`;
+                            };
+
+                            cellHtml += renderBadges(eventsMap[date].sample, '取樣');
+                            cellHtml += renderBadges(eventsMap[date].demold, '拆模');
+                            cellHtml += renderBadges(eventsMap[date].collect, '收件');
+                            cellHtml += renderBadges(eventsMap[date].test, '壓測');
+                        }
+
+                        cellHtml += `</div>`;
+                        if (isException) cell.classList.add('bg-red-50');
+                        cell.innerHTML = cellHtml;
+                        date++;
+                    }
+                    row.appendChild(cell);
+                }
+                tbody.appendChild(row);
+                if (date > daysInMonth) break;
+            }
+        };
+
+        window.exportCSV = () => {
+            let csvContent = "\uFEFF"; 
+            csvContent += "取樣編號,打設樁號,取樣日期,拆模日期,實驗室收件,抗壓會驗,備註\n";
+
+            const filteredData = scheduleData.filter(item => currentFilter === 'ALL' || item.machine === currentFilter);
+
+            filteredData.forEach(item => {
+                const pileStr = window.pileNumbers[item.id] || "";
+                const row = [
+                    item.id,
+                    pileStr, 
+                    window.formatMinguoRaw(item.sampleDate),
+                    window.formatMinguoRaw(item.demoldDate),
+                    window.formatMinguoRaw(item.collectDate),
+                    window.formatMinguoRaw(item.testDate),
+                    item.remark
+                ];
+                csvContent += row.join(",") + "\n";
+            });
+
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            const url = URL.createObjectURL(blob);
+            link.setAttribute("href", url);
+            link.setAttribute("download", `預壘樁試體管制排程_${currentFilter}.csv`);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        };
+
+        // 啟動 Firebase 與系統
+        initFirebase();
+
+    </script>
+</body>
+</html>
