@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>衛生福利部防疫中心興建工程 - 試體管制排程系統 V3.1</title>
+    <title>衛生福利部防疫中心興建工程 - 試體管制排程系統 V3.2</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
@@ -11,6 +11,7 @@
         body { font-family: 'Noto Sans TC', sans-serif; background-color: #f3f4f6; }
         .table-header { background-color: #1e3a8a; color: white; }
         .row-hover:hover { background-color: #e0e7ff; transition: background-color 0.2s; }
+        .weekend-row { background-color: #fef3c7; }
         
         /* 終極結案鎖定樣式 (僅抗壓完成時觸發) */
         .completed-row { background-color: #f1f5f9 !important; color: #94a3b8 !important; }
@@ -19,14 +20,16 @@
         
         .calendar-scroll::-webkit-scrollbar { width: 4px; }
         .calendar-scroll::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 4px; }
-        .pile-input { border: 1px solid #cbd5e1; border-radius: 4px; padding: 2px 6px; width: 100px; font-size: 0.875rem; text-align: center; transition: all 0.2s; background: white; }
+        
+        /* V3.2 寬度優化：改為靠左對齊，取消固定寬度，改用100%並設定最小寬度 */
+        .pile-input { border: 1px solid #cbd5e1; border-radius: 4px; padding: 4px 8px; width: 100%; min-width: 220px; font-size: 0.875rem; text-align: left; transition: all 0.2s; background: white; }
         .pile-input:focus { border-color: #2563eb; outline: none; box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2); }
         
         /* 自定義 Checkbox 樣式 */
         .status-checkbox { width: 1.15rem; height: 1.15rem; cursor: pointer; flex-shrink: 0; }
-        .cb-sample { accent-color: #6366f1; } /* Indigo */
-        .cb-lab { accent-color: #f59e0b; }    /* Amber */
-        .cb-test { accent-color: #16a34a; }   /* Green */
+        .cb-sample { accent-color: #6366f1; } 
+        .cb-lab { accent-color: #f59e0b; }    
+        .cb-test { accent-color: #16a34a; }   
         
         .text-dimmed { color: #94a3b8; text-decoration: line-through; }
     </style>
@@ -40,7 +43,7 @@
                     <i class="fa-solid fa-building-shield text-blue-800"></i>
                     衛生福利部防疫中心興建工程
                 </h1>
-                <p class="text-gray-500 mt-1 text-sm">預壘樁試體管制系統 V3.1 <span class="bg-blue-100 text-blue-800 px-2 py-0.5 rounded text-xs ml-2 font-bold">四階戰情儀表板</span></p>
+                <p class="text-gray-500 mt-1 text-sm">預壘樁試體管制系統 V3.2 <span class="bg-blue-100 text-blue-800 px-2 py-0.5 rounded text-xs ml-2 font-bold">寬螢幕優化版</span></p>
             </div>
             <div id="sync-status" class="flex items-center gap-2 px-3 py-1.5 bg-gray-100 rounded-full text-xs md:text-sm font-bold text-gray-500 border border-gray-200">
                 <i class="fa-solid fa-spinner fa-spin"></i> 連線至專屬資料庫...
@@ -116,13 +119,13 @@
                 <table class="w-full text-left border-collapse">
                     <thead class="table-header">
                         <tr>
-                            <th class="p-3 font-semibold border-b border-blue-900 w-20">編號 (T)</th>
-                            <th class="p-3 font-semibold border-b border-blue-900 w-32 bg-blue-900/40">對應樁號 <i class="fa-solid fa-pen text-xs"></i></th>
-                            <th class="p-3 font-semibold border-b border-blue-900 bg-indigo-900/40"><i class="fa-solid fa-check-square opacity-70"></i> 取樣完成 (T日)</th>
-                            <th class="p-3 font-semibold border-b border-blue-900">拆模日期 (T+1)</th>
-                            <th class="p-3 font-semibold border-b border-blue-900 bg-amber-900/40"><i class="fa-solid fa-check-square opacity-70"></i> 實驗室收件 (二/五)</th>
-                            <th class="p-3 font-semibold border-b border-blue-900 bg-green-900/40"><i class="fa-solid fa-check-square opacity-70"></i> 抗壓會驗 (T+28)</th>
-                            <th class="p-3 font-semibold border-b border-blue-900 text-xs">備註機制</th>
+                            <th class="p-3 font-semibold border-b border-blue-900 min-w-[80px]">編號 (T)</th>
+                            <th class="p-3 font-semibold border-b border-blue-900 min-w-[220px] bg-blue-900/40">對應樁號 <i class="fa-solid fa-pen text-xs"></i></th>
+                            <th class="p-3 font-semibold border-b border-blue-900 bg-indigo-900/40 whitespace-nowrap"><i class="fa-solid fa-check-square opacity-70"></i> 取樣完成 (T日)</th>
+                            <th class="p-3 font-semibold border-b border-blue-900 whitespace-nowrap">拆模日期 (T+1)</th>
+                            <th class="p-3 font-semibold border-b border-blue-900 bg-amber-900/40 whitespace-nowrap"><i class="fa-solid fa-check-square opacity-70"></i> 實驗室收件 (二/五)</th>
+                            <th class="p-3 font-semibold border-b border-blue-900 bg-green-900/40 whitespace-nowrap"><i class="fa-solid fa-check-square opacity-70"></i> 抗壓會驗 (T+28)</th>
+                            <th class="p-3 font-semibold border-b border-blue-900 text-xs whitespace-nowrap">備註機制</th>
                         </tr>
                     </thead>
                     <tbody id="schedule-body" class="text-gray-700 text-sm">
@@ -209,7 +212,7 @@
         let isCloudEnabled = false;
         let db, auth;
 
-        // --- Firebase 初始化與資料繼承 ---
+        // --- Firebase 初始化 ---
         const initFirebase = async () => {
             try {
                 const app = initializeApp(firebaseConfig);
@@ -231,7 +234,6 @@
                                 window.exceptionDates = data.exceptionDates || [];
                                 window.pileNumbers = data.pileNumbers || {};
                                 
-                                // V3.0 資料對接
                                 window.statusSample = data.statusSample || {};
                                 window.statusLab = data.statusLab || {};
                                 window.statusTest = data.statusTest || data.completionStatus || {}; 
@@ -333,11 +335,9 @@
             window.saveDataToCloud();
         };
 
-        // 🚀 四階戰情儀表板更新邏輯
         window.updateDashboard = () => {
             const totalRows = scheduleData.length;
             
-            // 1. 總樁號進度
             const usedNumbers = new Set();
             Object.values(window.pileNumbers).forEach(val => {
                 const nums = (val.match(/\d+/g) || []).map(n => parseInt(n, 10));
@@ -350,7 +350,6 @@
             document.getElementById('prog-piles-text').innerText = `${pilesCount} / ${TOTAL_PILES_LIMIT} (${pilesPct.toFixed(1)}%)`;
             document.getElementById('prog-piles-bar').style.width = `${pilesPct}%`;
 
-            // 統計分階數量
             let countSample = 0, countLab = 0, countTest = 0;
             scheduleData.forEach(item => {
                 if(window.statusSample[item.id]) countSample++;
@@ -360,15 +359,12 @@
 
             const getPct = (c) => totalRows > 0 ? (c / totalRows) * 100 : 0;
 
-            // 2. 取樣進度
             document.getElementById('prog-sample-text').innerText = `${countSample} / ${totalRows} (${getPct(countSample).toFixed(1)}%)`;
             document.getElementById('prog-sample-bar').style.width = `${getPct(countSample)}%`;
 
-            // 3. 收件進度
             document.getElementById('prog-lab-text').innerText = `${countLab} / ${totalRows} (${getPct(countLab).toFixed(1)}%)`;
             document.getElementById('prog-lab-bar').style.width = `${getPct(countLab)}%`;
 
-            // 4. 抗壓結案進度
             document.getElementById('prog-test-text').innerText = `${countTest} / ${totalRows} (${getPct(countTest).toFixed(1)}%)`;
             document.getElementById('prog-test-bar').style.width = `${getPct(countTest)}%`;
         };
@@ -449,7 +445,6 @@
                 const isLab = window.statusLab[item.id] || false;
                 const isTested = window.statusTest[item.id] || false;
                 
-                // 只有「抗壓結案」打勾時，整行才會變灰鎖定
                 const tr = document.createElement('tr');
                 tr.className = `border-b border-gray-100 row-hover ${isTested ? 'completed-row' : ''}`;
                 
@@ -457,7 +452,7 @@
                     <td class="p-3 font-bold text-blue-900">${item.id}</td>
                     <td class="p-3">
                         <input type="text" class="pile-input" value="${window.pileNumbers[item.id] || ''}" 
-                               ${isTested ? 'readonly' : ''} onchange="updatePile('${item.id}', this.value)" placeholder="...">
+                               ${isTested ? 'readonly' : ''} onchange="updatePile('${item.id}', this.value)" placeholder="輸入樁號 (例: 12, 13)">
                     </td>
                     <td class="p-3">
                         <label class="flex items-center gap-2 cursor-pointer w-fit px-1 hover:bg-indigo-50 rounded">
@@ -485,7 +480,6 @@
                 tbody.appendChild(tr);
             });
 
-            // 更新篩選按鈕樣式
             document.querySelectorAll('[id^="btn-"]').forEach(b => {
                 if(b.id === `btn-${filter}`) b.className = 'px-3 py-1.5 rounded-lg text-sm font-medium bg-blue-800 text-white transition';
                 else if(b.id.startsWith('btn-view')) {} 
@@ -505,7 +499,6 @@
             window.renderCalendar();
         };
 
-        // 📅 V3.1 修復版：月曆四大事件完美回歸
         window.renderCalendar = () => {
             const year = currentCalDate.getFullYear();
             const month = currentCalDate.getMonth();
@@ -513,7 +506,6 @@
 
             document.getElementById('calendar-title').innerText = `民國 ${minguoYear} 年 ${month + 1} 月`;
 
-            // 事件收集器
             const eventsMap = {};
             const addEvent = (date, type, label, bgClass, icon) => {
                 if (date.getFullYear() !== year || date.getMonth() !== month) return;
@@ -524,7 +516,6 @@
 
             const filteredData = scheduleData.filter(item => currentFilter === 'ALL' || item.machine === currentFilter);
 
-            // 依據勾選狀態，改變月曆標籤的顏色 (實心/空心)
             filteredData.forEach(item => {
                 const isSampled = window.statusSample[item.id];
                 const isLab = window.statusLab[item.id];
@@ -607,7 +598,7 @@
             const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
             const link = document.createElement("a");
             link.href = URL.createObjectURL(blob);
-            link.download = `預壘樁進度追蹤表_V3.csv`;
+            link.download = `預壘樁進度追蹤表_V3.2.csv`;
             link.click();
         };
 
