@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>衛生福利部防疫中心興建工程 - 試體管制排程系統 V4.0</title>
+    <title>衛生福利部防疫中心興建工程 - 試體管制排程系統 V4.1</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
@@ -34,7 +34,7 @@
                     <i class="fa-solid fa-building-shield text-blue-800"></i>
                     衛生福利部防疫中心興建工程
                 </h1>
-                <p class="text-gray-500 mt-1 text-sm">預壘樁試體管制系統 V4.0 <span class="bg-green-100 text-green-800 px-2 py-0.5 rounded text-xs ml-2 font-bold"><i class="fa-brands fa-line text-green-600"></i> 主動預警發報版</span></p>
+                <p class="text-gray-500 mt-1 text-sm">預壘樁試體管制系統 V4.1 <span class="bg-green-100 text-green-800 px-2 py-0.5 rounded text-xs ml-2 font-bold"><i class="fa-brands fa-line text-green-600"></i> 主動預警發報版</span></p>
             </div>
             <div id="sync-status" class="flex items-center gap-2 px-3 py-1.5 bg-gray-100 rounded-full text-xs md:text-sm font-bold text-gray-500 border border-gray-200">
                 <i class="fa-solid fa-spinner fa-spin"></i> 連線至專屬資料庫...
@@ -228,50 +228,39 @@
         window.formatMinguo = (d) => { const y=d.getFullYear()-1911; const m=String(d.getMonth()+1).padStart(2,'0'); const dt=String(d.getDate()).padStart(2,'0'); const day=["日","一","二","三","四","五","六"][d.getDay()]; return `${y}/${m}/${dt}(${day})`; };
         const addDays = (d, days) => { let r=new Date(d); r.setDate(r.getDate()+days); return r; };
 
-        // 🔥 V4.0 核心功能：發送明日預警總整理
+        // 發送明日預警總整理
         window.sendTomorrowAlert = async () => {
             const btn = document.getElementById('btn-alert');
             btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 資料掃描與發送中...';
             btn.disabled = true;
 
-            const tomorrow = new Date();
-            tomorrow.setDate(tomorrow.getDate() + 1);
-            const tStr = window.toDateString(tomorrow);
-            const tMinguo = window.formatMinguo(tomorrow);
-
+            const tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate() + 1);
+            const tStr = window.toDateString(tomorrow); const tMinguo = window.formatMinguo(tomorrow);
             let samples = [], collects = [], tests = [];
 
-            // 掃描全區資料，找出明天需要做，且「還沒打勾」的項目
             scheduleData.forEach(item => {
                 if (window.toDateString(item.sampleDate) === tStr && !window.statusSample[item.id]) samples.push(item.id);
                 if (window.toDateString(item.collectDate) === tStr && !window.statusLab[item.id]) collects.push(item.id);
                 if (window.toDateString(item.testDate) === tStr && !window.statusTest[item.id]) tests.push(item.id);
             });
 
-            // 防呆：如果明天沒事做，就不發送
             if (samples.length === 0 && collects.length === 0 && tests.length === 0) {
                 window.showModal("無待辦事項", `明日 (${tMinguo}) 沒有需要取樣、收件或壓測的排程，無須發送預警。`, "success");
-                btn.innerHTML = '<i class="fa-solid fa-bell"></i> 推播明日待辦至 LINE';
-                btn.disabled = false;
-                return;
+                btn.innerHTML = '<i class="fa-solid fa-bell"></i> 推播明日待辦至 LINE'; btn.disabled = false; return;
             }
 
-            // 組裝超精美 LINE 報告文案
             const msg = `📢 【CDC 明日品管預警】\n📅 日期：${tMinguo}\n\n🧱 應取樣試體：\n${samples.length > 0 ? samples.join(', ') : '✅ 無'}\n\n🚚 應送驗收件：\n${collects.length > 0 ? collects.join(', ') : '✅ 無'}\n\n💯 應抗壓會驗：\n${tests.length > 0 ? tests.join(', ') : '✅ 無'}`;
 
             try {
-                // 將整包組裝好的文字，直接丟給 Make
                 await fetch(MAKE_WEBHOOK_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ reportText: msg })
                 });
                 window.showModal("發送成功！", "明日排程預警已成功推播至 LINE 囉！", "success");
             } catch(e) {
                 window.showModal("發送失敗", "請檢查網路連線。", "error");
             } finally {
-                btn.innerHTML = '<i class="fa-solid fa-bell"></i> 推播明日待辦至 LINE';
-                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-bell"></i> 推播明日待辦至 LINE'; btn.disabled = false;
             }
         };
 
@@ -367,10 +356,15 @@
             };
             scheduleData.filter(item => currentFilter === 'ALL' || item.machine === currentFilter).forEach(item => {
                 const isSampled = window.statusSample[item.id], isLab = window.statusLab[item.id], isTested = window.statusTest[item.id];
-                addEvent(item.sampleDate, 'sample', item.id, isSampled ? 'bg-indigo-100 text-indigo-800 border-indigo-300' : 'bg-white text-indigo-600 border-indigo-300', isSampled ? 'fa-check' : 'fa-trowel-bricks');
-                addEvent(item.demoldDate, 'demold', item.id, 'bg-gray-100 text-gray-600 border-gray-200', 'fa-hammer');
-                addEvent(item.collectDate, 'collect', item.id, isLab ? 'bg-amber-100 text-amber-800 border-amber-300' : 'bg-white text-amber-600 border-amber-300', isLab ? 'fa-check' : 'fa-truck-fast');
-                addEvent(item.testDate, 'test', item.id, isTested ? 'bg-green-100 text-green-800 border-green-400' : 'bg-white text-red-600 border-red-300 font-bold', isTested ? 'fa-check-double' : 'fa-gavel');
+                
+                // 顯示樁號的合併邏輯
+                const pNums = window.pileNumbers[item.id];
+                const displayLabel = pNums ? `${item.id} (樁:${pNums})` : item.id;
+
+                addEvent(item.sampleDate, 'sample', displayLabel, isSampled ? 'bg-indigo-100 text-indigo-800 border-indigo-300' : 'bg-white text-indigo-600 border-indigo-300', isSampled ? 'fa-check' : 'fa-trowel-bricks');
+                addEvent(item.demoldDate, 'demold', displayLabel, 'bg-gray-100 text-gray-600 border-gray-200', 'fa-hammer');
+                addEvent(item.collectDate, 'collect', displayLabel, isLab ? 'bg-amber-100 text-amber-800 border-amber-300' : 'bg-white text-amber-600 border-amber-300', isLab ? 'fa-check' : 'fa-truck-fast');
+                addEvent(item.testDate, 'test', displayLabel, isTested ? 'bg-green-100 text-green-800 border-green-400' : 'bg-white text-red-600 border-red-300 font-bold', isTested ? 'fa-check-double' : 'fa-gavel');
             });
             const firstDay = new Date(year, month, 1).getDay(), daysInMonth = new Date(year, month + 1, 0).getDate();
             const tbody = document.getElementById('calendar-body'); tbody.innerHTML = '';
@@ -400,7 +394,7 @@
         window.exportCSV = () => {
             let csv = "\uFEFF取樣編號,打設樁號,取樣日期,取樣狀態,實驗室收件,收件狀態,抗壓會驗,結案狀態\n";
             scheduleData.forEach(i => { csv += `${i.id},"${window.pileNumbers[i.id]||''}",${window.toDateString(i.sampleDate)},${window.statusSample[i.id]?'已取樣':'未完成'},${window.toDateString(i.collectDate)},${window.statusLab[i.id]?'已收件':'未完成'},${window.toDateString(i.testDate)},${window.statusTest[i.id]?'已結案':'待辦'}\n`; });
-            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' }); const link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = `預壘樁進度追蹤表_V4.0.csv`; link.click();
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' }); const link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = `預壘樁進度追蹤表_V4.1.csv`; link.click();
         };
         window.showModal = (title, msg, type) => { 
             let iconHtml = type === 'success' ? '<i class="fa-solid fa-circle-check text-green-500"></i>' : (type === 'error' ? '<i class="fa-solid fa-circle-xmark text-red-500"></i>' : '<i class="fa-solid fa-triangle-exclamation text-orange-500"></i>');
