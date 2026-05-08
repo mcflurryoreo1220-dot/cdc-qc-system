@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>衛生福利部防疫中心興建工程 - 試體管制排程系統 V3.2</title>
+    <title>衛生福利部防疫中心興建工程 - 試體管制排程系統 V3.3</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
@@ -11,9 +11,7 @@
         body { font-family: 'Noto Sans TC', sans-serif; background-color: #f3f4f6; }
         .table-header { background-color: #1e3a8a; color: white; }
         .row-hover:hover { background-color: #e0e7ff; transition: background-color 0.2s; }
-        .weekend-row { background-color: #fef3c7; }
         
-        /* 終極結案鎖定樣式 (僅抗壓完成時觸發) */
         .completed-row { background-color: #f1f5f9 !important; color: #94a3b8 !important; }
         .completed-row td { border-color: #e2e8f0; }
         .completed-row input[type="text"] { background-color: #f8fafc !important; color: #94a3b8 !important; cursor: not-allowed; border-style: dashed !important; }
@@ -21,11 +19,9 @@
         .calendar-scroll::-webkit-scrollbar { width: 4px; }
         .calendar-scroll::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 4px; }
         
-        /* V3.2 寬度優化：改為靠左對齊，取消固定寬度，改用100%並設定最小寬度 */
         .pile-input { border: 1px solid #cbd5e1; border-radius: 4px; padding: 4px 8px; width: 100%; min-width: 220px; font-size: 0.875rem; text-align: left; transition: all 0.2s; background: white; }
         .pile-input:focus { border-color: #2563eb; outline: none; box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2); }
         
-        /* 自定義 Checkbox 樣式 */
         .status-checkbox { width: 1.15rem; height: 1.15rem; cursor: pointer; flex-shrink: 0; }
         .cb-sample { accent-color: #6366f1; } 
         .cb-lab { accent-color: #f59e0b; }    
@@ -43,7 +39,7 @@
                     <i class="fa-solid fa-building-shield text-blue-800"></i>
                     衛生福利部防疫中心興建工程
                 </h1>
-                <p class="text-gray-500 mt-1 text-sm">預壘樁試體管制系統 V3.2 <span class="bg-blue-100 text-blue-800 px-2 py-0.5 rounded text-xs ml-2 font-bold">寬螢幕優化版</span></p>
+                <p class="text-gray-500 mt-1 text-sm">預壘樁試體管制系統 V3.3 <span class="bg-green-100 text-green-800 px-2 py-0.5 rounded text-xs ml-2 font-bold"><i class="fa-brands fa-line text-green-600"></i> LINE 自動連動版</span></p>
             </div>
             <div id="sync-status" class="flex items-center gap-2 px-3 py-1.5 bg-gray-100 rounded-full text-xs md:text-sm font-bold text-gray-500 border border-gray-200">
                 <i class="fa-solid fa-spinner fa-spin"></i> 連線至專屬資料庫...
@@ -57,34 +53,19 @@
             
             <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-5">
                 <div>
-                    <div class="flex justify-between text-sm mb-1.5">
-                        <span class="font-bold text-blue-800 flex items-center gap-1.5"><i class="fa-solid fa-truck-monster"></i> 1. 樁號打設總進度 (共 613 支)</span>
-                        <span id="prog-piles-text" class="font-bold text-gray-600">0 / 613 (0%)</span>
-                    </div>
+                    <div class="flex justify-between text-sm mb-1.5"><span class="font-bold text-blue-800 flex items-center gap-1.5"><i class="fa-solid fa-truck-monster"></i> 1. 樁號打設總進度 (共 613 支)</span><span id="prog-piles-text" class="font-bold text-gray-600">0 / 613 (0%)</span></div>
                     <div class="w-full bg-gray-100 rounded-full h-3 shadow-inner"><div id="prog-piles-bar" class="bg-gradient-to-r from-blue-500 to-blue-700 h-3 rounded-full transition-all duration-1000" style="width:0%"></div></div>
                 </div>
-
                 <div>
-                    <div class="flex justify-between text-sm mb-1.5">
-                        <span class="font-bold text-indigo-700 flex items-center gap-1.5"><i class="fa-solid fa-trowel-bricks"></i> 2. 試體取樣完成率 (看試體組數)</span>
-                        <span id="prog-sample-text" class="font-bold text-gray-600">0 / 0 (0%)</span>
-                    </div>
+                    <div class="flex justify-between text-sm mb-1.5"><span class="font-bold text-indigo-700 flex items-center gap-1.5"><i class="fa-solid fa-trowel-bricks"></i> 2. 試體取樣完成率 (看試體組數)</span><span id="prog-sample-text" class="font-bold text-gray-600">0 / 0 (0%)</span></div>
                     <div class="w-full bg-gray-100 rounded-full h-3 shadow-inner"><div id="prog-sample-bar" class="bg-gradient-to-r from-indigo-400 to-indigo-600 h-3 rounded-full transition-all duration-1000" style="width:0%"></div></div>
                 </div>
-
                 <div>
-                    <div class="flex justify-between text-sm mb-1.5">
-                        <span class="font-bold text-amber-600 flex items-center gap-1.5"><i class="fa-solid fa-truck-fast"></i> 3. 實驗室收件進度 (每週二/五)</span>
-                        <span id="prog-lab-text" class="font-bold text-gray-600">0 / 0 (0%)</span>
-                    </div>
+                    <div class="flex justify-between text-sm mb-1.5"><span class="font-bold text-amber-600 flex items-center gap-1.5"><i class="fa-solid fa-truck-fast"></i> 3. 實驗室收件進度 (每週二/五)</span><span id="prog-lab-text" class="font-bold text-gray-600">0 / 0 (0%)</span></div>
                     <div class="w-full bg-gray-100 rounded-full h-3 shadow-inner"><div id="prog-lab-bar" class="bg-gradient-to-r from-amber-400 to-amber-600 h-3 rounded-full transition-all duration-1000" style="width:0%"></div></div>
                 </div>
-
                 <div>
-                    <div class="flex justify-between text-sm mb-1.5">
-                        <span class="font-bold text-green-700 flex items-center gap-1.5"><i class="fa-solid fa-check-double"></i> 4. 抗壓會驗結案率 (T+28 合格)</span>
-                        <span id="prog-test-text" class="font-bold text-gray-600">0 / 0 (0%)</span>
-                    </div>
+                    <div class="flex justify-between text-sm mb-1.5"><span class="font-bold text-green-700 flex items-center gap-1.5"><i class="fa-solid fa-check-double"></i> 4. 抗壓會驗結案率 (T+28 合格)</span><span id="prog-test-text" class="font-bold text-gray-600">0 / 0 (0%)</span></div>
                     <div class="w-full bg-gray-100 rounded-full h-3 shadow-inner"><div id="prog-test-bar" class="bg-gradient-to-r from-green-500 to-green-700 h-3 rounded-full transition-all duration-1000" style="width:0%"></div></div>
                 </div>
             </div>
@@ -105,13 +86,6 @@
                     <i class="fa-solid fa-file-csv"></i> 匯出 CSV 報表
                 </button>
             </div>
-
-            <div class="mt-4 p-3 bg-red-50/50 rounded-lg border border-red-100 flex flex-wrap gap-3 items-center">
-                <span class="font-bold text-red-600 text-sm flex items-center gap-1.5"><i class="fa-solid fa-calendar-xmark"></i> 例外停工日：</span>
-                <input type="date" id="exception-date-input" class="border border-gray-300 rounded px-2 py-1 text-gray-700 focus:outline-none focus:border-red-400 text-sm" min="2026-05-05" max="2026-07-30">
-                <button onclick="addExceptionDate()" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm font-medium transition shadow-sm">新增</button>
-                <div id="exception-list" class="flex flex-wrap gap-2 ml-1"></div>
-            </div>
         </div>
 
         <div id="table-view" class="bg-white shadow-md rounded-b-xl overflow-hidden">
@@ -128,22 +102,12 @@
                             <th class="p-3 font-semibold border-b border-blue-900 text-xs whitespace-nowrap">備註機制</th>
                         </tr>
                     </thead>
-                    <tbody id="schedule-body" class="text-gray-700 text-sm">
-                        </tbody>
+                    <tbody id="schedule-body" class="text-gray-700 text-sm"></tbody>
                 </table>
             </div>
         </div>
 
         <div id="calendar-view" class="bg-white shadow-md rounded-b-xl p-4 md:p-6 hidden">
-            
-            <div class="flex flex-wrap gap-4 text-xs md:text-sm mb-4 bg-gray-50 p-3 rounded-lg border border-gray-200">
-                <span class="font-bold text-gray-700 mr-2"><i class="fa-solid fa-circle-info text-blue-500"></i> 月曆圖例：</span>
-                <div class="flex items-center gap-1"><span class="w-3 h-3 rounded border border-indigo-300"></span> 待取樣 <span class="w-3 h-3 rounded bg-indigo-100 border border-indigo-300 ml-1"></span> <span class="text-indigo-800 font-bold">已取樣</span></div>
-                <div class="flex items-center gap-1 ml-2"><span class="w-3 h-3 rounded bg-gray-100 border border-gray-300"></span> <span class="text-gray-700">拆模</span></div>
-                <div class="flex items-center gap-1 ml-2"><span class="w-3 h-3 rounded border border-amber-300"></span> 待收件 <span class="w-3 h-3 rounded bg-amber-100 border border-amber-300 ml-1"></span> <span class="text-amber-800 font-bold">已收件</span></div>
-                <div class="flex items-center gap-1 ml-2"><span class="w-3 h-3 rounded border border-red-300"></span> 待壓測 <span class="w-3 h-3 rounded bg-green-100 border border-green-400 ml-1"></span> <span class="text-green-800 font-bold">已結案</span></div>
-            </div>
-
             <div class="flex justify-between items-center mb-4">
                 <button onclick="changeMonth(-1)" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg text-gray-700 font-bold transition"><i class="fa-solid fa-chevron-left"></i> 上個月</button>
                 <h2 id="calendar-title" class="text-xl md:text-2xl font-bold text-blue-900">民國 115 年 5 月</h2>
@@ -183,7 +147,6 @@
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // Firebase 金鑰
         const firebaseConfig = {
             apiKey: "AIzaSyAp1ZVuW95Api3kaQUPgttESZ0RGTEi8H8",
             authDomain: "cdc-qc-system.firebaseapp.com",
@@ -194,46 +157,66 @@
             measurementId: "G-X61VRPB96K"
         };
 
-        // --- 全域資料變數 ---
         window.exceptionDates = []; 
         window.pileNumbers = {}; 
-        
-        // V3.0 分階狀態存儲
         window.statusSample = {}; 
         window.statusLab = {};
         window.statusTest = {};
-        
         const scheduleData = [];
         let currentFilter = 'ALL';
         let currentView = 'table';
         let currentCalDate = new Date(2026, 4, 1); 
         const TOTAL_PILES_LIMIT = 613;
-
         let isCloudEnabled = false;
         let db, auth;
 
-        // --- Firebase 初始化 ---
+        // 🔥 新增：Make Webhook 網址與推播功能
+        const MAKE_WEBHOOK_URL = "https://hook.us2.make.com/3e3bd4bob7ptalfemcn6q982tyc0tjil";
+
+        window.sendLineNotification = async (sampleId, type) => {
+            const actionNames = {
+                'sample': '取樣完成 ✅',
+                'lab': '實驗室已收件 🚚',
+                'test': '抗壓會驗結案 💯'
+            };
+            const actionName = actionNames[type];
+            const piles = window.pileNumbers[sampleId] || '尚未填寫樁號';
+
+            try {
+                // 偷偷在背景將資料丟給 Make 接收站
+                await fetch(MAKE_WEBHOOK_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        sampleId: sampleId,
+                        action: actionName,
+                        piles: piles,
+                        time: new Date().toLocaleString('zh-TW', { hour12: false })
+                    })
+                });
+                console.log("情報已發送至接收站！");
+            } catch(e) {
+                console.error("情報發送失敗", e);
+            }
+        };
+
         const initFirebase = async () => {
             try {
                 const app = initializeApp(firebaseConfig);
                 auth = getAuth(app);
                 db = getFirestore(app);
                 isCloudEnabled = true;
-
                 await signInAnonymously(auth);
-
                 onAuthStateChanged(auth, (user) => {
                     if (user) {
                         document.getElementById('sync-status').innerHTML = '<i class="fa-solid fa-cloud text-green-600"></i> 正式雲端已連線';
                         document.getElementById('sync-status').className = "flex items-center gap-2 px-3 py-1.5 bg-green-50 rounded-full text-xs md:text-sm font-bold text-green-700 border border-green-200 shadow-sm";
-                        
                         const docRef = doc(db, 'scheduleData', 'mainState');
                         onSnapshot(docRef, (snapshot) => {
                             if (snapshot.exists()) {
                                 const data = snapshot.data();
                                 window.exceptionDates = data.exceptionDates || [];
                                 window.pileNumbers = data.pileNumbers || {};
-                                
                                 window.statusSample = data.statusSample || {};
                                 window.statusLab = data.statusLab || {};
                                 window.statusTest = data.statusTest || data.completionStatus || {}; 
@@ -259,355 +242,151 @@
                         statusLab: window.statusLab,
                         statusTest: window.statusTest
                     }, { merge: true });
-                } catch (err) { console.error("儲存失敗", err); }
+                } catch (err) {}
             }
         };
 
-        // --- 核心工具函數 ---
-        window.toDateString = (date) => {
-            const y = date.getFullYear();
-            const m = String(date.getMonth() + 1).padStart(2, '0');
-            const d = String(date.getDate()).padStart(2, '0');
-            return `${y}-${m}-${d}`;
-        };
+        window.toDateString = (d) => { const y=d.getFullYear(); const m=String(d.getMonth()+1).padStart(2,'0'); const dt=String(d.getDate()).padStart(2,'0'); return `${y}-${m}-${dt}`; };
+        window.formatMinguo = (d) => { const y=d.getFullYear()-1911; const m=String(d.getMonth()+1).padStart(2,'0'); const dt=String(d.getDate()).padStart(2,'0'); const day=["日","一","二","三","四","五","六"][d.getDay()]; return `${y}/${m}/${dt}(${day})`; };
+        const addDays = (d, days) => { let r=new Date(d); r.setDate(r.getDate()+days); return r; };
 
-        window.formatMinguo = (date) => {
-            const y = date.getFullYear() - 1911;
-            const m = String(date.getMonth() + 1).padStart(2, '0');
-            const d = String(date.getDate()).padStart(2, '0');
-            const dayName = ["日", "一", "二", "三", "四", "五", "六"][date.getDay()];
-            return `${y}/${m}/${d}(${dayName})`;
-        };
-
-        const addDays = (date, days) => {
-            let result = new Date(date);
-            result.setDate(result.getDate() + days);
-            return result;
-        };
-
-        // --- UI 與邏輯操作 ---
-        
         window.toggleStatus = (sampleId, type) => {
-            if (type === 'sample') window.statusSample[sampleId] = !window.statusSample[sampleId];
-            if (type === 'lab') window.statusLab[sampleId] = !window.statusLab[sampleId];
-            if (type === 'test') window.statusTest[sampleId] = !window.statusTest[sampleId];
+            let isCheckedNow = false;
+            if (type === 'sample') { window.statusSample[sampleId] = !window.statusSample[sampleId]; isCheckedNow = window.statusSample[sampleId]; }
+            if (type === 'lab') { window.statusLab[sampleId] = !window.statusLab[sampleId]; isCheckedNow = window.statusLab[sampleId]; }
+            if (type === 'test') { window.statusTest[sampleId] = !window.statusTest[sampleId]; isCheckedNow = window.statusTest[sampleId]; }
             
             window.saveDataToCloud();
             window.refreshAll(); 
+
+            // 🔥 核心觸發：只有當您「勾選 (完成)」時，才發送推播！取消打勾不發送。
+            if (isCheckedNow) {
+                window.sendLineNotification(sampleId, type);
+            }
         };
 
         window.updatePile = (sampleId, val) => {
             if (window.statusTest[sampleId]) return; 
-
             const trimmedVal = val.trim();
-            if (!trimmedVal) {
-                delete window.pileNumbers[sampleId];
-                window.saveDataToCloud();
-                return;
-            }
-
+            if (!trimmedVal) { delete window.pileNumbers[sampleId]; window.saveDataToCloud(); return; }
             const nums = (trimmedVal.match(/\d+/g) || []).map(n => parseInt(n, 10));
-            if (nums.length === 0) {
-                window.showModal("格式錯誤", "請輸入樁號數字。", "error");
-                window.renderTable(currentFilter);
-                return;
-            }
-
+            if (nums.length === 0) { window.showModal("格式錯誤", "請輸入樁號數字。", "error"); window.renderTable(currentFilter); return; }
             const outRange = nums.find(n => n < 1 || n > TOTAL_PILES_LIMIT);
-            if (outRange) {
-                window.showModal("範圍錯誤", `樁號 ${outRange} 超出本案規劃範圍 (1-${TOTAL_PILES_LIMIT})`, "error");
-                window.renderTable(currentFilter);
-                return;
-            }
-
+            if (outRange) { window.showModal("範圍錯誤", `樁號 ${outRange} 超出範圍 (1-${TOTAL_PILES_LIMIT})`, "error"); window.renderTable(currentFilter); return; }
             for (const [key, exist] of Object.entries(window.pileNumbers)) {
                 if (key === sampleId) continue;
                 const existNums = (exist.match(/\d+/g) || []).map(n => parseInt(n, 10));
                 const dup = nums.find(n => existNums.includes(n));
-                if (dup) {
-                    window.showModal("樁號重複", `第 ${dup} 號樁已登錄於試體「${key}」`, "warning");
-                    window.renderTable(currentFilter);
-                    return;
-                }
+                if (dup) { window.showModal("樁號重複", `第 ${dup} 號樁已登錄於試體「${key}」`, "warning"); window.renderTable(currentFilter); return; }
             }
-
             window.pileNumbers[sampleId] = trimmedVal;
             window.saveDataToCloud();
         };
 
         window.updateDashboard = () => {
             const totalRows = scheduleData.length;
-            
             const usedNumbers = new Set();
-            Object.values(window.pileNumbers).forEach(val => {
-                const nums = (val.match(/\d+/g) || []).map(n => parseInt(n, 10));
-                nums.forEach(n => usedNumbers.add(n));
-            });
-            const pilesCount = usedNumbers.size;
-            let pilesPct = (pilesCount / TOTAL_PILES_LIMIT) * 100;
-            if(pilesPct > 100) pilesPct = 100;
-            
+            Object.values(window.pileNumbers).forEach(val => { const nums = (val.match(/\d+/g) || []).map(n => parseInt(n, 10)); nums.forEach(n => usedNumbers.add(n)); });
+            const pilesCount = usedNumbers.size; let pilesPct = (pilesCount / TOTAL_PILES_LIMIT) * 100; if(pilesPct > 100) pilesPct = 100;
             document.getElementById('prog-piles-text').innerText = `${pilesCount} / ${TOTAL_PILES_LIMIT} (${pilesPct.toFixed(1)}%)`;
             document.getElementById('prog-piles-bar').style.width = `${pilesPct}%`;
-
             let countSample = 0, countLab = 0, countTest = 0;
-            scheduleData.forEach(item => {
-                if(window.statusSample[item.id]) countSample++;
-                if(window.statusLab[item.id]) countLab++;
-                if(window.statusTest[item.id]) countTest++;
-            });
-
+            scheduleData.forEach(item => { if(window.statusSample[item.id]) countSample++; if(window.statusLab[item.id]) countLab++; if(window.statusTest[item.id]) countTest++; });
             const getPct = (c) => totalRows > 0 ? (c / totalRows) * 100 : 0;
-
             document.getElementById('prog-sample-text').innerText = `${countSample} / ${totalRows} (${getPct(countSample).toFixed(1)}%)`;
             document.getElementById('prog-sample-bar').style.width = `${getPct(countSample)}%`;
-
             document.getElementById('prog-lab-text').innerText = `${countLab} / ${totalRows} (${getPct(countLab).toFixed(1)}%)`;
             document.getElementById('prog-lab-bar').style.width = `${getPct(countLab)}%`;
-
             document.getElementById('prog-test-text').innerText = `${countTest} / ${totalRows} (${getPct(countTest).toFixed(1)}%)`;
             document.getElementById('prog-test-bar').style.width = `${getPct(countTest)}%`;
         };
 
-        window.addExceptionDate = () => {
-            const input = document.getElementById('exception-date-input');
-            const val = input.value;
-            if (val && !window.exceptionDates.includes(val)) {
-                window.exceptionDates.push(val);
-                window.exceptionDates.sort();
-                window.saveDataToCloud();
-                input.value = "";
-            }
-        };
-
-        window.removeExceptionDate = (val) => {
-            window.exceptionDates = window.exceptionDates.filter(d => d !== val);
-            window.saveDataToCloud();
-        };
-
-        window.updateExceptionUI = () => {
-            const container = document.getElementById('exception-list');
-            container.innerHTML = "";
-            window.exceptionDates.forEach(val => {
-                const parts = val.split('-');
-                const minguo = `${parseInt(parts[0])-1911}/${parts[1]}/${parts[2]}`;
-                const tag = document.createElement('span');
-                tag.className = "bg-white text-red-700 px-2 py-0.5 rounded text-xs flex items-center gap-1 border border-red-200 shadow-sm";
-                tag.innerHTML = `${minguo} <i class="fa-solid fa-xmark cursor-pointer hover:text-red-900" onclick="removeExceptionDate('${val}')"></i>`;
-                container.appendChild(tag);
-            });
-        };
-
-        window.refreshAll = () => {
-            window.generateSchedule();
-            window.renderTable(currentFilter);
-            window.updateExceptionUI();
-            window.updateDashboard();
-            if (currentView === 'calendar') window.renderCalendar();
-        };
+        window.refreshAll = () => { window.generateSchedule(); window.renderTable(currentFilter); window.updateDashboard(); if (currentView === 'calendar') window.renderCalendar(); };
 
         window.generateSchedule = () => {
-            scheduleData.length = 0;
-            const startDate = new Date(2026, 4, 5); 
-            const endDate = new Date(2026, 6, 30);
-            let countA = 1, countB = 1;
-
+            scheduleData.length = 0; const startDate = new Date(2026, 4, 5); const endDate = new Date(2026, 6, 30); let countA = 1, countB = 1;
             for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
-                const dateStr = window.toDateString(d);
-                if (d.getDay() === 0 || window.exceptionDates.includes(dateStr)) continue;
-
+                if (d.getDay() === 0 || window.exceptionDates.includes(window.toDateString(d))) continue;
                 const makeRow = (m, c, t) => {
-                    let demold = addDays(t, 1);
-                    if (demold.getDay() === 0) demold = addDays(demold, 1);
-                    
-                    let collect = new Date(demold);
-                    while (collect.getDay() !== 2 && collect.getDay() !== 5) collect = addDays(collect, 1);
-                    
-                    let test = addDays(t, 28);
-                    if (test.getDay() === 6) test = addDays(test, 2);
-                    else if (test.getDay() === 0) test = addDays(test, 1);
-
+                    let demold = addDays(t, 1); if (demold.getDay() === 0) demold = addDays(demold, 1);
+                    let collect = new Date(demold); while (collect.getDay() !== 2 && collect.getDay() !== 5) collect = addDays(collect, 1);
+                    let test = addDays(t, 28); if (test.getDay() === 6) test = addDays(test, 2); else if (test.getDay() === 0) test = addDays(test, 1);
                     return { id: `${m}${c}`, machine: m, sampleDate: new Date(t), demoldDate: demold, collectDate: collect, testDate: test };
                 };
-
                 if (d >= new Date(2026, 4, 5)) scheduleData.push(makeRow('A', countA++, d));
                 if (d >= new Date(2026, 4, 9)) scheduleData.push(makeRow('B', countB++, d));
             }
         };
 
         window.renderTable = (filter) => {
-            const tbody = document.getElementById('schedule-body');
-            tbody.innerHTML = '';
-            const filtered = scheduleData.filter(i => filter === 'ALL' || i.machine === filter);
-
-            filtered.forEach(item => {
-                const isSampled = window.statusSample[item.id] || false;
-                const isLab = window.statusLab[item.id] || false;
-                const isTested = window.statusTest[item.id] || false;
-                
-                const tr = document.createElement('tr');
-                tr.className = `border-b border-gray-100 row-hover ${isTested ? 'completed-row' : ''}`;
-                
+            const tbody = document.getElementById('schedule-body'); tbody.innerHTML = '';
+            scheduleData.filter(i => filter === 'ALL' || i.machine === filter).forEach(item => {
+                const isSampled = window.statusSample[item.id] || false, isLab = window.statusLab[item.id] || false, isTested = window.statusTest[item.id] || false;
+                const tr = document.createElement('tr'); tr.className = `border-b border-gray-100 row-hover ${isTested ? 'completed-row' : ''}`;
                 tr.innerHTML = `
                     <td class="p-3 font-bold text-blue-900">${item.id}</td>
-                    <td class="p-3">
-                        <input type="text" class="pile-input" value="${window.pileNumbers[item.id] || ''}" 
-                               ${isTested ? 'readonly' : ''} onchange="updatePile('${item.id}', this.value)" placeholder="輸入樁號 (例: 12, 13)">
-                    </td>
-                    <td class="p-3">
-                        <label class="flex items-center gap-2 cursor-pointer w-fit px-1 hover:bg-indigo-50 rounded">
-                            <input type="checkbox" class="status-checkbox cb-sample" ${isSampled ? 'checked' : ''} ${isTested ? 'disabled' : ''} onclick="toggleStatus('${item.id}', 'sample')">
-                            <span class="${isSampled ? 'text-dimmed' : ''}">${window.formatMinguo(item.sampleDate)}</span>
-                        </label>
-                    </td>
+                    <td class="p-3"><input type="text" class="pile-input" value="${window.pileNumbers[item.id] || ''}" ${isTested ? 'readonly' : ''} onchange="updatePile('${item.id}', this.value)" placeholder="輸入樁號 (例: 12, 13)"></td>
+                    <td class="p-3"><label class="flex items-center gap-2 cursor-pointer w-fit px-1 hover:bg-indigo-50 rounded"><input type="checkbox" class="status-checkbox cb-sample" ${isSampled ? 'checked' : ''} ${isTested ? 'disabled' : ''} onclick="toggleStatus('${item.id}', 'sample')"><span class="${isSampled ? 'text-dimmed' : ''}">${window.formatMinguo(item.sampleDate)}</span></label></td>
                     <td class="p-3 text-gray-500">${window.formatMinguo(item.demoldDate)}</td>
-                    <td class="p-3">
-                        <label class="flex items-center gap-2 cursor-pointer w-fit px-1 hover:bg-amber-50 rounded">
-                            <input type="checkbox" class="status-checkbox cb-lab" ${isLab ? 'checked' : ''} ${isTested ? 'disabled' : ''} onclick="toggleStatus('${item.id}', 'lab')">
-                            <span class="${isLab ? 'text-dimmed' : ''}">${window.formatMinguo(item.collectDate)}</span>
-                        </label>
-                    </td>
-                    <td class="p-3">
-                        <label class="flex items-center gap-2 cursor-pointer w-fit px-1 hover:bg-green-50 rounded">
-                            <input type="checkbox" class="status-checkbox cb-test" ${isTested ? 'checked' : ''} onclick="toggleStatus('${item.id}', 'test')">
-                            <span class="font-bold ${isTested ? 'text-dimmed' : 'text-red-600'}">${window.formatMinguo(item.testDate)}</span>
-                        </label>
-                    </td>
-                    <td class="p-3 text-xs">
-                        ${isTested ? '<span class="bg-gray-200 text-gray-600 px-2 py-0.5 rounded font-bold"><i class="fa-solid fa-lock"></i> 結案鎖定</span>' : '<span class="text-blue-500"><i class="fa-solid fa-spinner fa-spin-pulse"></i> 進行中</span>'}
-                    </td>
+                    <td class="p-3"><label class="flex items-center gap-2 cursor-pointer w-fit px-1 hover:bg-amber-50 rounded"><input type="checkbox" class="status-checkbox cb-lab" ${isLab ? 'checked' : ''} ${isTested ? 'disabled' : ''} onclick="toggleStatus('${item.id}', 'lab')"><span class="${isLab ? 'text-dimmed' : ''}">${window.formatMinguo(item.collectDate)}</span></label></td>
+                    <td class="p-3"><label class="flex items-center gap-2 cursor-pointer w-fit px-1 hover:bg-green-50 rounded"><input type="checkbox" class="status-checkbox cb-test" ${isTested ? 'checked' : ''} onclick="toggleStatus('${item.id}', 'test')"><span class="font-bold ${isTested ? 'text-dimmed' : 'text-red-600'}">${window.formatMinguo(item.testDate)}</span></label></td>
+                    <td class="p-3 text-xs">${isTested ? '<span class="bg-gray-200 text-gray-600 px-2 py-0.5 rounded font-bold"><i class="fa-solid fa-lock"></i> 結案鎖定</span>' : '<span class="text-blue-500"><i class="fa-solid fa-spinner fa-spin-pulse"></i> 進行中</span>'}</td>
                 `;
                 tbody.appendChild(tr);
             });
-
-            document.querySelectorAll('[id^="btn-"]').forEach(b => {
-                if(b.id === `btn-${filter}`) b.className = 'px-3 py-1.5 rounded-lg text-sm font-medium bg-blue-800 text-white transition';
-                else if(b.id.startsWith('btn-view')) {} 
-                else b.className = 'px-3 py-1.5 rounded-lg text-sm font-medium bg-gray-200 text-gray-700 hover:bg-gray-300 transition';
-            });
+            document.querySelectorAll('[id^="btn-"]').forEach(b => { if(b.id === `btn-${filter}`) b.className = 'px-3 py-1.5 rounded-lg text-sm font-medium bg-blue-800 text-white transition'; else if(!b.id.startsWith('btn-view')) b.className = 'px-3 py-1.5 rounded-lg text-sm font-medium bg-gray-200 text-gray-700 hover:bg-gray-300 transition'; });
         };
 
-        window.toggleView = (v) => {
-            currentView = v;
-            document.getElementById('table-view').classList.toggle('hidden', v !== 'table');
-            document.getElementById('calendar-view').classList.toggle('hidden', v !== 'calendar');
-            if(v === 'calendar') window.renderCalendar();
-        };
-
-        window.changeMonth = (o) => {
-            currentCalDate.setMonth(currentCalDate.getMonth() + o);
-            window.renderCalendar();
-        };
+        window.toggleView = (v) => { currentView = v; document.getElementById('table-view').classList.toggle('hidden', v !== 'table'); document.getElementById('calendar-view').classList.toggle('hidden', v !== 'calendar'); if(v === 'calendar') window.renderCalendar(); };
+        window.changeMonth = (o) => { currentCalDate.setMonth(currentCalDate.getMonth() + o); window.renderCalendar(); };
 
         window.renderCalendar = () => {
-            const year = currentCalDate.getFullYear();
-            const month = currentCalDate.getMonth();
-            const minguoYear = year - 1911;
-
-            document.getElementById('calendar-title').innerText = `民國 ${minguoYear} 年 ${month + 1} 月`;
-
+            const year = currentCalDate.getFullYear(), month = currentCalDate.getMonth();
+            document.getElementById('calendar-title').innerText = `民國 ${year-1911} 年 ${month+1} 月`;
             const eventsMap = {};
             const addEvent = (date, type, label, bgClass, icon) => {
                 if (date.getFullYear() !== year || date.getMonth() !== month) return;
-                const d = date.getDate();
-                if (!eventsMap[d]) eventsMap[d] = { sample: [], demold: [], collect: [], test: [] };
+                const d = date.getDate(); if (!eventsMap[d]) eventsMap[d] = { sample: [], demold: [], collect: [], test: [] };
                 eventsMap[d][type].push({ label, bgClass, icon });
             };
-
-            const filteredData = scheduleData.filter(item => currentFilter === 'ALL' || item.machine === currentFilter);
-
-            filteredData.forEach(item => {
-                const isSampled = window.statusSample[item.id];
-                const isLab = window.statusLab[item.id];
-                const isTested = window.statusTest[item.id];
-
+            scheduleData.filter(item => currentFilter === 'ALL' || item.machine === currentFilter).forEach(item => {
+                const isSampled = window.statusSample[item.id], isLab = window.statusLab[item.id], isTested = window.statusTest[item.id];
                 addEvent(item.sampleDate, 'sample', item.id, isSampled ? 'bg-indigo-100 text-indigo-800 border-indigo-300' : 'bg-white text-indigo-600 border-indigo-300', isSampled ? 'fa-check' : 'fa-trowel-bricks');
                 addEvent(item.demoldDate, 'demold', item.id, 'bg-gray-100 text-gray-600 border-gray-200', 'fa-hammer');
                 addEvent(item.collectDate, 'collect', item.id, isLab ? 'bg-amber-100 text-amber-800 border-amber-300' : 'bg-white text-amber-600 border-amber-300', isLab ? 'fa-check' : 'fa-truck-fast');
                 addEvent(item.testDate, 'test', item.id, isTested ? 'bg-green-100 text-green-800 border-green-400' : 'bg-white text-red-600 border-red-300 font-bold', isTested ? 'fa-check-double' : 'fa-gavel');
             });
-
-            const firstDay = new Date(year, month, 1).getDay();
-            const daysInMonth = new Date(year, month + 1, 0).getDate();
-
-            const tbody = document.getElementById('calendar-body');
-            tbody.innerHTML = '';
-
+            const firstDay = new Date(year, month, 1).getDay(), daysInMonth = new Date(year, month + 1, 0).getDate();
+            const tbody = document.getElementById('calendar-body'); tbody.innerHTML = '';
             let date = 1;
             for (let i = 0; i < 6; i++) {
                 const row = document.createElement('tr');
                 for (let j = 0; j < 7; j++) {
-                    const cell = document.createElement('td');
-                    cell.className = 'border border-gray-200 p-1 md:p-2 align-top h-32 bg-white';
+                    const cell = document.createElement('td'); cell.className = 'border border-gray-200 p-1 md:p-2 align-top h-32 bg-white';
                     if (j === 0 || j === 6) cell.classList.add('bg-orange-50');
-
-                    if (i === 0 && j < firstDay) {
-                        cell.innerHTML = '';
-                    } else if (date > daysInMonth) {
-                        cell.innerHTML = '';
-                    } else {
-                        const checkDateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(date).padStart(2,'0')}`;
-                        const isException = window.exceptionDates.includes(checkDateStr);
-                        
+                    if (i === 0 && j < firstDay || date > daysInMonth) { cell.innerHTML = ''; } else {
+                        const isException = window.exceptionDates.includes(`${year}-${String(month+1).padStart(2,'0')}-${String(date).padStart(2,'0')}`);
                         let isToday = new Date().getFullYear() === year && new Date().getMonth() === month && new Date().getDate() === date;
-                        let dateClass = isToday ? 'bg-blue-800 text-white rounded-full w-6 h-6 flex items-center justify-center' : 'text-gray-600';
-                        let exceptionHtml = isException ? `<span class="text-xs bg-red-500 text-white px-1.5 py-0.5 rounded ml-1"><i class="fa-solid fa-ban"></i> 停工</span>` : '';
-
-                        let cellHtml = `<div class="font-bold text-sm mb-1 flex justify-between items-center">
-                                            <div class="flex items-center"><span class="${dateClass}">${date}</span> ${exceptionHtml}</div>
-                                        </div>`;
+                        let cellHtml = `<div class="font-bold text-sm mb-1 flex justify-between items-center"><div class="flex items-center"><span class="${isToday ? 'bg-blue-800 text-white rounded-full w-6 h-6 flex items-center justify-center' : 'text-gray-600'}">${date}</span> ${isException ? `<span class="text-xs bg-red-500 text-white px-1.5 py-0.5 rounded ml-1"><i class="fa-solid fa-ban"></i> 停工</span>` : ''}</div></div>`;
                         cellHtml += `<div class="flex flex-col gap-1 overflow-y-auto max-h-24 calendar-scroll pr-1">`;
-
                         if (eventsMap[date]) {
-                            const renderBadges = (evtArray, title) => {
-                                if (evtArray.length === 0) return '';
-                                const labels = evtArray.map(e => e.label).join(', ');
-                                const bg = evtArray[0].bgClass;
-                                const icon = evtArray[0].icon;
-                                return `<div class="text-[11px] border rounded px-1.5 py-0.5 leading-tight shadow-sm ${bg}" title="${title}: ${labels}">
-                                            <i class="fa-solid ${icon}"></i> <span class="font-bold">${title}:</span> ${labels}
-                                        </div>`;
-                            };
-
-                            cellHtml += renderBadges(eventsMap[date].sample, '取樣');
-                            cellHtml += renderBadges(eventsMap[date].demold, '拆模');
-                            cellHtml += renderBadges(eventsMap[date].collect, '收件');
-                            cellHtml += renderBadges(eventsMap[date].test, '壓測');
+                            const renderBadges = (evtArray, title) => evtArray.length === 0 ? '' : `<div class="text-[11px] border rounded px-1.5 py-0.5 leading-tight shadow-sm ${evtArray[0].bgClass}"><i class="fa-solid ${evtArray[0].icon}"></i> <span class="font-bold">${title}:</span> ${evtArray.map(e => e.label).join(', ')}</div>`;
+                            cellHtml += renderBadges(eventsMap[date].sample, '取樣') + renderBadges(eventsMap[date].demold, '拆模') + renderBadges(eventsMap[date].collect, '收件') + renderBadges(eventsMap[date].test, '壓測');
                         }
-
-                        cellHtml += `</div>`;
-                        if (isException) cell.classList.add('bg-red-50');
-                        cell.innerHTML = cellHtml;
-                        date++;
+                        cellHtml += `</div>`; if (isException) cell.classList.add('bg-red-50'); cell.innerHTML = cellHtml; date++;
                     }
                     row.appendChild(cell);
                 }
-                tbody.appendChild(row);
-                if (date > daysInMonth) break;
+                tbody.appendChild(row); if (date > daysInMonth) break;
             }
         };
 
         window.exportCSV = () => {
             let csv = "\uFEFF取樣編號,打設樁號,取樣日期,取樣狀態,實驗室收件,收件狀態,抗壓會驗,結案狀態\n";
-            scheduleData.forEach(i => {
-                const s1 = window.statusSample[i.id] ? '已取樣' : '未完成';
-                const s2 = window.statusLab[i.id] ? '已收件' : '未完成';
-                const s3 = window.statusTest[i.id] ? '已結案' : '待辦';
-                csv += `${i.id},"${window.pileNumbers[i.id]||''}",${window.toDateString(i.sampleDate)},${s1},${window.toDateString(i.collectDate)},${s2},${window.toDateString(i.testDate)},${s3}\n`;
-            });
-            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-            const link = document.createElement("a");
-            link.href = URL.createObjectURL(blob);
-            link.download = `預壘樁進度追蹤表_V3.2.csv`;
-            link.click();
+            scheduleData.forEach(i => { csv += `${i.id},"${window.pileNumbers[i.id]||''}",${window.toDateString(i.sampleDate)},${window.statusSample[i.id]?'已取樣':'未完成'},${window.toDateString(i.collectDate)},${window.statusLab[i.id]?'已收件':'未完成'},${window.toDateString(i.testDate)},${window.statusTest[i.id]?'已結案':'待辦'}\n`; });
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' }); const link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = `預壘樁進度追蹤表_V3.3.csv`; link.click();
         };
-
-        window.showModal = (title, msg, type) => {
-            const header = document.getElementById('custom-modal-header');
-            header.innerHTML = `<i class="fa-solid ${type==='error'?'fa-circle-xmark text-red-500':'fa-triangle-exclamation text-orange-500'}"></i> ${title}`;
-            document.getElementById('custom-modal-message').innerText = msg;
-            document.getElementById('custom-modal').classList.remove('hidden');
-        };
+        window.showModal = (title, msg, type) => { document.getElementById('custom-modal-header').innerHTML = `<i class="fa-solid ${type==='error'?'fa-circle-xmark text-red-500':'fa-triangle-exclamation text-orange-500'}"></i> ${title}`; document.getElementById('custom-modal-message').innerText = msg; document.getElementById('custom-modal').classList.remove('hidden'); };
         window.closeModal = () => document.getElementById('custom-modal').classList.add('hidden');
         window.filterData = (f) => { currentFilter = f; window.renderTable(f); if(currentView==='calendar') window.renderCalendar(); };
 
