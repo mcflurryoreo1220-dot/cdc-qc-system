@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>衛生福利部防疫中心興建工程 - 試體管制排程系統 V4.1</title>
+    <title>衛生福利部防疫中心興建工程 - 試體管制排程系統 V4.2</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
@@ -34,7 +34,7 @@
                     <i class="fa-solid fa-building-shield text-blue-800"></i>
                     衛生福利部防疫中心興建工程
                 </h1>
-                <p class="text-gray-500 mt-1 text-sm">預壘樁試體管制系統 V4.1 <span class="bg-green-100 text-green-800 px-2 py-0.5 rounded text-xs ml-2 font-bold"><i class="fa-brands fa-line text-green-600"></i> 主動預警發報版</span></p>
+                <p class="text-gray-500 mt-1 text-sm">預壘樁試體管制系統 V4.2 <span class="bg-green-100 text-green-800 px-2 py-0.5 rounded text-xs ml-2 font-bold"><i class="fa-solid fa-helmet-safety text-green-600"></i> 獨立假日施工支援版</span></p>
             </div>
             <div id="sync-status" class="flex items-center gap-2 px-3 py-1.5 bg-gray-100 rounded-full text-xs md:text-sm font-bold text-gray-500 border border-gray-200">
                 <i class="fa-solid fa-spinner fa-spin"></i> 連線至專屬資料庫...
@@ -46,7 +46,6 @@
                 <h3 class="font-bold text-gray-800 text-lg flex items-center gap-2">
                     <i class="fa-solid fa-chart-pie text-blue-600"></i> 全區進度戰情室
                 </h3>
-                
                 <button onclick="sendTomorrowAlert()" id="btn-alert" class="px-5 py-2 bg-[#06C755] hover:bg-[#05b34c] text-white rounded-lg text-sm font-bold shadow-md transition flex items-center gap-2 animate-pulse hover:animate-none">
                     <i class="fa-solid fa-bell"></i> 推播明日待辦至 LINE
                 </button>
@@ -94,6 +93,17 @@
                 <button onclick="addExceptionDate()" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm font-medium transition shadow-sm">新增</button>
                 <div id="exception-list" class="flex flex-wrap gap-2 ml-1"></div>
             </div>
+
+            <div class="mt-2 p-3 bg-indigo-50/50 rounded-lg border border-indigo-100 flex flex-wrap gap-3 items-center">
+                <span class="font-bold text-indigo-700 text-sm flex items-center gap-1.5"><i class="fa-solid fa-calendar-plus"></i> 假日施工(加班)：</span>
+                <select id="extra-machine" class="border border-gray-300 rounded px-2 py-1 text-gray-700 focus:outline-none focus:border-indigo-400 text-sm">
+                    <option value="B">B 車</option>
+                    <option value="A">A 車</option>
+                </select>
+                <input type="date" id="extra-date-input" class="border border-gray-300 rounded px-2 py-1 text-gray-700 focus:outline-none focus:border-indigo-400 text-sm" min="2026-05-05" max="2026-07-30">
+                <button onclick="addExtraDate()" class="bg-indigo-500 hover:bg-indigo-600 text-white px-3 py-1 rounded text-sm font-medium transition shadow-sm">新增</button>
+                <div id="extra-list" class="flex flex-wrap gap-2 ml-1"></div>
+            </div>
         </div>
 
         <div id="table-view" class="bg-white shadow-md rounded-b-xl overflow-hidden">
@@ -116,13 +126,6 @@
         </div>
 
         <div id="calendar-view" class="bg-white shadow-md rounded-b-xl p-4 md:p-6 hidden">
-            <div class="flex flex-wrap gap-4 text-xs md:text-sm mb-4 bg-gray-50 p-3 rounded-lg border border-gray-200">
-                <span class="font-bold text-gray-700 mr-2"><i class="fa-solid fa-circle-info text-blue-500"></i> 月曆圖例：</span>
-                <div class="flex items-center gap-1"><span class="w-3 h-3 rounded border border-indigo-300"></span> 待取樣 <span class="w-3 h-3 rounded bg-indigo-100 border border-indigo-300 ml-1"></span> <span class="text-indigo-800 font-bold">已取樣</span></div>
-                <div class="flex items-center gap-1 ml-2"><span class="w-3 h-3 rounded bg-gray-100 border border-gray-300"></span> <span class="text-gray-700">拆模</span></div>
-                <div class="flex items-center gap-1 ml-2"><span class="w-3 h-3 rounded border border-amber-300"></span> 待收件 <span class="w-3 h-3 rounded bg-amber-100 border border-amber-300 ml-1"></span> <span class="text-amber-800 font-bold">已收件</span></div>
-                <div class="flex items-center gap-1 ml-2"><span class="w-3 h-3 rounded border border-red-300"></span> 待壓測 <span class="w-3 h-3 rounded bg-green-100 border border-green-400 ml-1"></span> <span class="text-green-800 font-bold">已結案</span></div>
-            </div>
             <div class="flex justify-between items-center mb-4">
                 <button onclick="changeMonth(-1)" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg text-gray-700 font-bold transition"><i class="fa-solid fa-chevron-left"></i> 上個月</button>
                 <h2 id="calendar-title" class="text-xl md:text-2xl font-bold text-blue-900">民國 115 年 5 月</h2>
@@ -173,6 +176,8 @@
         };
 
         window.exceptionDates = []; 
+        window.extraWorkA = []; // 🔥 A車獨立加班日
+        window.extraWorkB = []; // 🔥 B車獨立加班日
         window.pileNumbers = {}; 
         window.statusSample = {}; 
         window.statusLab = {};
@@ -201,8 +206,13 @@
                         onSnapshot(docRef, (snapshot) => {
                             if (snapshot.exists()) {
                                 const data = snapshot.data();
-                                window.exceptionDates = data.exceptionDates || []; window.pileNumbers = data.pileNumbers || {};
-                                window.statusSample = data.statusSample || {}; window.statusLab = data.statusLab || {}; window.statusTest = data.statusTest || data.completionStatus || {}; 
+                                window.exceptionDates = data.exceptionDates || []; 
+                                window.extraWorkA = data.extraWorkA || [];
+                                window.extraWorkB = data.extraWorkB || [];
+                                window.pileNumbers = data.pileNumbers || {};
+                                window.statusSample = data.statusSample || {}; 
+                                window.statusLab = data.statusLab || {}; 
+                                window.statusTest = data.statusTest || data.completionStatus || {}; 
                             }
                             window.refreshAll();
                         });
@@ -217,8 +227,13 @@
             if (isCloudEnabled && auth.currentUser) {
                 try {
                     await setDoc(doc(db, 'scheduleData', 'mainState'), { 
-                        exceptionDates: window.exceptionDates, pileNumbers: window.pileNumbers,
-                        statusSample: window.statusSample, statusLab: window.statusLab, statusTest: window.statusTest
+                        exceptionDates: window.exceptionDates, 
+                        extraWorkA: window.extraWorkA,
+                        extraWorkB: window.extraWorkB,
+                        pileNumbers: window.pileNumbers,
+                        statusSample: window.statusSample, 
+                        statusLab: window.statusLab, 
+                        statusTest: window.statusTest
                     }, { merge: true });
                 } catch (err) {}
             }
@@ -228,7 +243,6 @@
         window.formatMinguo = (d) => { const y=d.getFullYear()-1911; const m=String(d.getMonth()+1).padStart(2,'0'); const dt=String(d.getDate()).padStart(2,'0'); const day=["日","一","二","三","四","五","六"][d.getDay()]; return `${y}/${m}/${dt}(${day})`; };
         const addDays = (d, days) => { let r=new Date(d); r.setDate(r.getDate()+days); return r; };
 
-        // 發送明日預警總整理
         window.sendTomorrowAlert = async () => {
             const btn = document.getElementById('btn-alert');
             btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 資料掃描與發送中...';
@@ -303,23 +317,53 @@
             document.getElementById('prog-test-text').innerText = `${countTest} / ${totalRows} (${getPct(countTest).toFixed(1)}%)`; document.getElementById('prog-test-bar').style.width = `${getPct(countTest)}%`;
         };
 
+        // 停工日與加班日 UI 邏輯
         window.addExceptionDate = () => { const input = document.getElementById('exception-date-input'); const val = input.value; if (val && !window.exceptionDates.includes(val)) { window.exceptionDates.push(val); window.exceptionDates.sort(); window.saveDataToCloud(); input.value = ""; } };
         window.removeExceptionDate = (val) => { window.exceptionDates = window.exceptionDates.filter(d => d !== val); window.saveDataToCloud(); };
-        window.updateExceptionUI = () => { const container = document.getElementById('exception-list'); container.innerHTML = ""; window.exceptionDates.forEach(val => { const parts = val.split('-'); const minguo = `${parseInt(parts[0])-1911}/${parts[1]}/${parts[2]}`; const tag = document.createElement('span'); tag.className = "bg-white text-red-700 px-2 py-0.5 rounded text-xs flex items-center gap-1 border border-red-200 shadow-sm"; tag.innerHTML = `${minguo} <i class="fa-solid fa-xmark cursor-pointer hover:text-red-900" onclick="removeExceptionDate('${val}')"></i>`; container.appendChild(tag); }); };
-        window.refreshAll = () => { window.generateSchedule(); window.renderTable(currentFilter); window.updateExceptionUI(); window.updateDashboard(); if (currentView === 'calendar') window.renderCalendar(); };
+        window.addExtraDate = () => { const machine = document.getElementById('extra-machine').value; const input = document.getElementById('extra-date-input'); const val = input.value; if (val) { if (machine === 'A' && !window.extraWorkA.includes(val)) { window.extraWorkA.push(val); window.extraWorkA.sort(); } if (machine === 'B' && !window.extraWorkB.includes(val)) { window.extraWorkB.push(val); window.extraWorkB.sort(); } window.saveDataToCloud(); input.value = ""; } };
+        window.removeExtraDate = (m, val) => { if (m === 'A') window.extraWorkA = window.extraWorkA.filter(d => d !== val); if (m === 'B') window.extraWorkB = window.extraWorkB.filter(d => d !== val); window.saveDataToCloud(); };
 
+        window.updateExtraUI = () => {
+            const expContainer = document.getElementById('exception-list'); expContainer.innerHTML = ""; window.exceptionDates.forEach(val => { const parts = val.split('-'); const minguo = `${parseInt(parts[0])-1911}/${parts[1]}/${parts[2]}`; const tag = document.createElement('span'); tag.className = "bg-white text-red-700 px-2 py-0.5 rounded text-xs flex items-center gap-1 border border-red-200 shadow-sm"; tag.innerHTML = `${minguo} <i class="fa-solid fa-xmark cursor-pointer hover:text-red-900" onclick="removeExceptionDate('${val}')"></i>`; expContainer.appendChild(tag); });
+            const extraContainer = document.getElementById('extra-list'); extraContainer.innerHTML = "";
+            const renderTag = (m, val) => { const parts = val.split('-'); const minguo = `${parseInt(parts[0])-1911}/${parts[1]}/${parts[2]}`; const tag = document.createElement('span'); tag.className = "bg-white text-indigo-700 px-2 py-0.5 rounded text-xs flex items-center gap-1 border border-indigo-200 shadow-sm"; tag.innerHTML = `${m}車: ${minguo} <i class="fa-solid fa-xmark cursor-pointer hover:text-indigo-900" onclick="removeExtraDate('${m}', '${val}')"></i>`; extraContainer.appendChild(tag); };
+            window.extraWorkA.forEach(val => renderTag('A', val)); window.extraWorkB.forEach(val => renderTag('B', val));
+        };
+
+        window.refreshAll = () => { window.generateSchedule(); window.renderTable(currentFilter); window.updateExtraUI(); window.updateDashboard(); if (currentView === 'calendar') window.renderCalendar(); };
+
+        // 🔥 V4.2 核心更新：獨立排程邏輯
         window.generateSchedule = () => {
-            scheduleData.length = 0; const startDate = new Date(2026, 4, 5); const endDate = new Date(2026, 6, 30); let countA = 1, countB = 1;
-            for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
-                if (d.getDay() === 0 || window.exceptionDates.includes(window.toDateString(d))) continue;
+            scheduleData.length = 0; const startDateA = new Date(2026, 4, 5); const startDateB = new Date(2026, 4, 9); const endDate = new Date(2026, 6, 30); 
+            let countA = 1, countB = 1;
+
+            for (let d = new Date(startDateA); d <= endDate; d.setDate(d.getDate() + 1)) {
+                const dateStr = window.toDateString(d);
+                const isSunday = d.getDay() === 0;
+                const isException = window.exceptionDates.includes(dateStr);
+                
                 const makeRow = (m, c, t) => {
                     let demold = addDays(t, 1); if (demold.getDay() === 0) demold = addDays(demold, 1);
                     let collect = new Date(demold); while (collect.getDay() !== 2 && collect.getDay() !== 5) collect = addDays(collect, 1);
                     let test = addDays(t, 28); if (test.getDay() === 6) test = addDays(test, 2); else if (test.getDay() === 0) test = addDays(test, 1);
                     return { id: `${m}${c}`, machine: m, sampleDate: new Date(t), demoldDate: demold, collectDate: collect, testDate: test };
                 };
-                if (d >= new Date(2026, 4, 5)) scheduleData.push(makeRow('A', countA++, d));
-                if (d >= new Date(2026, 4, 9)) scheduleData.push(makeRow('B', countB++, d));
+
+                // A車邏輯
+                if (d >= startDateA) {
+                    const isExtraA = window.extraWorkA.includes(dateStr);
+                    if ((!isSunday && !isException) || isExtraA) {
+                        scheduleData.push(makeRow('A', countA++, new Date(d)));
+                    }
+                }
+                
+                // B車邏輯
+                if (d >= startDateB) {
+                    const isExtraB = window.extraWorkB.includes(dateStr);
+                    if ((!isSunday && !isException) || isExtraB) {
+                        scheduleData.push(makeRow('B', countB++, new Date(d)));
+                    }
+                }
             }
         };
 
@@ -356,11 +400,7 @@
             };
             scheduleData.filter(item => currentFilter === 'ALL' || item.machine === currentFilter).forEach(item => {
                 const isSampled = window.statusSample[item.id], isLab = window.statusLab[item.id], isTested = window.statusTest[item.id];
-                
-                // 顯示樁號的合併邏輯
-                const pNums = window.pileNumbers[item.id];
-                const displayLabel = pNums ? `${item.id} (樁:${pNums})` : item.id;
-
+                const pNums = window.pileNumbers[item.id]; const displayLabel = pNums ? `${item.id} (樁:${pNums})` : item.id;
                 addEvent(item.sampleDate, 'sample', displayLabel, isSampled ? 'bg-indigo-100 text-indigo-800 border-indigo-300' : 'bg-white text-indigo-600 border-indigo-300', isSampled ? 'fa-check' : 'fa-trowel-bricks');
                 addEvent(item.demoldDate, 'demold', displayLabel, 'bg-gray-100 text-gray-600 border-gray-200', 'fa-hammer');
                 addEvent(item.collectDate, 'collect', displayLabel, isLab ? 'bg-amber-100 text-amber-800 border-amber-300' : 'bg-white text-amber-600 border-amber-300', isLab ? 'fa-check' : 'fa-truck-fast');
@@ -375,9 +415,17 @@
                     const cell = document.createElement('td'); cell.className = 'border border-gray-200 p-1 md:p-2 align-top h-32 bg-white';
                     if (j === 0 || j === 6) cell.classList.add('bg-orange-50');
                     if (i === 0 && j < firstDay || date > daysInMonth) { cell.innerHTML = ''; } else {
-                        const isException = window.exceptionDates.includes(`${year}-${String(month+1).padStart(2,'0')}-${String(date).padStart(2,'0')}`);
+                        const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(date).padStart(2,'0')}`;
+                        const isException = window.exceptionDates.includes(dateStr);
+                        const isExtraA = window.extraWorkA.includes(dateStr); const isExtraB = window.extraWorkB.includes(dateStr);
+                        
+                        let extraBadge = '';
+                        if (isExtraA && isExtraB) extraBadge = `<span class="text-xs bg-indigo-500 text-white px-1.5 py-0.5 rounded ml-1">A/B加班</span>`;
+                        else if (isExtraA) extraBadge = `<span class="text-xs bg-indigo-500 text-white px-1.5 py-0.5 rounded ml-1">A車加班</span>`;
+                        else if (isExtraB) extraBadge = `<span class="text-xs bg-indigo-500 text-white px-1.5 py-0.5 rounded ml-1">B車加班</span>`;
+
                         let isToday = new Date().getFullYear() === year && new Date().getMonth() === month && new Date().getDate() === date;
-                        let cellHtml = `<div class="font-bold text-sm mb-1 flex justify-between items-center"><div class="flex items-center"><span class="${isToday ? 'bg-blue-800 text-white rounded-full w-6 h-6 flex items-center justify-center' : 'text-gray-600'}">${date}</span> ${isException ? `<span class="text-xs bg-red-500 text-white px-1.5 py-0.5 rounded ml-1"><i class="fa-solid fa-ban"></i> 停工</span>` : ''}</div></div>`;
+                        let cellHtml = `<div class="font-bold text-sm mb-1 flex justify-between items-center"><div class="flex items-center"><span class="${isToday ? 'bg-blue-800 text-white rounded-full w-6 h-6 flex items-center justify-center' : 'text-gray-600'}">${date}</span> ${isException ? `<span class="text-xs bg-red-500 text-white px-1.5 py-0.5 rounded ml-1"><i class="fa-solid fa-ban"></i> 停工</span>` : ''}${extraBadge}</div></div>`;
                         cellHtml += `<div class="flex flex-col gap-1 overflow-y-auto max-h-24 calendar-scroll pr-1">`;
                         if (eventsMap[date]) {
                             const renderBadges = (evtArray, title) => evtArray.length === 0 ? '' : `<div class="text-[11px] border rounded px-1.5 py-0.5 leading-tight shadow-sm ${evtArray[0].bgClass}"><i class="fa-solid ${evtArray[0].icon}"></i> <span class="font-bold">${title}:</span> ${evtArray.map(e => e.label).join(', ')}</div>`;
@@ -394,7 +442,7 @@
         window.exportCSV = () => {
             let csv = "\uFEFF取樣編號,打設樁號,取樣日期,取樣狀態,實驗室收件,收件狀態,抗壓會驗,結案狀態\n";
             scheduleData.forEach(i => { csv += `${i.id},"${window.pileNumbers[i.id]||''}",${window.toDateString(i.sampleDate)},${window.statusSample[i.id]?'已取樣':'未完成'},${window.toDateString(i.collectDate)},${window.statusLab[i.id]?'已收件':'未完成'},${window.toDateString(i.testDate)},${window.statusTest[i.id]?'已結案':'待辦'}\n`; });
-            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' }); const link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = `預壘樁進度追蹤表_V4.1.csv`; link.click();
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' }); const link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = `預壘樁進度追蹤表_V4.2.csv`; link.click();
         };
         window.showModal = (title, msg, type) => { 
             let iconHtml = type === 'success' ? '<i class="fa-solid fa-circle-check text-green-500"></i>' : (type === 'error' ? '<i class="fa-solid fa-circle-xmark text-red-500"></i>' : '<i class="fa-solid fa-triangle-exclamation text-orange-500"></i>');
