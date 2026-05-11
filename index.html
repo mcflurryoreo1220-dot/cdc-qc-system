@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>衛生福利部防疫中心興建工程 - 試體管制排程系統 V4.4</title>
+    <title>衛生福利部防疫中心興建工程 - 試體管制排程系統 V4.5</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
@@ -36,7 +36,7 @@
                     <i class="fa-solid fa-building-shield text-blue-800"></i>
                     衛生福利部防疫中心興建工程
                 </h1>
-                <p class="text-gray-500 mt-1 text-sm">預壘樁試體管制系統 V4.4 <span class="bg-green-100 text-green-800 px-2 py-0.5 rounded text-xs ml-2 font-bold"><i class="fa-solid fa-file-pen text-green-600"></i> 異常履歷整合版</span></p>
+                <p class="text-gray-500 mt-1 text-sm">預壘樁試體管制系統 V4.5 <span class="bg-green-100 text-green-800 px-2 py-0.5 rounded text-xs ml-2 font-bold"><i class="fa-solid fa-microchip text-green-600"></i> AI 動態預測版</span></p>
             </div>
             <div id="sync-status" class="flex items-center gap-2 px-3 py-1.5 bg-gray-100 rounded-full text-xs md:text-sm font-bold text-gray-500 border border-gray-200">
                 <i class="fa-solid fa-spinner fa-spin"></i> 連線至專屬資料庫...
@@ -69,6 +69,14 @@
                 <div>
                     <div class="flex justify-between text-sm mb-1.5"><span class="font-bold text-green-700 flex items-center gap-1.5"><i class="fa-solid fa-check-double"></i> 4. 抗壓會驗結案率 (T+28 合格)</span><span id="prog-test-text" class="font-bold text-gray-600">0 / 0 (0%)</span></div>
                     <div class="w-full bg-gray-100 rounded-full h-3 shadow-inner"><div id="prog-test-bar" class="bg-gradient-to-r from-green-500 to-green-700 h-3 rounded-full transition-all duration-1000" style="width:0%"></div></div>
+                </div>
+            </div>
+
+            <div id="prediction-banner" class="mt-5 p-3 rounded-lg border border-gray-200 bg-gray-50 flex items-center gap-3 transition-colors duration-500">
+                <div class="bg-white w-8 h-8 flex items-center justify-center rounded-full shadow-sm text-blue-600 shrink-0"><i class="fa-solid fa-robot"></i></div>
+                <div class="text-sm text-gray-700 w-full flex flex-col md:flex-row md:items-center gap-1 md:gap-2">
+                    <span class="font-bold text-blue-900 min-w-max"><i class="fa-solid fa-bolt text-yellow-500"></i> AI 動態推估：</span>
+                    <span id="prediction-text">讀取打設數據中...</span>
                 </div>
             </div>
         </div>
@@ -184,7 +192,7 @@
         window.statusSample = {}; 
         window.statusLab = {};
         window.statusTest = {};
-        window.remarks = {}; // 🔥 V4.4 新增：異常備註資料庫
+        window.remarks = {}; 
         
         const scheduleData = [];
         let currentFilter = 'ALL';
@@ -216,7 +224,7 @@
                                 window.statusSample = data.statusSample || {}; 
                                 window.statusLab = data.statusLab || {}; 
                                 window.statusTest = data.statusTest || data.completionStatus || {}; 
-                                window.remarks = data.remarks || {}; // 🔥 讀取備註
+                                window.remarks = data.remarks || {}; 
                             }
                             window.refreshAll();
                         });
@@ -238,7 +246,7 @@
                         statusSample: window.statusSample, 
                         statusLab: window.statusLab, 
                         statusTest: window.statusTest,
-                        remarks: window.remarks // 🔥 儲存備註
+                        remarks: window.remarks 
                     }, { merge: true });
                 } catch (err) {}
             }
@@ -308,7 +316,6 @@
             window.saveDataToCloud();
         };
 
-        // 🔥 V4.4 新增：更新異常備註功能
         window.updateRemark = (sampleId, val) => {
             const trimmedVal = val.trim();
             if (!trimmedVal) { delete window.remarks[sampleId]; } 
@@ -316,14 +323,25 @@
             window.saveDataToCloud();
         };
 
+        // 🔥 V4.5 更新：整合進度統計與 AI 動態預測
         window.updateDashboard = () => {
             const totalRows = scheduleData.length;
             const usedA = new Set(); const usedB = new Set();
+            const workedDates = new Set(); // 記錄實際有施作的日期
+
             Object.entries(window.pileNumbers).forEach(([id, val]) => {
                 const nums = (val.match(/\d+/g) || []).map(n => parseInt(n, 10));
-                nums.forEach(n => { if (id.startsWith('A')) usedA.add(n); else if (id.startsWith('B')) usedB.add(n); });
+                if (nums.length > 0) {
+                    nums.forEach(n => { if (id.startsWith('A')) usedA.add(n); else if (id.startsWith('B')) usedB.add(n); });
+                    // 找出這個 id 對應的日期
+                    const item = scheduleData.find(s => s.id === id);
+                    if (item) workedDates.add(window.toDateString(item.sampleDate));
+                }
             });
+            
             const countA = usedA.size; const countB = usedB.size; const pilesCount = countA + countB;
+            const workedDays = workedDates.size; // 實際作業天數
+            
             let pilesPct = (pilesCount / TOTAL_PILES_LIMIT) * 100; if(pilesPct > 100) pilesPct = 100;
             
             document.getElementById('prog-piles-text').innerHTML = `
@@ -332,6 +350,42 @@
                 <span class="font-bold text-gray-700">${pilesCount} / ${TOTAL_PILES_LIMIT} (${pilesPct.toFixed(1)}%)</span>
             `;
             document.getElementById('prog-piles-bar').style.width = `${pilesPct}%`;
+
+            // 🔥 AI 預估邏輯
+            const predBanner = document.getElementById('prediction-banner');
+            const predText = document.getElementById('prediction-text');
+            
+            if (pilesCount > 0 && workedDays > 0) {
+                const avgRate = pilesCount / workedDays;
+                const remainingPiles = TOTAL_PILES_LIMIT - pilesCount;
+                const estimatedRemainingDays = Math.ceil(remainingPiles / avgRate);
+
+                // 往後推算日期 (避開休假日與停工日)
+                let simDate = new Date(); // 從今天開始算
+                let addedDays = 0;
+                let loopCount = 0; // 防呆機制
+                
+                while(addedDays < estimatedRemainingDays && loopCount < 1000) {
+                    simDate.setDate(simDate.getDate() + 1);
+                    const dStr = window.toDateString(simDate);
+                    const isSunday = simDate.getDay() === 0;
+                    const isException = window.exceptionDates.includes(dStr);
+                    const isExtraA = window.extraWorkA.includes(dStr);
+                    const isExtraB = window.extraWorkB.includes(dStr);
+                    const isWorkingDay = (!isSunday && !isException) || isExtraA || isExtraB;
+
+                    if (isWorkingDay) addedDays++;
+                    loopCount++;
+                }
+
+                const estDateStr = window.formatMinguo(simDate);
+                
+                predBanner.className = "mt-5 p-3 rounded-lg border border-blue-200 bg-blue-50 flex items-center gap-3 transition-colors duration-500 shadow-sm";
+                predText.innerHTML = `目前實際作業 <span class="font-bold text-blue-700">${workedDays}</span> 天，平均產能 <span class="font-bold text-blue-700">${avgRate.toFixed(1)}</span> 支/日。推估剩餘 <span class="font-bold text-blue-700">${estimatedRemainingDays}</span> 個工作天，預計將於 <span class="font-bold text-red-600 bg-white px-2 py-0.5 rounded border border-red-200">${estDateStr}</span> 全數完工！`;
+            } else {
+                predBanner.className = "mt-5 p-3 rounded-lg border border-gray-200 bg-gray-50 flex items-center gap-3 transition-colors duration-500";
+                predText.innerHTML = "累積樁號數據不足，尚無法進行完工推估。";
+            }
             
             let countSample = 0, countLab = 0, countTest = 0;
             scheduleData.forEach(item => { if(window.statusSample[item.id]) countSample++; if(window.statusLab[item.id]) countLab++; if(window.statusTest[item.id]) countTest++; });
@@ -394,7 +448,6 @@
                 const remarkVal = window.remarks[item.id] || '';
                 const tr = document.createElement('tr'); tr.className = `border-b border-gray-100 row-hover ${isTested ? 'completed-row' : ''}`;
                 
-                // 🔥 V4.4 更新：最後一欄加入備註輸入框
                 tr.innerHTML = `
                     <td class="p-3 font-bold text-blue-900">${item.id}</td>
                     <td class="p-3"><input type="text" class="pile-input" value="${window.pileNumbers[item.id] || ''}" ${isTested ? 'readonly' : ''} onchange="updatePile('${item.id}', this.value)" placeholder="輸入樁號 (例: 12, 13)"></td>
@@ -467,11 +520,10 @@
             }
         };
 
-        // 🔥 V4.4 更新：匯出 CSV 時，同步匯出異常備註欄位
         window.exportCSV = () => {
             let csv = "\uFEFF取樣編號,打設樁號,取樣日期,取樣狀態,實驗室收件,收件狀態,抗壓會驗,結案狀態,異常備註\n";
             scheduleData.forEach(i => { csv += `${i.id},"${window.pileNumbers[i.id]||''}",${window.toDateString(i.sampleDate)},${window.statusSample[i.id]?'已取樣':'未完成'},${window.toDateString(i.collectDate)},${window.statusLab[i.id]?'已收件':'未完成'},${window.toDateString(i.testDate)},${window.statusTest[i.id]?'已結案':'待辦'},"${window.remarks[i.id]||''}"\n`; });
-            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' }); const link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = `預壘樁進度追蹤表_V4.4.csv`; link.click();
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' }); const link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = `預壘樁進度追蹤表_V4.5.csv`; link.click();
         };
         
         window.showModal = (title, msg, type) => { 
