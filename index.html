@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>衛生福利部防疫中心興建工程 - 試體管制排程系統 V4.5</title>
+    <title>衛生福利部防疫中心興建工程 - 試體管制排程系統 V4.6</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
@@ -36,7 +36,7 @@
                     <i class="fa-solid fa-building-shield text-blue-800"></i>
                     衛生福利部防疫中心興建工程
                 </h1>
-                <p class="text-gray-500 mt-1 text-sm">預壘樁試體管制系統 V4.5 <span class="bg-green-100 text-green-800 px-2 py-0.5 rounded text-xs ml-2 font-bold"><i class="fa-solid fa-microchip text-green-600"></i> AI 動態預測版</span></p>
+                <p class="text-gray-500 mt-1 text-sm">預壘樁試體管制系統 V4.6 <span class="bg-green-100 text-green-800 px-2 py-0.5 rounded text-xs ml-2 font-bold"><i class="fa-solid fa-scale-balanced text-green-600"></i> 材料計量防呆檢核版</span></p>
             </div>
             <div id="sync-status" class="flex items-center gap-2 px-3 py-1.5 bg-gray-100 rounded-full text-xs md:text-sm font-bold text-gray-500 border border-gray-200">
                 <i class="fa-solid fa-spinner fa-spin"></i> 連線至專屬資料庫...
@@ -78,6 +78,37 @@
                     <span class="font-bold text-blue-900 min-w-max"><i class="fa-solid fa-bolt text-yellow-500"></i> AI 動態推估：</span>
                     <span id="prediction-text">讀取打設數據中...</span>
                 </div>
+            </div>
+
+            <div class="mt-4 p-4 bg-orange-50 rounded-xl border border-orange-200">
+                <div class="flex items-center gap-2 mb-3">
+                    <i class="fa-solid fa-calculator text-orange-600 text-lg"></i>
+                    <h4 class="font-bold text-orange-900">現場斗仔體積 ⭢ 報表申報防呆計算機</h4>
+                    <span class="text-xs bg-orange-200 text-orange-800 px-2 py-0.5 rounded-full ml-2">品管查核專用</span>
+                </div>
+                <div class="grid grid-cols-2 md:grid-cols-5 gap-3 items-end text-sm">
+                    <div>
+                        <label class="block text-gray-600 font-bold mb-1">砂 (每拌/斗)</label>
+                        <input type="number" id="calc-sand-bucket" class="w-full border-gray-300 rounded px-2 py-1.5 focus:border-orange-500" value="4">
+                    </div>
+                    <div>
+                        <label class="block text-gray-600 font-bold mb-1">水泥 (每拌/斗)</label>
+                        <input type="number" id="calc-cem-bucket" class="w-full border-gray-300 rounded px-2 py-1.5 focus:border-orange-500" value="2">
+                    </div>
+                    <div>
+                        <label class="block text-gray-600 font-bold mb-1">斗仔容積 (公升)</label>
+                        <input type="number" id="calc-vol" class="w-full border-gray-300 rounded px-2 py-1.5 focus:border-orange-500" value="20" title="若使用大桶可自行修改容積">
+                    </div>
+                    <div>
+                        <label class="block text-gray-600 font-bold mb-1">本日總拌合盤數</label>
+                        <input type="number" id="calc-batches" class="w-full border-gray-300 rounded px-2 py-1.5 focus:border-orange-500" value="100">
+                    </div>
+                    <div>
+                        <button onclick="calculateMaterials()" class="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold py-1.5 rounded transition shadow-sm">換算檢核</button>
+                    </div>
+                </div>
+                <div id="calc-result" class="mt-3 p-3 bg-white border border-orange-100 rounded text-gray-700 hidden shadow-inner">
+                    </div>
             </div>
         </div>
 
@@ -323,24 +354,22 @@
             window.saveDataToCloud();
         };
 
-        // 🔥 V4.5 更新：整合進度統計與 AI 動態預測
         window.updateDashboard = () => {
             const totalRows = scheduleData.length;
             const usedA = new Set(); const usedB = new Set();
-            const workedDates = new Set(); // 記錄實際有施作的日期
+            const workedDates = new Set();
 
             Object.entries(window.pileNumbers).forEach(([id, val]) => {
                 const nums = (val.match(/\d+/g) || []).map(n => parseInt(n, 10));
                 if (nums.length > 0) {
                     nums.forEach(n => { if (id.startsWith('A')) usedA.add(n); else if (id.startsWith('B')) usedB.add(n); });
-                    // 找出這個 id 對應的日期
                     const item = scheduleData.find(s => s.id === id);
                     if (item) workedDates.add(window.toDateString(item.sampleDate));
                 }
             });
             
             const countA = usedA.size; const countB = usedB.size; const pilesCount = countA + countB;
-            const workedDays = workedDates.size; // 實際作業天數
+            const workedDays = workedDates.size; 
             
             let pilesPct = (pilesCount / TOTAL_PILES_LIMIT) * 100; if(pilesPct > 100) pilesPct = 100;
             
@@ -351,7 +380,6 @@
             `;
             document.getElementById('prog-piles-bar').style.width = `${pilesPct}%`;
 
-            // 🔥 AI 預估邏輯
             const predBanner = document.getElementById('prediction-banner');
             const predText = document.getElementById('prediction-text');
             
@@ -360,10 +388,9 @@
                 const remainingPiles = TOTAL_PILES_LIMIT - pilesCount;
                 const estimatedRemainingDays = Math.ceil(remainingPiles / avgRate);
 
-                // 往後推算日期 (避開休假日與停工日)
-                let simDate = new Date(); // 從今天開始算
+                let simDate = new Date();
                 let addedDays = 0;
-                let loopCount = 0; // 防呆機制
+                let loopCount = 0; 
                 
                 while(addedDays < estimatedRemainingDays && loopCount < 1000) {
                     simDate.setDate(simDate.getDate() + 1);
@@ -379,7 +406,6 @@
                 }
 
                 const estDateStr = window.formatMinguo(simDate);
-                
                 predBanner.className = "mt-5 p-3 rounded-lg border border-blue-200 bg-blue-50 flex items-center gap-3 transition-colors duration-500 shadow-sm";
                 predText.innerHTML = `目前實際作業 <span class="font-bold text-blue-700">${workedDays}</span> 天，平均產能 <span class="font-bold text-blue-700">${avgRate.toFixed(1)}</span> 支/日。推估剩餘 <span class="font-bold text-blue-700">${estimatedRemainingDays}</span> 個工作天，預計將於 <span class="font-bold text-red-600 bg-white px-2 py-0.5 rounded border border-red-200">${estDateStr}</span> 全數完工！`;
             } else {
@@ -393,6 +419,36 @@
             document.getElementById('prog-sample-text').innerText = `${countSample} / ${totalRows} (${getPct(countSample).toFixed(1)}%)`; document.getElementById('prog-sample-bar').style.width = `${getPct(countSample)}%`;
             document.getElementById('prog-lab-text').innerText = `${countLab} / ${totalRows} (${getPct(countLab).toFixed(1)}%)`; document.getElementById('prog-lab-bar').style.width = `${getPct(countLab)}%`;
             document.getElementById('prog-test-text').innerText = `${countTest} / ${totalRows} (${getPct(countTest).toFixed(1)}%)`; document.getElementById('prog-test-bar').style.width = `${getPct(countTest)}%`;
+        };
+
+        // 🔥 V4.6 新增：現場斗仔體積轉報表噸數換算邏輯
+        window.calculateMaterials = () => {
+            const sb = parseFloat(document.getElementById('calc-sand-bucket').value) || 0;
+            const cb = parseFloat(document.getElementById('calc-cem-bucket').value) || 0;
+            const volL = parseFloat(document.getElementById('calc-vol').value) || 0;
+            const batches = parseFloat(document.getElementById('calc-batches').value) || 0;
+
+            const volM3 = volL / 1000;
+            const totalSandM3 = sb * volM3 * batches;
+            const totalCemM3 = cb * volM3 * batches;
+
+            // 水泥鬆方體積轉重量：實務常見容重約 1.4 t/m³，可視現場水泥性質微調
+            const cementDensity = 1.4;
+            const totalCemTon = totalCemM3 * cementDensity;
+
+            const resDiv = document.getElementById('calc-result');
+            resDiv.innerHTML = `
+                <div class="flex flex-col md:flex-row gap-4 justify-between items-center w-full">
+                    <div class="text-center md:text-left w-full md:w-auto">理論砂用量<br><span class="text-2xl font-bold text-blue-700">${totalSandM3.toFixed(2)}</span> <span class="text-sm text-gray-500">m³</span></div>
+                    <div class="text-gray-300 hidden md:block text-2xl">|</div>
+                    <div class="border-t border-orange-200 w-full my-2 md:hidden"></div>
+                    <div class="text-center md:text-left w-full md:w-auto">理論水泥用量<br><span class="text-2xl font-bold text-gray-800">${totalCemTon.toFixed(2)}</span> <span class="text-sm text-gray-500">噸</span> <span class="text-xs text-gray-400 block mt-1">(以體積轉換容重1.4推算)</span></div>
+                    <div class="text-gray-300 hidden md:block text-2xl">|</div>
+                    <div class="border-t border-orange-200 w-full my-2 md:hidden"></div>
+                    <div class="w-full md:w-auto text-center"><span class="text-xs text-red-600 font-bold bg-red-50 px-3 py-2 rounded-lg border border-red-100 flex items-center justify-center gap-1.5"><i class="fa-solid fa-triangle-exclamation"></i> 請與施工報表比對查核</span></div>
+                </div>
+            `;
+            resDiv.classList.remove('hidden');
         };
 
         window.addExceptionDate = () => { const input = document.getElementById('exception-date-input'); const val = input.value; if (val && !window.exceptionDates.includes(val)) { window.exceptionDates.push(val); window.exceptionDates.sort(); window.saveDataToCloud(); input.value = ""; } };
@@ -523,7 +579,7 @@
         window.exportCSV = () => {
             let csv = "\uFEFF取樣編號,打設樁號,取樣日期,取樣狀態,實驗室收件,收件狀態,抗壓會驗,結案狀態,異常備註\n";
             scheduleData.forEach(i => { csv += `${i.id},"${window.pileNumbers[i.id]||''}",${window.toDateString(i.sampleDate)},${window.statusSample[i.id]?'已取樣':'未完成'},${window.toDateString(i.collectDate)},${window.statusLab[i.id]?'已收件':'未完成'},${window.toDateString(i.testDate)},${window.statusTest[i.id]?'已結案':'待辦'},"${window.remarks[i.id]||''}"\n`; });
-            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' }); const link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = `預壘樁進度追蹤表_V4.5.csv`; link.click();
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' }); const link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = `預壘樁進度追蹤表_V4.6.csv`; link.click();
         };
         
         window.showModal = (title, msg, type) => { 
