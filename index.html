@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>衛生福利部防疫中心興建工程 - 試體管制排程系統 V4.9</title>
+    <title>衛生福利部防疫中心興建工程 - 試體管制排程系統 V5.0</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
@@ -14,10 +14,9 @@
         .completed-row { background-color: #f1f5f9 !important; color: #94a3b8 !important; }
         .completed-row td { border-color: #e2e8f0; }
         .completed-row textarea { background-color: #f8fafc !important; color: #94a3b8 !important; cursor: not-allowed; border-style: dashed !important; }
-        .calendar-scroll::-webkit-scrollbar { width: 4px; }
-        .calendar-scroll::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 4px; }
+        .calendar-scroll::-webkit-scrollbar, .matrix-scroll::-webkit-scrollbar { width: 6px; }
+        .calendar-scroll::-webkit-scrollbar-thumb, .matrix-scroll::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 4px; }
         
-        /* 🔥 V4.9 優化：改為多行文字框，加寬並允許垂直拉伸 */
         .pile-input { border: 1px solid #cbd5e1; border-radius: 4px; padding: 6px 8px; width: 100%; min-width: 350px; font-size: 0.875rem; text-align: left; transition: all 0.2s; background: white; resize: vertical; line-height: 1.4; }
         .pile-input:focus { border-color: #2563eb; outline: none; box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2); }
         .remark-input { border: 1px solid #cbd5e1; border-radius: 4px; padding: 6px 8px; width: 100%; min-width: 250px; font-size: 0.875rem; text-align: left; transition: all 0.2s; background: white; resize: vertical; line-height: 1.4; }
@@ -28,6 +27,13 @@
         .cb-lab { accent-color: #f59e0b; }    
         .cb-test { accent-color: #16a34a; }   
         .text-dimmed { color: #94a3b8; text-decoration: line-through; }
+        
+        /* 矩陣方塊樣式 */
+        .matrix-box { width: 42px; height: 42px; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: bold; border-radius: 6px; transition: all 0.2s; cursor: default; }
+        .box-missing { background-color: #f1f5f9; color: #94a3b8; border: 1px solid #e2e8f0; }
+        .box-ok { background-color: #dbeafe; color: #1e40af; border: 1px solid #bfdbfe; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+        .box-error { background-color: #fee2e2; color: #b91c1c; border: 2px solid #f87171; box-shadow: 0 0 8px rgba(248, 113, 113, 0.6); animation: pulse-border 2s infinite; }
+        @keyframes pulse-border { 0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); } 70% { box-shadow: 0 0 0 6px rgba(239, 68, 68, 0); } 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } }
     </style>
 </head>
 <body class="p-2 md:p-6">
@@ -39,7 +45,7 @@
                     <i class="fa-solid fa-building-shield text-blue-800"></i>
                     衛生福利部防疫中心興建工程
                 </h1>
-                <p class="text-gray-500 mt-1 text-sm">預壘樁試體管制系統 V4.9 <span class="bg-green-100 text-green-800 px-2 py-0.5 rounded text-xs ml-2 font-bold"><i class="fa-solid fa-expand text-green-600"></i> 欄寬優化多行版</span></p>
+                <p class="text-gray-500 mt-1 text-sm">預壘樁試體管制系統 V5.0 <span class="bg-purple-100 text-purple-800 px-2 py-0.5 rounded text-xs ml-2 font-bold"><i class="fa-solid fa-border-all text-purple-600"></i> 樁號防呆矩陣雷達版</span></p>
             </div>
             <div id="sync-status" class="flex items-center gap-2 px-3 py-1.5 bg-gray-100 rounded-full text-xs md:text-sm font-bold text-gray-500 border border-gray-200">
                 <i class="fa-solid fa-spinner fa-spin"></i> 連線至專屬資料庫...
@@ -112,7 +118,8 @@
                     <button onclick="filterData('B')" id="btn-B" class="px-3 py-1.5 rounded-lg text-sm font-medium bg-gray-200 text-gray-700 hover:bg-gray-300 transition">B 車</button>
                 </div>
                 <div class="flex gap-2">
-                    <button onclick="openReconModal()" class="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-sm font-medium shadow transition flex items-center gap-2 whitespace-nowrap"><i class="fa-solid fa-scale-unbalanced"></i> 數量閉合核對</button>
+                    <button onclick="openMatrixModal()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-medium shadow transition flex items-center gap-2 whitespace-nowrap"><i class="fa-solid fa-border-all"></i> 防呆矩陣圖</button>
+                    <button onclick="openReconModal()" class="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-sm font-medium shadow transition flex items-center gap-2 whitespace-nowrap"><i class="fa-solid fa-scale-unbalanced"></i> 日報勾稽表</button>
                     <button onclick="exportCSV()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm font-medium shadow transition flex items-center gap-2 whitespace-nowrap"><i class="fa-solid fa-file-csv"></i> 匯出 CSV</button>
                 </div>
             </div>
@@ -181,16 +188,44 @@
                             <th class="p-3 border-b text-blue-700 font-bold text-center">A車(系統)</th>
                             <th class="p-3 border-b text-indigo-700 font-bold text-center">B車(系統)</th>
                             <th class="p-3 border-b text-gray-900 font-bold text-center text-lg">系統總計</th>
-                            <th class="p-3 border-b text-orange-700 font-bold text-center">施工組報表數量 <i class="fa-solid fa-pen text-xs"></i></th>
-                            <th class="p-3 border-b text-center font-bold">勾稽狀態</th>
+                            <th class="p-3 border-b text-orange-700 font-bold text-center">施工組日報 <i class="fa-solid fa-pen text-xs"></i></th>
+                            <th class="p-3 border-b text-center font-bold">狀態</th>
                         </tr>
                     </thead>
                     <tbody id="recon-body" class="text-sm"></tbody>
                 </table>
             </div>
-            <div class="p-4 border-t border-gray-200 bg-gray-50 flex justify-between items-center">
-                <span class="text-xs text-gray-500"><i class="fa-solid fa-circle-info text-purple-500"></i> 系統會自動加總您在主畫面填寫的樁號數量</span>
+            <div class="p-4 border-t border-gray-200 bg-gray-50 flex justify-end items-center">
                 <button onclick="closeReconModal()" class="px-5 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg font-medium shadow transition">完成關閉</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="matrix-modal" class="fixed inset-0 z-[100] flex items-center justify-center hidden bg-black/60 backdrop-blur-sm transition-opacity">
+        <div class="bg-white rounded-xl shadow-2xl max-w-5xl w-full mx-4 overflow-hidden flex flex-col max-h-[95vh]">
+            <div class="p-4 border-b border-gray-200 flex justify-between items-center bg-indigo-50">
+                <h3 class="text-lg font-bold text-indigo-900 flex items-center gap-2"><i class="fa-solid fa-border-all"></i> 全區 613 支樁號防呆矩陣圖</h3>
+                <button onclick="closeMatrixModal()" class="text-gray-500 hover:text-red-500 transition"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            
+            <div class="p-4 bg-white border-b border-gray-100 flex flex-wrap gap-4 items-center justify-between shadow-sm z-10">
+                <div class="flex gap-4 text-sm font-bold">
+                    <div class="flex items-center gap-2"><span class="w-4 h-4 block rounded bg-[#f1f5f9] border border-[#e2e8f0]"></span> <span class="text-gray-600">未登錄 (<span id="matrix-count-missing">0</span>)</span></div>
+                    <div class="flex items-center gap-2"><span class="w-4 h-4 block rounded bg-[#dbeafe] border border-[#bfdbfe]"></span> <span class="text-blue-700">已登錄 (<span id="matrix-count-ok">0</span>)</span></div>
+                    <div class="flex items-center gap-2"><span class="w-4 h-4 block rounded bg-[#fee2e2] border-2 border-[#f87171] shadow-[0_0_5px_rgba(248,113,113,0.5)]"></span> <span class="text-red-600">重複異常 (<span id="matrix-count-error">0</span>)</span></div>
+                </div>
+                <div id="matrix-error-msg" class="text-sm font-bold text-red-600 hidden animate-pulse">
+                    <i class="fa-solid fa-triangle-exclamation"></i> 發現重複登錄樁號，請查核！
+                </div>
+            </div>
+
+            <div class="p-4 overflow-y-auto flex-1 bg-gray-50 matrix-scroll">
+                <div id="matrix-container" class="flex flex-wrap gap-1.5 justify-center md:justify-start">
+                    </div>
+            </div>
+            
+            <div class="p-4 border-t border-gray-200 bg-white flex justify-end items-center">
+                <button onclick="closeMatrixModal()" class="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-medium shadow transition">關閉雷達</button>
             </div>
         </div>
     </div>
@@ -210,8 +245,7 @@
             measurementId: "G-X61VRPB96K"
         };
 
-        window.exceptionDates = []; 
-        window.extraWorkA = []; window.extraWorkB = []; 
+        window.exceptionDates = []; window.extraWorkA = []; window.extraWorkB = []; 
         window.pileNumbers = {}; window.statusSample = {}; window.statusLab = {}; window.statusTest = {}; window.remarks = {}; 
         window.contractorReports = {}; 
 
@@ -253,6 +287,69 @@
         window.formatMinguo = (d) => { const y=d.getFullYear()-1911; const m=String(d.getMonth()+1).padStart(2,'0'); const dt=String(d.getDate()).padStart(2,'0'); const day=["日","一","二","三","四","五","六"][d.getDay()]; return `${y}/${m}/${dt}(${day})`; };
         const addDays = (d, days) => { let r=new Date(d); r.setDate(r.getDate()+days); return r; };
 
+        // 🔥 V5.0 核心：生成防呆矩陣雷達
+        window.openMatrixModal = () => {
+            window.renderMatrixGrid();
+            document.getElementById('matrix-modal').classList.remove('hidden');
+        };
+        window.closeMatrixModal = () => {
+            document.getElementById('matrix-modal').classList.add('hidden');
+        };
+
+        window.renderMatrixGrid = () => {
+            // 初始化計數器
+            const counts = new Array(TOTAL_PILES_LIMIT + 1).fill(0);
+            
+            // 掃描全部已輸入的樁號
+            Object.values(window.pileNumbers).forEach(val => {
+                const nums = (val.match(/\d+/g) || []).map(n => parseInt(n, 10));
+                nums.forEach(n => {
+                    if (n >= 1 && n <= TOTAL_PILES_LIMIT) {
+                        counts[n]++;
+                    }
+                });
+            });
+
+            const container = document.getElementById('matrix-container');
+            container.innerHTML = '';
+            
+            let statMissing = 0, statOk = 0, statError = 0;
+
+            for (let i = 1; i <= TOTAL_PILES_LIMIT; i++) {
+                const box = document.createElement('div');
+                let statusClass = '';
+                
+                if (counts[i] === 0) {
+                    statusClass = 'box-missing';
+                    statMissing++;
+                } else if (counts[i] === 1) {
+                    statusClass = 'box-ok';
+                    statOk++;
+                } else {
+                    statusClass = 'box-error';
+                    statError++;
+                    box.title = `警告：第 ${i} 號樁被重複登錄了 ${counts[i]} 次！`;
+                }
+
+                box.className = `matrix-box ${statusClass}`;
+                box.innerText = i;
+                container.appendChild(box);
+            }
+
+            // 更新統計數字與警告訊息
+            document.getElementById('matrix-count-missing').innerText = statMissing;
+            document.getElementById('matrix-count-ok').innerText = statOk;
+            document.getElementById('matrix-count-error').innerText = statError;
+
+            const errorMsg = document.getElementById('matrix-error-msg');
+            if (statError > 0) {
+                errorMsg.classList.remove('hidden');
+            } else {
+                errorMsg.classList.add('hidden');
+            }
+        };
+
+        // 數量勾稽邏輯
         window.openReconModal = () => { window.renderReconTable(); document.getElementById('recon-modal').classList.remove('hidden'); };
         window.closeReconModal = () => { document.getElementById('recon-modal').classList.add('hidden'); };
 
@@ -283,17 +380,16 @@
             sortedDates.forEach(dStr => {
                 const stat = dailyStats[dStr]; const minguo = window.formatMinguo(stat.dateObj);
                 const reportVal = window.contractorReports[dStr] !== undefined ? window.contractorReports[dStr] : '';
-                let statusHtml = '<span class="text-gray-400 font-bold">- 待填報表 -</span>'; let rowBg = '';
-                
+                let statusHtml = '<span class="text-gray-400 font-bold">- 待填報 -</span>'; let rowBg = '';
                 if (reportVal !== '') {
                     const rNum = parseInt(reportVal, 10);
-                    if (rNum === stat.total) { statusHtml = '<span class="bg-green-100 text-green-700 px-3 py-1 rounded-full font-bold shadow-sm"><i class="fa-solid fa-check"></i> 數量閉合</span>'; } 
+                    if (rNum === stat.total) { statusHtml = '<span class="bg-green-100 text-green-700 px-3 py-1 rounded-full font-bold shadow-sm"><i class="fa-solid fa-check"></i> 閉合</span>'; } 
                     else {
                         const diff = rNum - stat.total; const diffText = diff > 0 ? `多報 ${diff} 支` : `少報 ${Math.abs(diff)} 支`;
                         statusHtml = `<span class="bg-red-100 text-red-700 px-3 py-1 rounded-full font-bold shadow-sm animate-pulse"><i class="fa-solid fa-xmark"></i> ${diffText}</span>`; rowBg = 'bg-red-50/40';
                     }
                 }
-                tbody.innerHTML += `<tr class="border-b border-gray-200 hover:bg-gray-50 transition ${rowBg}"><td class="p-3 font-bold text-gray-700">${minguo}</td><td class="p-3 text-blue-700 text-center font-bold bg-blue-50/30">${stat.A > 0 ? stat.A : '-'}</td><td class="p-3 text-indigo-700 text-center font-bold bg-indigo-50/30">${stat.B > 0 ? stat.B : '-'}</td><td class="p-3 font-black text-xl text-gray-900 text-center bg-gray-100/50">${stat.total}</td><td class="p-3 text-center"><input type="number" class="border-2 border-orange-300 rounded-lg px-2 py-1.5 w-24 focus:border-orange-500 focus:outline-none text-center font-bold text-orange-700 shadow-inner" value="${reportVal}" onchange="updateContractorReport('${dStr}', this.value)" placeholder="?"></td><td class="p-3 text-center">${statusHtml}</td></tr>`;
+                tbody.innerHTML += `<tr class="border-b border-gray-200 hover:bg-gray-50 transition ${rowBg}"><td class="p-3 font-bold text-gray-700">${minguo}</td><td class="p-3 text-blue-700 text-center font-bold bg-blue-50/30">${stat.A > 0 ? stat.A : '-'}</td><td class="p-3 text-indigo-700 text-center font-bold bg-indigo-50/30">${stat.B > 0 ? stat.B : '-'}</td><td class="p-3 font-black text-xl text-gray-900 text-center bg-gray-100/50">${stat.total}</td><td class="p-3 text-center"><input type="number" class="border-2 border-orange-300 rounded-lg px-2 py-1 w-20 focus:border-orange-500 focus:outline-none text-center font-bold text-orange-700 shadow-inner" value="${reportVal}" onchange="updateContractorReport('${dStr}', this.value)" placeholder="?"></td><td class="p-3 text-center">${statusHtml}</td></tr>`;
             });
         };
 
@@ -325,8 +421,17 @@
             resDiv.classList.remove('hidden');
         };
 
+        // 放寬「樁號重複」的防呆限制，改由矩陣圖處理
         window.toggleStatus = (sampleId, type) => { if (type === 'sample') window.statusSample[sampleId] = !window.statusSample[sampleId]; if (type === 'lab') window.statusLab[sampleId] = !window.statusLab[sampleId]; if (type === 'test') window.statusTest[sampleId] = !window.statusTest[sampleId]; window.saveDataToCloud(); window.refreshAll(); };
-        window.updatePile = (sampleId, val) => { const trimmedVal = val.trim(); if (!trimmedVal) { delete window.pileNumbers[sampleId]; } else { window.pileNumbers[sampleId] = trimmedVal; } window.saveDataToCloud(); };
+        window.updatePile = (sampleId, val) => { 
+            const trimmedVal = val.trim(); 
+            if (!trimmedVal) { delete window.pileNumbers[sampleId]; } else { window.pileNumbers[sampleId] = trimmedVal; } 
+            window.saveDataToCloud(); 
+            // 只要有改樁號，若矩陣開著就即時更新
+            if (!document.getElementById('matrix-modal').classList.contains('hidden')) window.renderMatrixGrid();
+            if (!document.getElementById('recon-modal').classList.contains('hidden')) window.renderReconTable();
+            window.updateDashboard();
+        };
         window.updateRemark = (sampleId, val) => { const trimmedVal = val.trim(); if (!trimmedVal) { delete window.remarks[sampleId]; } else { window.remarks[sampleId] = trimmedVal; } window.saveDataToCloud(); };
 
         window.updateDashboard = () => {
@@ -350,4 +455,104 @@
             document.getElementById('prog-test-text').innerText = `${cT} / ${scheduleData.length} (${getP(cT).toFixed(1)}%)`; document.getElementById('prog-test-bar').style.width = `${getP(cT)}%`;
         };
 
-        window.addExceptionDate = ()
+        window.addExceptionDate = () => { const input = document.getElementById('exception-date-input'); const val = input.value; if (val && !window.exceptionDates.includes(val)) { window.exceptionDates.push(val); window.exceptionDates.sort(); window.saveDataToCloud(); input.value = ""; } };
+        window.removeExceptionDate = (val) => { window.exceptionDates = window.exceptionDates.filter(d => d !== val); window.saveDataToCloud(); };
+        window.addExtraDate = () => { const machine = document.getElementById('extra-machine').value; const input = document.getElementById('extra-date-input'); const val = input.value; if (val) { if (machine === 'A' && !window.extraWorkA.includes(val)) window.extraWorkA.push(val); if (machine === 'B' && !window.extraWorkB.includes(val)) window.extraWorkB.push(val); window.saveDataToCloud(); input.value = ""; } };
+        window.removeExtraDate = (m, val) => { if (m === 'A') window.extraWorkA = window.extraWorkA.filter(d => d !== val); if (m === 'B') window.extraWorkB = window.extraWorkB.filter(d => d !== val); window.saveDataToCloud(); };
+
+        window.updateExtraUI = () => {
+            const expContainer = document.getElementById('exception-list'); expContainer.innerHTML = ""; window.exceptionDates.forEach(val => { const parts = val.split('-'); const minguo = `${parseInt(parts[0])-1911}/${parts[1]}/${parts[2]}`; const tag = document.createElement('span'); tag.className = "bg-white text-red-700 px-2 py-0.5 rounded text-xs flex items-center gap-1 border border-red-200"; tag.innerHTML = `${minguo} <i class="fa-solid fa-xmark cursor-pointer" onclick="removeExceptionDate('${val}')"></i>`; expContainer.appendChild(tag); });
+            const extraContainer = document.getElementById('extra-list'); extraContainer.innerHTML = "";
+            const renderTag = (m, val) => { const parts = val.split('-'); const minguo = `${parseInt(parts[0])-1911}/${parts[1]}/${parts[2]}`; const tag = document.createElement('span'); tag.className = "bg-white text-indigo-700 px-2 py-0.5 rounded text-xs flex items-center gap-1 border border-indigo-200"; tag.innerHTML = `${m}車: ${minguo} <i class="fa-solid fa-xmark cursor-pointer" onclick="removeExtraDate('${m}', '${val}')"></i>`; extraContainer.appendChild(tag); };
+            window.extraWorkA.forEach(val => renderTag('A', val)); window.extraWorkB.forEach(val => renderTag('B', val));
+        };
+
+        window.refreshAll = () => { window.generateSchedule(); window.renderTable(currentFilter); window.updateExtraUI(); window.updateDashboard(); if (currentView === 'calendar') window.renderCalendar(); if (!document.getElementById('recon-modal').classList.contains('hidden')) window.renderReconTable(); if (!document.getElementById('matrix-modal').classList.contains('hidden')) window.renderMatrixGrid(); };
+
+        window.generateSchedule = () => {
+            scheduleData.length = 0; const startDateA = new Date(2026, 4, 5); const startDateB = new Date(2026, 4, 9); const endDate = new Date(2026, 6, 30); let cA = 1, cB = 1;
+            for (let d = new Date(startDateA); d <= endDate; d.setDate(d.getDate() + 1)) {
+                const dStr = window.toDateString(d); const isSun = d.getDay() === 0; const isEx = window.exceptionDates.includes(dStr);
+                const makeR = (m, c, t) => {
+                    let dem = addDays(t, 1); if (dem.getDay() === 0) dem = addDays(dem, 1);
+                    let col = new Date(dem); while (col.getDay() !== 2 && col.getDay() !== 5) col = addDays(col, 1);
+                    let tes = addDays(t, 28); if (tes.getDay() === 6) tes = addDays(tes, 2); else if (tes.getDay() === 0) tes = addDays(tes, 1);
+                    return { id: `${m}${c}`, machine: m, sampleDate: new Date(t), demoldDate: dem, collectDate: col, testDate: tes };
+                };
+                if (d >= startDateA) { if ((!isSun && !isEx) || window.extraWorkA.includes(dStr)) scheduleData.push(makeR('A', cA++, new Date(d))); }
+                if (d >= startDateB) { if ((!isSun && !isEx) || window.extraWorkB.includes(dStr)) scheduleData.push(makeR('B', cB++, new Date(d))); }
+            }
+        };
+
+        window.renderTable = (filter) => {
+            const tbody = document.getElementById('schedule-body'); tbody.innerHTML = '';
+            scheduleData.filter(i => filter === 'ALL' || i.machine === filter).forEach(item => {
+                const isS = window.statusSample[item.id], isL = window.statusLab[item.id], isT = window.statusTest[item.id];
+                const tr = document.createElement('tr'); tr.className = `border-b border-gray-100 row-hover ${isT ? 'completed-row' : ''}`;
+                tr.innerHTML = `<td class="p-3 font-bold text-blue-900">${item.id}</td><td class="p-3"><textarea class="pile-input" rows="2" ${isT ? 'readonly' : ''} onchange="updatePile('${item.id}', this.value)" placeholder="輸入樁號 (例: 12, 13)">${window.pileNumbers[item.id] || ''}</textarea></td><td class="p-3"><label class="flex items-center gap-2"><input type="checkbox" class="status-checkbox cb-sample" ${isS?'checked':''} ${isT?'disabled':''} onclick="toggleStatus('${item.id}', 'sample')"><span class="${isS?'text-dimmed':''}">${window.formatMinguo(item.sampleDate)}</span></label></td><td class="p-3 text-gray-500">${window.formatMinguo(item.demoldDate)}</td><td class="p-3"><label class="flex items-center gap-2"><input type="checkbox" class="status-checkbox cb-lab" ${isL?'checked':''} ${isT?'disabled':''} onclick="toggleStatus('${item.id}', 'lab')"><span class="${isL?'text-dimmed':''}">${window.formatMinguo(item.collectDate)}</span></label></td><td class="p-3"><label class="flex items-center gap-2"><input type="checkbox" class="status-checkbox cb-test" ${isT?'checked':''} onclick="toggleStatus('${item.id}', 'test')"><span class="font-bold ${isT?'text-dimmed':'text-red-600'}">${window.formatMinguo(item.testDate)}</span></label></td><td class="p-3"><div class="flex flex-col gap-1.5"><textarea class="remark-input" rows="2" ${isT?'readonly':''} onchange="updateRemark('${item.id}', this.value)" placeholder="異常註記">${window.remarks[item.id]||''}</textarea></div></td>`;
+                tbody.appendChild(tr);
+            });
+        };
+
+        window.toggleView = (v) => { currentView = v; document.getElementById('table-view').classList.toggle('hidden', v !== 'table'); document.getElementById('calendar-view').classList.toggle('hidden', v !== 'calendar'); if(v === 'calendar') window.renderCalendar(); };
+        window.changeMonth = (o) => { currentCalDate.setMonth(currentCalDate.getMonth() + o); window.renderCalendar(); };
+        window.renderCalendar = () => { 
+            const year = currentCalDate.getFullYear(), month = currentCalDate.getMonth();
+            document.getElementById('calendar-title').innerText = `民國 ${year-1911} 年 ${month+1} 月`;
+            const eventsMap = {};
+            const addEvent = (date, type, label, bgClass, icon) => {
+                if (date.getFullYear() !== year || date.getMonth() !== month) return;
+                const d = date.getDate(); if (!eventsMap[d]) eventsMap[d] = { sample: [], demold: [], collect: [], test: [] };
+                eventsMap[d][type].push({ label, bgClass, icon });
+            };
+            scheduleData.filter(item => currentFilter === 'ALL' || item.machine === currentFilter).forEach(item => {
+                const isS = window.statusSample[item.id], isL = window.statusLab[item.id], isT = window.statusTest[item.id];
+                const pNums = window.pileNumbers[item.id]; const displayLabel = pNums ? `${item.id} (樁:${pNums})` : item.id;
+                addEvent(item.sampleDate, 'sample', displayLabel, isS ? 'bg-indigo-100 text-indigo-800 border-indigo-300' : 'bg-white text-indigo-600 border-indigo-300', isS ? 'fa-check' : 'fa-trowel-bricks');
+                addEvent(item.demoldDate, 'demold', displayLabel, 'bg-gray-100 text-gray-600 border-gray-200', 'fa-hammer');
+                addEvent(item.collectDate, 'collect', displayLabel, isL ? 'bg-amber-100 text-amber-800 border-amber-300' : 'bg-white text-amber-600 border-amber-300', isL ? 'fa-check' : 'fa-truck-fast');
+                addEvent(item.testDate, 'test', displayLabel, isT ? 'bg-green-100 text-green-800 border-green-400' : 'bg-white text-red-600 border-red-300 font-bold', isT ? 'fa-check-double' : 'fa-gavel');
+            });
+            const firstDay = new Date(year, month, 1).getDay(), daysInMonth = new Date(year, month + 1, 0).getDate();
+            const tbody = document.getElementById('calendar-body'); tbody.innerHTML = '';
+            let date = 1;
+            for (let i = 0; i < 6; i++) {
+                const row = document.createElement('tr');
+                for (let j = 0; j < 7; j++) {
+                    const cell = document.createElement('td'); cell.className = 'border border-gray-200 p-1 md:p-2 align-top h-32 bg-white';
+                    if (j === 0 || j === 6) cell.classList.add('bg-orange-50');
+                    if (i === 0 && j < firstDay || date > daysInMonth) { cell.innerHTML = ''; } else {
+                        const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(date).padStart(2,'0')}`;
+                        const isException = window.exceptionDates.includes(dateStr);
+                        const isExtraA = window.extraWorkA.includes(dateStr); const isExtraB = window.extraWorkB.includes(dateStr);
+                        let extraBadge = '';
+                        if (isExtraA && isExtraB) extraBadge = `<span class="text-xs bg-indigo-500 text-white px-1.5 py-0.5 rounded ml-1">A/B加班</span>`;
+                        else if (isExtraA) extraBadge = `<span class="text-xs bg-indigo-500 text-white px-1.5 py-0.5 rounded ml-1">A車加班</span>`;
+                        else if (isExtraB) extraBadge = `<span class="text-xs bg-indigo-500 text-white px-1.5 py-0.5 rounded ml-1">B車加班</span>`;
+                        let isToday = new Date().getFullYear() === year && new Date().getMonth() === month && new Date().getDate() === date;
+                        let cellHtml = `<div class="font-bold text-sm mb-1 flex justify-between items-center"><div class="flex items-center"><span class="${isToday ? 'bg-blue-800 text-white rounded-full w-6 h-6 flex items-center justify-center' : 'text-gray-600'}">${date}</span> ${isException ? `<span class="text-xs bg-red-500 text-white px-1.5 py-0.5 rounded ml-1"><i class="fa-solid fa-ban"></i> 停工</span>` : ''}${extraBadge}</div></div>`;
+                        cellHtml += `<div class="flex flex-col gap-1 overflow-y-auto max-h-24 calendar-scroll pr-1">`;
+                        if (eventsMap[date]) {
+                            const renderBadges = (evtArray, title) => evtArray.length === 0 ? '' : `<div class="text-[11px] border rounded px-1.5 py-0.5 leading-tight shadow-sm ${evtArray[0].bgClass}"><i class="fa-solid ${evtArray[0].icon}"></i> <span class="font-bold">${title}:</span> ${evtArray.map(e => e.label).join(', ')}</div>`;
+                            cellHtml += renderBadges(eventsMap[date].sample, '取樣') + renderBadges(eventsMap[date].demold, '拆模') + renderBadges(eventsMap[date].collect, '收件') + renderBadges(eventsMap[date].test, '壓測');
+                        }
+                        cellHtml += `</div>`; if (isException) cell.classList.add('bg-red-50'); cell.innerHTML = cellHtml; date++;
+                    }
+                    row.appendChild(cell);
+                }
+                tbody.appendChild(row); if (date > daysInMonth) break;
+            }
+         };
+        window.exportCSV = () => {
+            let csv = "\uFEFF取樣編號,打設樁號,取樣日期,取樣狀態,實驗室收件,收件狀態,抗壓會驗,結案狀態,異常備註\n";
+            scheduleData.forEach(i => { csv += `${i.id},"${window.pileNumbers[i.id]||''}",${window.toDateString(i.sampleDate)},${window.statusSample[i.id]?'已取樣':'未完成'},${window.toDateString(i.collectDate)},${window.statusLab[i.id]?'已收件':'未完成'},${window.toDateString(i.testDate)},${window.statusTest[i.id]?'已結案':'待辦'},"${window.remarks[i.id]||''}"\n`; });
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' }); const link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = `預壘樁進度追蹤表_V5.0.csv`; link.click();
+        };
+        window.showModal = (title, msg, type) => { let icon = type === 'success' ? 'fa-circle-check text-green-500' : 'fa-circle-xmark text-red-500'; document.getElementById('custom-modal-header').innerHTML = `<i class="fa-solid ${icon}"></i> ${title}`; document.getElementById('custom-modal-message').innerText = msg; document.getElementById('custom-modal').classList.remove('hidden'); };
+        window.closeModal = () => document.getElementById('custom-modal').classList.add('hidden');
+        window.filterData = (f) => { currentFilter = f; window.renderTable(f); if(currentView==='calendar') window.renderCalendar(); };
+
+        initFirebase();
+    </script>
+</body>
+</html>
