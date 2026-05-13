@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>衛生福利部防疫中心興建工程 - 試體管制排程系統 V6.0</title>
+    <title>衛生福利部防疫中心興建工程 - 試體管制排程系統 V6.1</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
@@ -17,9 +17,10 @@
         .calendar-scroll::-webkit-scrollbar, .matrix-scroll::-webkit-scrollbar { width: 6px; }
         .calendar-scroll::-webkit-scrollbar-thumb, .matrix-scroll::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 4px; }
         
-        .pile-input { border: 1px solid #cbd5e1; border-radius: 4px; padding: 6px 8px; width: 100%; min-width: 180px; font-size: 0.875rem; text-align: left; transition: all 0.2s; background: white; resize: vertical; line-height: 1.4; }
+        /* 🔥 V6.1 鎖定欄寬與取消拉伸，保持版面完美 */
+        .pile-input { border: 1px solid #cbd5e1; border-radius: 4px; padding: 6px 8px; width: 100%; min-width: 180px; font-size: 0.875rem; text-align: left; transition: all 0.2s; background: white; resize: none; line-height: 1.4; overflow-y: auto; }
         .pile-input:focus { border-color: #2563eb; outline: none; box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2); }
-        .remark-input { border: 1px solid #cbd5e1; border-radius: 4px; padding: 6px 8px; width: 100%; min-width: 120px; font-size: 0.875rem; text-align: left; transition: all 0.2s; background: white; resize: vertical; line-height: 1.4; }
+        .remark-input { border: 1px solid #cbd5e1; border-radius: 4px; padding: 6px 8px; width: 100%; min-width: 120px; font-size: 0.875rem; text-align: left; transition: all 0.2s; background: white; resize: none; line-height: 1.4; overflow-y: auto; }
         .remark-input:focus { border-color: #ef4444; outline: none; box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.2); }
         
         .status-checkbox { width: 1.15rem; height: 1.15rem; cursor: pointer; flex-shrink: 0; }
@@ -44,7 +45,7 @@
                     <i class="fa-solid fa-building-shield text-blue-800"></i>
                     衛生福利部防疫中心興建工程
                 </h1>
-                <p class="text-gray-500 mt-1 text-sm">預壘樁試體管制系統 V6.0 <span class="bg-cyan-100 text-cyan-800 px-2 py-0.5 rounded text-xs ml-2 font-bold"><i class="fa-solid fa-cloud-arrow-down text-cyan-600"></i> 施工日報全自動連動版</span></p>
+                <p class="text-gray-500 mt-1 text-sm">預壘樁試體管制系統 V6.1 <span class="bg-blue-100 text-blue-800 px-2 py-0.5 rounded text-xs ml-2 font-bold"><i class="fa-solid fa-lock text-blue-600"></i> 版面鎖定優化版</span></p>
             </div>
             <div id="sync-status" class="flex items-center gap-2 px-3 py-1.5 bg-gray-100 rounded-full text-xs md:text-sm font-bold text-gray-500 border border-gray-200">
                 <i class="fa-solid fa-spinner fa-spin"></i> 連線至專屬資料庫...
@@ -256,7 +257,6 @@
 
         const MAKE_WEBHOOK_URL = "https://hook.us2.make.com/3e3bd4bob7ptalfemcn6q982tyc0tjil";
         
-        // 🔥 V6.0 施工組日報的黃金通道 (CSV 連結)
         const CONTRACTOR_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQeDEcb4ErD1XpPyx4s2kEVCToYMtqfsFMW2J2_5l5xUS23xEMgueri4OND67Mo8NS1O6oDNV3IRPST/pub?output=csv";
 
         const initFirebase = async () => {
@@ -292,7 +292,6 @@
         window.formatMinguo = (d) => { const y=d.getFullYear()-1911; const m=String(d.getMonth()+1).padStart(2,'0'); const dt=String(d.getDate()).padStart(2,'0'); const day=["日","一","二","三","四","五","六"][d.getDay()]; return `${y}/${m}/${dt}(${day})`; };
         const addDays = (d, days) => { let r=new Date(d); r.setDate(r.getDate()+days); return r; };
 
-        // 🔥 V6.0 核心功能：自動抓取施工日報 (CSV) 並填入系統
         window.syncFromContractor = async () => {
             const btn = document.getElementById('btn-sync-csv');
             const originalHtml = btn.innerHTML;
@@ -300,26 +299,18 @@
             btn.disabled = true;
 
             try {
-                // 1. 抓取 CSV 資料
                 const response = await fetch(CONTRACTOR_CSV_URL);
                 if (!response.ok) throw new Error("無法連線至表單");
                 const csvText = await response.text();
                 
-                // 2. 解析 CSV (依照截圖：A欄=樁號, B欄=施工日期, C欄=機台)
                 const lines = csvText.split('\n');
-                const groupedData = {}; // 用來整理 { "2026-05-05_A": ["593", "597", ...], ... }
+                const groupedData = {};
                 
-                for (let i = 1; i < lines.length; i++) { // 跳過第一行標題
+                for (let i = 1; i < lines.length; i++) {
                     if (!lines[i].trim()) continue;
                     const cols = lines[i].split(',');
-                    
-                    const rawPile = cols[0] || '';
-                    const date = cols[1] || '';
-                    const machine = cols[2] || '';
-                    
-                    // 萃取數字 (例如 "P613" 變成 "613")
+                    const rawPile = cols[0] || ''; const date = cols[1] || ''; const machine = cols[2] || '';
                     const pileNum = rawPile.replace(/\D/g, ''); 
-                    // 判斷是 A 還是 B 車
                     const machLetter = machine.includes('A') ? 'A' : (machine.includes('B') ? 'B' : '');
 
                     if (pileNum && date && machLetter) {
@@ -329,19 +320,13 @@
                     }
                 }
 
-                // 3. 把整理好的資料，填進品管系統的對應格子裡
                 let updatedCount = 0;
                 scheduleData.forEach(item => {
                     const itemDateStr = window.toDateString(item.sampleDate);
                     const key = `${itemDateStr}_${item.machine}`;
-                    
                     if (groupedData[key]) {
-                        // 把陣列用「、」串接起來
                         const newPileStr = groupedData[key].join('、');
-                        
-                        // 防呆機制：如果該筆排程已經「壓測結案(鎖定)」，就不允許覆蓋
                         if (!window.statusTest[item.id]) {
-                            // 只有當資料有變動時才算一次更新
                             if (window.pileNumbers[item.id] !== newPileStr) {
                                 window.pileNumbers[item.id] = newPileStr;
                                 updatedCount++;
@@ -350,23 +335,12 @@
                     }
                 });
 
-                // 4. 存檔與更新畫面
                 window.saveDataToCloud();
                 window.refreshAll();
-                
-                if (updatedCount > 0) {
-                    window.showModal("同步成功！", `已成功從施工組日報抓取資料，並自動更新了 ${updatedCount} 筆排程的樁號！`, "success");
-                } else {
-                    window.showModal("同步完成", "目前施工組日報沒有新的樁號，或所有資料已是最新狀態。", "success");
-                }
-
-            } catch (error) {
-                console.error(error);
-                window.showModal("同步失敗", "無法讀取施工組日報資料，請確認 CSV 網址是否正確且公開。", "error");
-            } finally {
-                btn.innerHTML = originalHtml;
-                btn.disabled = false;
-            }
+                if (updatedCount > 0) { window.showModal("同步成功！", `已成功從施工組日報自動更新了 ${updatedCount} 筆排程的樁號！`, "success"); } 
+                else { window.showModal("同步完成", "目前施工組日報沒有新的樁號，或所有資料已是最新狀態。", "success"); }
+            } catch (error) { window.showModal("同步失敗", "無法讀取施工組日報資料，請確認 CSV 網址是否正確且公開。", "error"); } 
+            finally { btn.innerHTML = originalHtml; btn.disabled = false; }
         };
 
         window.openMatrixModal = () => { window.renderMatrixGrid(); document.getElementById('matrix-modal').classList.remove('hidden'); };
@@ -531,12 +505,12 @@
                 const tr = document.createElement('tr'); tr.className = `border-b border-gray-100 row-hover ${isT ? 'completed-row' : ''}`;
                 tr.innerHTML = `
                     <td class="p-3 font-bold text-blue-900">${item.id}</td>
-                    <td class="p-3"><textarea class="pile-input" rows="2" ${isT ? 'readonly' : ''} onchange="updatePile('${item.id}', this.value)" placeholder="輸入樁號 (例: 12, 13)">${window.pileNumbers[item.id] || ''}</textarea></td>
+                    <td class="p-3"><textarea class="pile-input" rows="3" ${isT ? 'readonly' : ''} onchange="updatePile('${item.id}', this.value)" placeholder="輸入樁號 (例: 12, 13)">${window.pileNumbers[item.id] || ''}</textarea></td>
                     <td class="p-3"><label class="flex items-center gap-2"><input type="checkbox" class="status-checkbox cb-sample" ${isS?'checked':''} ${isT?'disabled':''} onclick="toggleStatus('${item.id}', 'sample')"><span class="${isS?'text-dimmed':''}">${window.formatMinguo(item.sampleDate)}</span></label></td>
                     <td class="p-3 text-gray-500">${window.formatMinguo(item.demoldDate)}</td>
                     <td class="p-3"><label class="flex items-center gap-2"><input type="checkbox" class="status-checkbox cb-lab" ${isL?'checked':''} ${isT?'disabled':''} onclick="toggleStatus('${item.id}', 'lab')"><span class="${isL?'text-dimmed':''}">${window.formatMinguo(item.collectDate)}</span></label></td>
                     <td class="p-3"><label class="flex items-center gap-2"><input type="checkbox" class="status-checkbox cb-test" ${isT?'checked':''} onclick="toggleStatus('${item.id}', 'test')"><span class="font-bold ${isT?'text-dimmed':'text-red-600'}">${window.formatMinguo(item.testDate)}</span></label></td>
-                    <td class="p-3"><div class="flex flex-col gap-1.5"><textarea class="remark-input" rows="2" ${isT?'readonly':''} onchange="updateRemark('${item.id}', this.value)" placeholder="異常註記">${window.remarks[item.id]||''}</textarea></div></td>
+                    <td class="p-3"><div class="flex flex-col gap-1.5"><textarea class="remark-input" rows="3" ${isT?'readonly':''} onchange="updateRemark('${item.id}', this.value)" placeholder="異常註記">${window.remarks[item.id]||''}</textarea></div></td>
                 `;
                 tbody.appendChild(tr);
             });
@@ -594,7 +568,7 @@
         window.exportCSV = () => {
             let csv = "\uFEFF取樣編號,打設樁號,取樣日期,取樣狀態,實驗室收件,收件狀態,抗壓會驗,結案狀態,異常備註\n";
             scheduleData.forEach(i => { csv += `${i.id},"${window.pileNumbers[i.id]||''}",${window.toDateString(i.sampleDate)},${window.statusSample[i.id]?'已取樣':'未完成'},${window.toDateString(i.collectDate)},${window.statusLab[i.id]?'已收件':'未完成'},${window.toDateString(i.testDate)},${window.statusTest[i.id]?'已結案':'待辦'},"${window.remarks[i.id]||''}"\n`; });
-            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' }); const link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = `預壘樁進度追蹤表_V6.0.csv`; link.click();
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' }); const link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = `預壘樁進度追蹤表_V6.1.csv`; link.click();
         };
         window.showModal = (title, msg, type) => { let icon = type === 'success' ? 'fa-circle-check text-green-500' : 'fa-circle-xmark text-red-500'; document.getElementById('custom-modal-header').innerHTML = `<i class="fa-solid ${icon}"></i> ${title}`; document.getElementById('custom-modal-message').innerText = msg; document.getElementById('custom-modal').classList.remove('hidden'); };
         window.closeModal = () => document.getElementById('custom-modal').classList.add('hidden');
