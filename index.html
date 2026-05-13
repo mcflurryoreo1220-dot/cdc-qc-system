@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>衛生福利部防疫中心興建工程 - 試體管制排程系統 V5.1</title>
+    <title>衛生福利部防疫中心興建工程 - 試體管制排程系統 V6.0</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
@@ -17,7 +17,6 @@
         .calendar-scroll::-webkit-scrollbar, .matrix-scroll::-webkit-scrollbar { width: 6px; }
         .calendar-scroll::-webkit-scrollbar-thumb, .matrix-scroll::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 4px; }
         
-        /* 🔥 V5.1 滿版優化：釋放強制寬度，讓表格自動適應螢幕不產生卷軸 */
         .pile-input { border: 1px solid #cbd5e1; border-radius: 4px; padding: 6px 8px; width: 100%; min-width: 180px; font-size: 0.875rem; text-align: left; transition: all 0.2s; background: white; resize: vertical; line-height: 1.4; }
         .pile-input:focus { border-color: #2563eb; outline: none; box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2); }
         .remark-input { border: 1px solid #cbd5e1; border-radius: 4px; padding: 6px 8px; width: 100%; min-width: 120px; font-size: 0.875rem; text-align: left; transition: all 0.2s; background: white; resize: vertical; line-height: 1.4; }
@@ -45,7 +44,7 @@
                     <i class="fa-solid fa-building-shield text-blue-800"></i>
                     衛生福利部防疫中心興建工程
                 </h1>
-                <p class="text-gray-500 mt-1 text-sm">預壘樁試體管制系統 V5.1 <span class="bg-blue-100 text-blue-800 px-2 py-0.5 rounded text-xs ml-2 font-bold"><i class="fa-solid fa-compress text-blue-600"></i> 滿版自動縮放版</span></p>
+                <p class="text-gray-500 mt-1 text-sm">預壘樁試體管制系統 V6.0 <span class="bg-cyan-100 text-cyan-800 px-2 py-0.5 rounded text-xs ml-2 font-bold"><i class="fa-solid fa-cloud-arrow-down text-cyan-600"></i> 施工日報全自動連動版</span></p>
             </div>
             <div id="sync-status" class="flex items-center gap-2 px-3 py-1.5 bg-gray-100 rounded-full text-xs md:text-sm font-bold text-gray-500 border border-gray-200">
                 <i class="fa-solid fa-spinner fa-spin"></i> 連線至專屬資料庫...
@@ -57,9 +56,14 @@
                 <h3 class="font-bold text-gray-800 text-lg flex items-center gap-2">
                     <i class="fa-solid fa-chart-pie text-blue-600"></i> 全區進度戰情室
                 </h3>
-                <button onclick="sendTomorrowAlert()" id="btn-alert" class="px-5 py-2 bg-[#06C755] hover:bg-[#05b34c] text-white rounded-lg text-sm font-bold shadow-md transition flex items-center gap-2 animate-pulse hover:animate-none">
-                    <i class="fa-solid fa-bell"></i> 推播明日待辦至 LINE
-                </button>
+                <div class="flex gap-2">
+                    <button onclick="syncFromContractor()" id="btn-sync-csv" class="px-5 py-2 bg-[#0080ff] hover:bg-[#0066cc] text-white rounded-lg text-sm font-bold shadow-md transition flex items-center gap-2">
+                        <i class="fa-solid fa-cloud-arrow-down"></i> 抓取施工日報
+                    </button>
+                    <button onclick="sendTomorrowAlert()" id="btn-alert" class="px-5 py-2 bg-[#06C755] hover:bg-[#05b34c] text-white rounded-lg text-sm font-bold shadow-md transition flex items-center gap-2 animate-pulse hover:animate-none">
+                        <i class="fa-solid fa-bell"></i> 推播待辦至 LINE
+                    </button>
+                </div>
             </div>
             
             <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-5">
@@ -251,6 +255,9 @@
         const TOTAL_PILES_LIMIT = 613; let isCloudEnabled = false; let db, auth;
 
         const MAKE_WEBHOOK_URL = "https://hook.us2.make.com/3e3bd4bob7ptalfemcn6q982tyc0tjil";
+        
+        // 🔥 V6.0 施工組日報的黃金通道 (CSV 連結)
+        const CONTRACTOR_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQeDEcb4ErD1XpPyx4s2kEVCToYMtqfsFMW2J2_5l5xUS23xEMgueri4OND67Mo8NS1O6oDNV3IRPST/pub?output=csv";
 
         const initFirebase = async () => {
             try {
@@ -284,6 +291,83 @@
         window.toDateString = (d) => { const y=d.getFullYear(); const m=String(d.getMonth()+1).padStart(2,'0'); const dt=String(d.getDate()).padStart(2,'0'); return `${y}-${m}-${dt}`; };
         window.formatMinguo = (d) => { const y=d.getFullYear()-1911; const m=String(d.getMonth()+1).padStart(2,'0'); const dt=String(d.getDate()).padStart(2,'0'); const day=["日","一","二","三","四","五","六"][d.getDay()]; return `${y}/${m}/${dt}(${day})`; };
         const addDays = (d, days) => { let r=new Date(d); r.setDate(r.getDate()+days); return r; };
+
+        // 🔥 V6.0 核心功能：自動抓取施工日報 (CSV) 並填入系統
+        window.syncFromContractor = async () => {
+            const btn = document.getElementById('btn-sync-csv');
+            const originalHtml = btn.innerHTML;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 同步資料中...';
+            btn.disabled = true;
+
+            try {
+                // 1. 抓取 CSV 資料
+                const response = await fetch(CONTRACTOR_CSV_URL);
+                if (!response.ok) throw new Error("無法連線至表單");
+                const csvText = await response.text();
+                
+                // 2. 解析 CSV (依照截圖：A欄=樁號, B欄=施工日期, C欄=機台)
+                const lines = csvText.split('\n');
+                const groupedData = {}; // 用來整理 { "2026-05-05_A": ["593", "597", ...], ... }
+                
+                for (let i = 1; i < lines.length; i++) { // 跳過第一行標題
+                    if (!lines[i].trim()) continue;
+                    const cols = lines[i].split(',');
+                    
+                    const rawPile = cols[0] || '';
+                    const date = cols[1] || '';
+                    const machine = cols[2] || '';
+                    
+                    // 萃取數字 (例如 "P613" 變成 "613")
+                    const pileNum = rawPile.replace(/\D/g, ''); 
+                    // 判斷是 A 還是 B 車
+                    const machLetter = machine.includes('A') ? 'A' : (machine.includes('B') ? 'B' : '');
+
+                    if (pileNum && date && machLetter) {
+                        const key = `${date}_${machLetter}`;
+                        if (!groupedData[key]) groupedData[key] = [];
+                        groupedData[key].push(pileNum);
+                    }
+                }
+
+                // 3. 把整理好的資料，填進品管系統的對應格子裡
+                let updatedCount = 0;
+                scheduleData.forEach(item => {
+                    const itemDateStr = window.toDateString(item.sampleDate);
+                    const key = `${itemDateStr}_${item.machine}`;
+                    
+                    if (groupedData[key]) {
+                        // 把陣列用「、」串接起來
+                        const newPileStr = groupedData[key].join('、');
+                        
+                        // 防呆機制：如果該筆排程已經「壓測結案(鎖定)」，就不允許覆蓋
+                        if (!window.statusTest[item.id]) {
+                            // 只有當資料有變動時才算一次更新
+                            if (window.pileNumbers[item.id] !== newPileStr) {
+                                window.pileNumbers[item.id] = newPileStr;
+                                updatedCount++;
+                            }
+                        }
+                    }
+                });
+
+                // 4. 存檔與更新畫面
+                window.saveDataToCloud();
+                window.refreshAll();
+                
+                if (updatedCount > 0) {
+                    window.showModal("同步成功！", `已成功從施工組日報抓取資料，並自動更新了 ${updatedCount} 筆排程的樁號！`, "success");
+                } else {
+                    window.showModal("同步完成", "目前施工組日報沒有新的樁號，或所有資料已是最新狀態。", "success");
+                }
+
+            } catch (error) {
+                console.error(error);
+                window.showModal("同步失敗", "無法讀取施工組日報資料，請確認 CSV 網址是否正確且公開。", "error");
+            } finally {
+                btn.innerHTML = originalHtml;
+                btn.disabled = false;
+            }
+        };
 
         window.openMatrixModal = () => { window.renderMatrixGrid(); document.getElementById('matrix-modal').classList.remove('hidden'); };
         window.closeMatrixModal = () => { document.getElementById('matrix-modal').classList.add('hidden'); };
@@ -362,9 +446,9 @@
                 if (window.toDateString(item.collectDate) === tStr && !window.statusLab[item.id]) collects.push(item.id);
                 if (window.toDateString(item.testDate) === tStr && !window.statusTest[item.id]) tests.push(item.id);
             });
-            if (samples.length === 0 && collects.length === 0 && tests.length === 0) { window.showModal("無待辦事項", `明日 (${tMinguo}) 沒有需要取樣、收件或壓測的排程，無須發送預警。`, "success"); btn.innerHTML = '<i class="fa-solid fa-bell"></i> 推播明日待辦至 LINE'; btn.disabled = false; return; }
+            if (samples.length === 0 && collects.length === 0 && tests.length === 0) { window.showModal("無待辦事項", `明日 (${tMinguo}) 沒有需要取樣、收件或壓測的排程，無須發送預警。`, "success"); btn.innerHTML = '<i class="fa-solid fa-bell"></i> 推播待辦至 LINE'; btn.disabled = false; return; }
             const msg = `📢 【CDC 明日品管預警】\n📅 日期：${tMinguo}\n\n🧱 應取樣試體：\n${samples.length > 0 ? samples.join(', ') : '✅ 無'}\n\n🚚 應送驗收件：\n${collects.length > 0 ? collects.join(', ') : '✅ 無'}\n\n💯 應抗壓會驗：\n${tests.length > 0 ? tests.join(', ') : '✅ 無'}`;
-            try { await fetch(MAKE_WEBHOOK_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ reportText: msg }) }); window.showModal("發送成功！", "明日排程預警已推播囉！", "success"); } catch(e) { window.showModal("發送失敗", "請檢查網路連線。", "error"); } finally { btn.innerHTML = '<i class="fa-solid fa-bell"></i> 推播明日待辦至 LINE'; btn.disabled = false; }
+            try { await fetch(MAKE_WEBHOOK_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ reportText: msg }) }); window.showModal("發送成功！", "明日排程預警已推播囉！", "success"); } catch(e) { window.showModal("發送失敗", "請檢查網路連線。", "error"); } finally { btn.innerHTML = '<i class="fa-solid fa-bell"></i> 推播待辦至 LINE'; btn.disabled = false; }
         };
 
         window.calculateMaterials = () => {
@@ -510,7 +594,7 @@
         window.exportCSV = () => {
             let csv = "\uFEFF取樣編號,打設樁號,取樣日期,取樣狀態,實驗室收件,收件狀態,抗壓會驗,結案狀態,異常備註\n";
             scheduleData.forEach(i => { csv += `${i.id},"${window.pileNumbers[i.id]||''}",${window.toDateString(i.sampleDate)},${window.statusSample[i.id]?'已取樣':'未完成'},${window.toDateString(i.collectDate)},${window.statusLab[i.id]?'已收件':'未完成'},${window.toDateString(i.testDate)},${window.statusTest[i.id]?'已結案':'待辦'},"${window.remarks[i.id]||''}"\n`; });
-            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' }); const link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = `預壘樁進度追蹤表_V5.1.csv`; link.click();
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' }); const link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = `預壘樁進度追蹤表_V6.0.csv`; link.click();
         };
         window.showModal = (title, msg, type) => { let icon = type === 'success' ? 'fa-circle-check text-green-500' : 'fa-circle-xmark text-red-500'; document.getElementById('custom-modal-header').innerHTML = `<i class="fa-solid ${icon}"></i> ${title}`; document.getElementById('custom-modal-message').innerText = msg; document.getElementById('custom-modal').classList.remove('hidden'); };
         window.closeModal = () => document.getElementById('custom-modal').classList.add('hidden');
