@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>衛生福利部防疫中心興建工程 - 試體管制排程系統 V5.0</title>
+    <title>衛生福利部防疫中心興建工程 - 試體管制排程系統 V5.1</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
@@ -17,9 +17,10 @@
         .calendar-scroll::-webkit-scrollbar, .matrix-scroll::-webkit-scrollbar { width: 6px; }
         .calendar-scroll::-webkit-scrollbar-thumb, .matrix-scroll::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 4px; }
         
-        .pile-input { border: 1px solid #cbd5e1; border-radius: 4px; padding: 6px 8px; width: 100%; min-width: 350px; font-size: 0.875rem; text-align: left; transition: all 0.2s; background: white; resize: vertical; line-height: 1.4; }
+        /* 🔥 V5.1 滿版優化：釋放強制寬度，讓表格自動適應螢幕不產生卷軸 */
+        .pile-input { border: 1px solid #cbd5e1; border-radius: 4px; padding: 6px 8px; width: 100%; min-width: 180px; font-size: 0.875rem; text-align: left; transition: all 0.2s; background: white; resize: vertical; line-height: 1.4; }
         .pile-input:focus { border-color: #2563eb; outline: none; box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2); }
-        .remark-input { border: 1px solid #cbd5e1; border-radius: 4px; padding: 6px 8px; width: 100%; min-width: 250px; font-size: 0.875rem; text-align: left; transition: all 0.2s; background: white; resize: vertical; line-height: 1.4; }
+        .remark-input { border: 1px solid #cbd5e1; border-radius: 4px; padding: 6px 8px; width: 100%; min-width: 120px; font-size: 0.875rem; text-align: left; transition: all 0.2s; background: white; resize: vertical; line-height: 1.4; }
         .remark-input:focus { border-color: #ef4444; outline: none; box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.2); }
         
         .status-checkbox { width: 1.15rem; height: 1.15rem; cursor: pointer; flex-shrink: 0; }
@@ -28,7 +29,6 @@
         .cb-test { accent-color: #16a34a; }   
         .text-dimmed { color: #94a3b8; text-decoration: line-through; }
         
-        /* 矩陣方塊樣式 */
         .matrix-box { width: 42px; height: 42px; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: bold; border-radius: 6px; transition: all 0.2s; cursor: default; }
         .box-missing { background-color: #f1f5f9; color: #94a3b8; border: 1px solid #e2e8f0; }
         .box-ok { background-color: #dbeafe; color: #1e40af; border: 1px solid #bfdbfe; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
@@ -45,7 +45,7 @@
                     <i class="fa-solid fa-building-shield text-blue-800"></i>
                     衛生福利部防疫中心興建工程
                 </h1>
-                <p class="text-gray-500 mt-1 text-sm">預壘樁試體管制系統 V5.0 <span class="bg-purple-100 text-purple-800 px-2 py-0.5 rounded text-xs ml-2 font-bold"><i class="fa-solid fa-border-all text-purple-600"></i> 樁號防呆矩陣雷達版</span></p>
+                <p class="text-gray-500 mt-1 text-sm">預壘樁試體管制系統 V5.1 <span class="bg-blue-100 text-blue-800 px-2 py-0.5 rounded text-xs ml-2 font-bold"><i class="fa-solid fa-compress text-blue-600"></i> 滿版自動縮放版</span></p>
             </div>
             <div id="sync-status" class="flex items-center gap-2 px-3 py-1.5 bg-gray-100 rounded-full text-xs md:text-sm font-bold text-gray-500 border border-gray-200">
                 <i class="fa-solid fa-spinner fa-spin"></i> 連線至專屬資料庫...
@@ -143,23 +143,21 @@
             </div>
         </div>
 
-        <div id="table-view" class="bg-white shadow-md rounded-b-xl overflow-hidden">
-            <div class="overflow-x-auto">
-                <table class="w-full text-left border-collapse">
-                    <thead class="table-header">
-                        <tr>
-                            <th class="p-3 font-semibold border-b border-blue-900 min-w-[80px]">編號 (T)</th>
-                            <th class="p-3 font-semibold border-b border-blue-900 min-w-[350px] bg-blue-900/40">對應樁號 <i class="fa-solid fa-pen text-xs"></i></th>
-                            <th class="p-3 font-semibold border-b border-blue-900 bg-indigo-900/40 whitespace-nowrap"><i class="fa-solid fa-check-square opacity-70"></i> 取樣完成 (T日)</th>
-                            <th class="p-3 font-semibold border-b border-blue-900 whitespace-nowrap">拆模日期 (T+1)</th>
-                            <th class="p-3 font-semibold border-b border-blue-900 bg-amber-900/40 whitespace-nowrap"><i class="fa-solid fa-check-square opacity-70"></i> 實驗室收件 (二/五)</th>
-                            <th class="p-3 font-semibold border-b border-blue-900 bg-green-900/40 whitespace-nowrap"><i class="fa-solid fa-check-square opacity-70"></i> 抗壓會驗 (T+28)</th>
-                            <th class="p-3 font-semibold border-b border-blue-900 text-xs min-w-[250px]">異常備註 / 狀態</th>
-                        </tr>
-                    </thead>
-                    <tbody id="schedule-body" class="text-gray-700 text-sm"></tbody>
-                </table>
-            </div>
+        <div id="table-view" class="bg-white shadow-md rounded-b-xl overflow-x-hidden">
+            <table class="w-full text-left border-collapse table-auto">
+                <thead class="table-header">
+                    <tr>
+                        <th class="p-3 font-semibold border-b border-blue-900 w-[60px] whitespace-nowrap">編號(T)</th>
+                        <th class="p-3 font-semibold border-b border-blue-900 w-[35%] bg-blue-900/40">對應樁號 <i class="fa-solid fa-pen text-xs"></i></th>
+                        <th class="p-3 font-semibold border-b border-blue-900 bg-indigo-900/40 whitespace-nowrap"><i class="fa-solid fa-check-square opacity-70"></i> 取樣(T)</th>
+                        <th class="p-3 font-semibold border-b border-blue-900 whitespace-nowrap">拆模(T+1)</th>
+                        <th class="p-3 font-semibold border-b border-blue-900 bg-amber-900/40 whitespace-nowrap"><i class="fa-solid fa-check-square opacity-70"></i> 收件(二/五)</th>
+                        <th class="p-3 font-semibold border-b border-blue-900 bg-green-900/40 whitespace-nowrap"><i class="fa-solid fa-check-square opacity-70"></i> 抗壓(T+28)</th>
+                        <th class="p-3 font-semibold border-b border-blue-900 text-xs w-[15%]">異常備註 / 狀態</th>
+                    </tr>
+                </thead>
+                <tbody id="schedule-body" class="text-gray-700 text-sm"></tbody>
+            </table>
         </div>
 
         <div id="calendar-view" class="bg-white shadow-md rounded-b-xl p-4 md:p-6 hidden">
@@ -188,7 +186,7 @@
                             <th class="p-3 border-b text-blue-700 font-bold text-center">A車(系統)</th>
                             <th class="p-3 border-b text-indigo-700 font-bold text-center">B車(系統)</th>
                             <th class="p-3 border-b text-gray-900 font-bold text-center text-lg">系統總計</th>
-                            <th class="p-3 border-b text-orange-700 font-bold text-center">施工組日報 <i class="fa-solid fa-pen text-xs"></i></th>
+                            <th class="p-3 border-b text-orange-700 font-bold text-center">施工組報表數量 <i class="fa-solid fa-pen text-xs"></i></th>
                             <th class="p-3 border-b text-center font-bold">狀態</th>
                         </tr>
                     </thead>
@@ -287,69 +285,29 @@
         window.formatMinguo = (d) => { const y=d.getFullYear()-1911; const m=String(d.getMonth()+1).padStart(2,'0'); const dt=String(d.getDate()).padStart(2,'0'); const day=["日","一","二","三","四","五","六"][d.getDay()]; return `${y}/${m}/${dt}(${day})`; };
         const addDays = (d, days) => { let r=new Date(d); r.setDate(r.getDate()+days); return r; };
 
-        // 🔥 V5.0 核心：生成防呆矩陣雷達
-        window.openMatrixModal = () => {
-            window.renderMatrixGrid();
-            document.getElementById('matrix-modal').classList.remove('hidden');
-        };
-        window.closeMatrixModal = () => {
-            document.getElementById('matrix-modal').classList.add('hidden');
-        };
+        window.openMatrixModal = () => { window.renderMatrixGrid(); document.getElementById('matrix-modal').classList.remove('hidden'); };
+        window.closeMatrixModal = () => { document.getElementById('matrix-modal').classList.add('hidden'); };
 
         window.renderMatrixGrid = () => {
-            // 初始化計數器
             const counts = new Array(TOTAL_PILES_LIMIT + 1).fill(0);
-            
-            // 掃描全部已輸入的樁號
             Object.values(window.pileNumbers).forEach(val => {
                 const nums = (val.match(/\d+/g) || []).map(n => parseInt(n, 10));
-                nums.forEach(n => {
-                    if (n >= 1 && n <= TOTAL_PILES_LIMIT) {
-                        counts[n]++;
-                    }
-                });
+                nums.forEach(n => { if (n >= 1 && n <= TOTAL_PILES_LIMIT) counts[n]++; });
             });
-
-            const container = document.getElementById('matrix-container');
-            container.innerHTML = '';
-            
+            const container = document.getElementById('matrix-container'); container.innerHTML = '';
             let statMissing = 0, statOk = 0, statError = 0;
-
             for (let i = 1; i <= TOTAL_PILES_LIMIT; i++) {
-                const box = document.createElement('div');
-                let statusClass = '';
-                
-                if (counts[i] === 0) {
-                    statusClass = 'box-missing';
-                    statMissing++;
-                } else if (counts[i] === 1) {
-                    statusClass = 'box-ok';
-                    statOk++;
-                } else {
-                    statusClass = 'box-error';
-                    statError++;
-                    box.title = `警告：第 ${i} 號樁被重複登錄了 ${counts[i]} 次！`;
-                }
-
-                box.className = `matrix-box ${statusClass}`;
-                box.innerText = i;
-                container.appendChild(box);
+                const box = document.createElement('div'); let statusClass = '';
+                if (counts[i] === 0) { statusClass = 'box-missing'; statMissing++; } 
+                else if (counts[i] === 1) { statusClass = 'box-ok'; statOk++; } 
+                else { statusClass = 'box-error'; statError++; box.title = `警告：第 ${i} 號樁被重複登錄了 ${counts[i]} 次！`; }
+                box.className = `matrix-box ${statusClass}`; box.innerText = i; container.appendChild(box);
             }
-
-            // 更新統計數字與警告訊息
-            document.getElementById('matrix-count-missing').innerText = statMissing;
-            document.getElementById('matrix-count-ok').innerText = statOk;
-            document.getElementById('matrix-count-error').innerText = statError;
-
+            document.getElementById('matrix-count-missing').innerText = statMissing; document.getElementById('matrix-count-ok').innerText = statOk; document.getElementById('matrix-count-error').innerText = statError;
             const errorMsg = document.getElementById('matrix-error-msg');
-            if (statError > 0) {
-                errorMsg.classList.remove('hidden');
-            } else {
-                errorMsg.classList.add('hidden');
-            }
+            if (statError > 0) { errorMsg.classList.remove('hidden'); } else { errorMsg.classList.add('hidden'); }
         };
 
-        // 數量勾稽邏輯
         window.openReconModal = () => { window.renderReconTable(); document.getElementById('recon-modal').classList.remove('hidden'); };
         window.closeReconModal = () => { document.getElementById('recon-modal').classList.add('hidden'); };
 
@@ -421,13 +379,11 @@
             resDiv.classList.remove('hidden');
         };
 
-        // 放寬「樁號重複」的防呆限制，改由矩陣圖處理
         window.toggleStatus = (sampleId, type) => { if (type === 'sample') window.statusSample[sampleId] = !window.statusSample[sampleId]; if (type === 'lab') window.statusLab[sampleId] = !window.statusLab[sampleId]; if (type === 'test') window.statusTest[sampleId] = !window.statusTest[sampleId]; window.saveDataToCloud(); window.refreshAll(); };
         window.updatePile = (sampleId, val) => { 
             const trimmedVal = val.trim(); 
             if (!trimmedVal) { delete window.pileNumbers[sampleId]; } else { window.pileNumbers[sampleId] = trimmedVal; } 
             window.saveDataToCloud(); 
-            // 只要有改樁號，若矩陣開著就即時更新
             if (!document.getElementById('matrix-modal').classList.contains('hidden')) window.renderMatrixGrid();
             if (!document.getElementById('recon-modal').classList.contains('hidden')) window.renderReconTable();
             window.updateDashboard();
@@ -489,7 +445,15 @@
             scheduleData.filter(i => filter === 'ALL' || i.machine === filter).forEach(item => {
                 const isS = window.statusSample[item.id], isL = window.statusLab[item.id], isT = window.statusTest[item.id];
                 const tr = document.createElement('tr'); tr.className = `border-b border-gray-100 row-hover ${isT ? 'completed-row' : ''}`;
-                tr.innerHTML = `<td class="p-3 font-bold text-blue-900">${item.id}</td><td class="p-3"><textarea class="pile-input" rows="2" ${isT ? 'readonly' : ''} onchange="updatePile('${item.id}', this.value)" placeholder="輸入樁號 (例: 12, 13)">${window.pileNumbers[item.id] || ''}</textarea></td><td class="p-3"><label class="flex items-center gap-2"><input type="checkbox" class="status-checkbox cb-sample" ${isS?'checked':''} ${isT?'disabled':''} onclick="toggleStatus('${item.id}', 'sample')"><span class="${isS?'text-dimmed':''}">${window.formatMinguo(item.sampleDate)}</span></label></td><td class="p-3 text-gray-500">${window.formatMinguo(item.demoldDate)}</td><td class="p-3"><label class="flex items-center gap-2"><input type="checkbox" class="status-checkbox cb-lab" ${isL?'checked':''} ${isT?'disabled':''} onclick="toggleStatus('${item.id}', 'lab')"><span class="${isL?'text-dimmed':''}">${window.formatMinguo(item.collectDate)}</span></label></td><td class="p-3"><label class="flex items-center gap-2"><input type="checkbox" class="status-checkbox cb-test" ${isT?'checked':''} onclick="toggleStatus('${item.id}', 'test')"><span class="font-bold ${isT?'text-dimmed':'text-red-600'}">${window.formatMinguo(item.testDate)}</span></label></td><td class="p-3"><div class="flex flex-col gap-1.5"><textarea class="remark-input" rows="2" ${isT?'readonly':''} onchange="updateRemark('${item.id}', this.value)" placeholder="異常註記">${window.remarks[item.id]||''}</textarea></div></td>`;
+                tr.innerHTML = `
+                    <td class="p-3 font-bold text-blue-900">${item.id}</td>
+                    <td class="p-3"><textarea class="pile-input" rows="2" ${isT ? 'readonly' : ''} onchange="updatePile('${item.id}', this.value)" placeholder="輸入樁號 (例: 12, 13)">${window.pileNumbers[item.id] || ''}</textarea></td>
+                    <td class="p-3"><label class="flex items-center gap-2"><input type="checkbox" class="status-checkbox cb-sample" ${isS?'checked':''} ${isT?'disabled':''} onclick="toggleStatus('${item.id}', 'sample')"><span class="${isS?'text-dimmed':''}">${window.formatMinguo(item.sampleDate)}</span></label></td>
+                    <td class="p-3 text-gray-500">${window.formatMinguo(item.demoldDate)}</td>
+                    <td class="p-3"><label class="flex items-center gap-2"><input type="checkbox" class="status-checkbox cb-lab" ${isL?'checked':''} ${isT?'disabled':''} onclick="toggleStatus('${item.id}', 'lab')"><span class="${isL?'text-dimmed':''}">${window.formatMinguo(item.collectDate)}</span></label></td>
+                    <td class="p-3"><label class="flex items-center gap-2"><input type="checkbox" class="status-checkbox cb-test" ${isT?'checked':''} onclick="toggleStatus('${item.id}', 'test')"><span class="font-bold ${isT?'text-dimmed':'text-red-600'}">${window.formatMinguo(item.testDate)}</span></label></td>
+                    <td class="p-3"><div class="flex flex-col gap-1.5"><textarea class="remark-input" rows="2" ${isT?'readonly':''} onchange="updateRemark('${item.id}', this.value)" placeholder="異常註記">${window.remarks[item.id]||''}</textarea></div></td>
+                `;
                 tbody.appendChild(tr);
             });
         };
@@ -546,7 +510,7 @@
         window.exportCSV = () => {
             let csv = "\uFEFF取樣編號,打設樁號,取樣日期,取樣狀態,實驗室收件,收件狀態,抗壓會驗,結案狀態,異常備註\n";
             scheduleData.forEach(i => { csv += `${i.id},"${window.pileNumbers[i.id]||''}",${window.toDateString(i.sampleDate)},${window.statusSample[i.id]?'已取樣':'未完成'},${window.toDateString(i.collectDate)},${window.statusLab[i.id]?'已收件':'未完成'},${window.toDateString(i.testDate)},${window.statusTest[i.id]?'已結案':'待辦'},"${window.remarks[i.id]||''}"\n`; });
-            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' }); const link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = `預壘樁進度追蹤表_V5.0.csv`; link.click();
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' }); const link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = `預壘樁進度追蹤表_V5.1.csv`; link.click();
         };
         window.showModal = (title, msg, type) => { let icon = type === 'success' ? 'fa-circle-check text-green-500' : 'fa-circle-xmark text-red-500'; document.getElementById('custom-modal-header').innerHTML = `<i class="fa-solid ${icon}"></i> ${title}`; document.getElementById('custom-modal-message').innerText = msg; document.getElementById('custom-modal').classList.remove('hidden'); };
         window.closeModal = () => document.getElementById('custom-modal').classList.add('hidden');
