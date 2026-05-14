@@ -3,21 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>衛生福利部防疫中心興建工程 - 試體管制系統 V8.6</title>
+    <title>衛生福利部防疫中心興建工程 - 試體管制系統 V8.7</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
         
-        /* 🎨 清晰商務美學配色 (加深對比版) */
         :root {
             --bg-color: #F8FAFC;       
             --text-main: #0F172A;      
             --border-color: #CBD5E1;   
             
-            --color-blue-deep: #1E3A8A;  /* 深靛藍 */
-            --color-orange-deep: #B45309; /* 深暖橘 */
-            --color-green-deep: #166534;  /* 墨石綠 */
+            --color-blue-deep: #1E3A8A;  
+            --color-orange-deep: #B45309; 
+            --color-green-deep: #166534;  
         }
 
         body { 
@@ -107,6 +106,17 @@
         .box-error { background-color: #DC2626; color: #FFFFFF; border: 1px solid #991B1B; box-shadow: 0 0 8px rgba(220, 38, 38, 0.6); animation: pulse-border 2s infinite; } 
         
         @keyframes pulse-border { 0% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.6); } 70% { box-shadow: 0 0 0 6px rgba(220, 38, 38, 0); } 100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0); } }
+
+        /* 🔥 AI Banner 動態炫光外框特效 */
+        .ai-banner-wrapper {
+            background: linear-gradient(90deg, #FDE68A, #FDBA74, #FDE68A);
+            background-size: 200% 200%;
+            animation: gradient-shift 5s ease infinite;
+            padding: 2px;
+            border-radius: 1rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+        }
+        @keyframes gradient-shift { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
     </style>
 </head>
 <body class="p-2 md:p-8">
@@ -122,7 +132,7 @@
                     衛生福利部防疫中心興建工程 QC 管制
                 </h1>
                 <p class="text-slate-600 mt-2 text-base font-bold flex items-center gap-3">
-                    預壘樁試體管制排程系統 <span class="bg-slate-200 text-slate-800 px-3 py-1 rounded-md text-sm font-black border border-slate-300">V8.6 UI 完美對齊版</span>
+                    預壘樁試體管制排程系統 <span class="bg-slate-200 text-slate-800 px-3 py-1 rounded-md text-sm font-black border border-slate-300">V8.7 AI 高光膠囊版</span>
                 </p>
             </div>
             <div id="sync-status" class="flex items-center gap-2 px-5 py-2.5 bg-[#EFF6FF] rounded-xl text-sm font-black text-blue-800 border border-blue-200 shadow-sm">
@@ -179,11 +189,26 @@
                 </div>
             </div>
 
-            <div id="prediction-banner" class="mt-5 p-4 rounded-xl border border-orange-300 bg-[#FFFBEB] flex items-center gap-4 shadow-inner">
-                <div class="bg-white w-10 h-10 flex items-center justify-center rounded-lg shadow-sm text-amber-600 shrink-0 border border-amber-100"><i class="fa-solid fa-bolt-lightning text-xl"></i></div>
-                <div class="text-base text-slate-800 w-full flex flex-col md:flex-row md:items-center gap-2">
-                    <span class="font-black text-amber-700 min-w-max">AI 智慧產能推估：</span>
-                    <span id="prediction-text" class="font-black text-slate-700">正在計算數據速率...</span>
+            <div class="mt-6 ai-banner-wrapper">
+                <div class="bg-white/95 backdrop-blur-md rounded-[14px] p-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-5 h-full">
+                    
+                    <div class="flex items-center gap-4">
+                        <div class="relative flex h-14 w-14 items-center justify-center shrink-0">
+                            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-20"></span>
+                            <div class="relative bg-gradient-to-br from-amber-400 to-orange-600 w-12 h-12 rounded-xl flex items-center justify-center text-white shadow-lg border border-orange-300">
+                                <i class="fa-solid fa-wand-magic-sparkles text-xl"></i>
+                            </div>
+                        </div>
+                        <div>
+                            <h4 class="font-black text-slate-800 text-lg flex items-center gap-2">AI 智慧產能與風險推估 <span class="bg-amber-100 text-amber-700 px-2 py-0.5 rounded-md text-[10px] uppercase border border-amber-200">Beta</span></h4>
+                            <p class="text-sm font-bold text-slate-500 mt-0.5">基於現場實際打設數據進行動態模型演算</p>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-wrap gap-3 w-full md:w-auto" id="prediction-metrics">
+                        <div class="text-slate-500 font-bold px-4 py-3 bg-slate-50 rounded-xl border border-slate-200 w-full text-center">掃描歷史數據中...</div>
+                    </div>
+
                 </div>
             </div>
         </div>
@@ -223,19 +248,19 @@
             <div class="border-t border-slate-200 pt-6">
                 <div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-4">
                     <button onclick="openMatrixModal()" class="flex items-center justify-center gap-2 px-4 py-3.5 bg-[#1E3A8A] text-white rounded-xl text-[15px] font-black hover:bg-[#172554] transition shadow-md border border-[#172554] hover:-translate-y-1 hover:shadow-lg">
-                        <i class="fa-solid fa-border-all text-xl"></i> 防呆矩陣雷達
+                        <i class="fa-solid fa-border-all text-xl opacity-80"></i> 防呆矩陣雷達
                     </button>
                     <button onclick="openReconModal()" class="flex items-center justify-center gap-2 px-4 py-3.5 bg-[#B45309] text-white rounded-xl text-[15px] font-black hover:bg-[#78350F] transition shadow-md border border-[#78350F] hover:-translate-y-1 hover:shadow-lg">
-                        <i class="fa-solid fa-scale-unbalanced text-xl"></i> 數量申報勾稽
+                        <i class="fa-solid fa-scale-unbalanced text-xl opacity-80"></i> 數量申報勾稽
                     </button>
                     <button onclick="syncFromContractor()" id="btn-sync-csv" class="flex items-center justify-center gap-2 px-4 py-3.5 bg-[#475569] text-white rounded-xl text-[15px] font-black hover:bg-[#334155] transition shadow-md border border-[#334155] hover:-translate-y-1 hover:shadow-lg">
-                        <i class="fa-solid fa-cloud-arrow-down text-xl"></i> 抓取日報同步
+                        <i class="fa-solid fa-cloud-arrow-down text-xl opacity-80"></i> 抓取日報同步
                     </button>
                     <button onclick="sendTomorrowAlert()" id="btn-alert" class="flex items-center justify-center gap-2 px-4 py-3.5 bg-slate-800 text-white rounded-xl text-[15px] font-black shadow-md hover:bg-black transition border border-slate-900 hover:-translate-y-1 hover:shadow-lg">
                         <i class="fa-solid fa-bell text-xl text-yellow-400"></i> LINE 推播測試
                     </button>
                     <button onclick="exportCSV()" class="flex items-center justify-center gap-2 px-4 py-3.5 bg-[#166534] text-white rounded-xl text-[15px] font-black shadow-md hover:bg-[#14532D] transition border border-[#14532D] hover:-translate-y-1 hover:shadow-lg">
-                        <i class="fa-solid fa-file-csv text-xl"></i> 匯出品管 CSV
+                        <i class="fa-solid fa-file-csv text-xl opacity-80"></i> 匯出品管 CSV
                     </button>
                 </div>
             </div>
@@ -454,6 +479,7 @@
             });
         };
 
+        // JS 更新：修改原本單行的文字，換成獨立數據膠囊 
         window.updateDashboard = () => {
             const usedA = new Set(); const usedB = new Set(); const workedDates = new Set();
             Object.entries(window.pileNumbers).forEach(([id, val]) => { const nums = (val.match(/\d+/g) || []).map(n => parseInt(n, 10)); if (nums.length > 0) { nums.forEach(n => { if (id.startsWith('A')) usedA.add(n); else if (id.startsWith('B')) usedB.add(n); }); const item = scheduleData.find(s => s.id === id); if (item) workedDates.add(window.toDateString(item.sampleDate)); } });
@@ -466,9 +492,35 @@
             document.getElementById('prog-piles-bar').style.width = `${pilesPct}%`;
 
             if (pilesCount > 0 && workedDays > 0) {
-                const avgRate = pilesCount / workedDays; const estDays = Math.ceil((TOTAL_PILES_LIMIT - pilesCount) / avgRate);
-                let simDate = new Date(); let added = 0; while(added < estDays) { simDate.setDate(simDate.getDate() + 1); const dStr = window.toDateString(simDate); const isExGlobal = window.exceptionDates.includes(dStr); const isExA = isExGlobal || window.exceptionA.includes(dStr); const isExB = isExGlobal || window.exceptionB.includes(dStr); if (simDate.getDay() !== 0 && (!isExA || !isExB)) added++; }
-                document.getElementById('prediction-text').innerHTML = `近期平均產能：約 <span class="bg-white px-2 py-0.5 rounded text-slate-800 shadow-sm border border-orange-200">${avgRate.toFixed(1)} 支/日</span>。推估剩餘 <b class="text-amber-700">${estDays}</b> 工作天，約於 <span class="bg-white px-2 py-0.5 rounded text-[#B45309] shadow-sm border border-orange-200">${window.formatMinguo(simDate)}</span> 完工！`;
+                const avgRate = pilesCount / workedDays; 
+                const estDays = Math.ceil((TOTAL_PILES_LIMIT - pilesCount) / avgRate);
+                let simDate = new Date(); let added = 0; 
+                while(added < estDays) { 
+                    simDate.setDate(simDate.getDate() + 1); 
+                    const dStr = window.toDateString(simDate); 
+                    const isExGlobal = window.exceptionDates.includes(dStr); 
+                    const isExA = isExGlobal || window.exceptionA.includes(dStr); 
+                    const isExB = isExGlobal || window.exceptionB.includes(dStr); 
+                    if (simDate.getDay() !== 0 && (!isExA || !isExB)) added++; 
+                }
+                
+                // 動態產生高質感的數據膠囊
+                document.getElementById('prediction-metrics').innerHTML = `
+                    <div class="bg-white/80 border border-slate-200 px-5 py-2.5 rounded-xl flex flex-col justify-center items-center shadow-sm w-full md:w-auto">
+                        <span class="text-[11px] font-black text-slate-500 mb-1 tracking-widest uppercase">近期動態產能</span>
+                        <span class="text-2xl font-black text-slate-800">${avgRate.toFixed(1)} <span class="text-sm text-slate-500 font-bold">支/日</span></span>
+                    </div>
+                    <div class="bg-white/80 border border-slate-200 px-5 py-2.5 rounded-xl flex flex-col justify-center items-center shadow-sm w-full md:w-auto">
+                        <span class="text-[11px] font-black text-slate-500 mb-1 tracking-widest uppercase">預估剩餘</span>
+                        <span class="text-2xl font-black text-[#B45309]">${estDays} <span class="text-sm text-slate-500 font-bold">工作天</span></span>
+                    </div>
+                    <div class="bg-orange-50 border border-orange-200 px-6 py-2.5 rounded-xl flex flex-col justify-center items-center shadow-sm w-full md:w-auto">
+                        <span class="text-[11px] font-black text-orange-600 mb-1 tracking-widest uppercase"><i class="fa-regular fa-calendar-check"></i> 預估完工日</span>
+                        <span class="text-2xl font-black text-[#B45309]">${window.formatMinguo(simDate)}</span>
+                    </div>
+                `;
+            } else {
+                document.getElementById('prediction-metrics').innerHTML = `<div class="text-slate-500 font-bold px-6 py-3 bg-white/80 border border-slate-200 rounded-xl shadow-sm text-sm">系統累積數據不足，尚無法進行有效推估。</div>`;
             }
 
             let cS=0, cL=0, cT=0; scheduleData.forEach(i => { if(window.statusSample[i.id]) cS++; if(window.statusLab[i.id]) cL++; if(window.statusTest[i.id]) cT++; });
