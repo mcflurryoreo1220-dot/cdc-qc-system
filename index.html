@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>衛生福利部防疫中心興建工程 - 試體管制系統 V9.3</title>
+    <title>衛生福利部防疫中心興建工程 - 試體管制系統 V9.4</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
@@ -44,7 +44,6 @@
             border-bottom: 1px solid var(--border-color);
             transition: all 0.2s ease;
         }
-        /* ✨ 優化 3: 深度聚焦 Hover 效果 */
         .modern-row:hover:not(.completed-row) { 
             background-color: #F1F5F9; 
             box-shadow: inset 4px 0 0 0 var(--color-blue-deep);
@@ -137,7 +136,7 @@
                     衛生福利部防疫中心興建工程 QC 管制
                 </h1>
                 <p class="text-slate-600 mt-2 text-base font-bold flex items-center gap-3">
-                    預壘樁試體管制排程系統 <span class="bg-slate-200 text-slate-800 px-3 py-1 rounded-md text-sm font-black border border-slate-300">V9.3 極致流暢版</span>
+                    預壘樁試體管制排程系統 <span class="bg-slate-200 text-slate-800 px-3 py-1 rounded-md text-sm font-black border border-slate-300">V9.4 智慧倒數特仕版</span>
                 </p>
             </div>
             <div id="sync-status" class="flex items-center gap-2 px-5 py-2.5 bg-[#EFF6FF] rounded-xl text-sm font-black text-blue-800 border border-blue-200 shadow-sm">
@@ -184,13 +183,18 @@
                     <div class="w-full bg-[#78350F]/50 rounded-full h-3"><div id="prog-lab-bar" class="bg-orange-300 h-3 rounded-full transition-all duration-1000" style="width:0%"></div></div>
                 </div>
 
-                <div class="border border-[#166534] rounded-xl p-5 bg-[#166534] shadow-md flex flex-col justify-between transition hover:shadow-lg">
-                    <div class="text-green-100 font-bold text-sm tracking-wide mb-3">4. 抗壓會驗結案率</div>
-                    <div class="flex items-end gap-2 mb-3">
+                <div class="border border-[#166534] rounded-xl p-5 bg-[#166534] shadow-md flex flex-col justify-between transition hover:shadow-lg relative overflow-hidden">
+                    <div class="flex justify-between items-start mb-2 relative z-10">
+                        <div class="text-green-100 font-bold text-sm tracking-wide mt-1">4. 抗壓會驗結案率</div>
+                        <div id="next-test-info" class="text-[11px] font-black text-green-200 bg-green-800 px-2 py-0.5 rounded shadow-sm">
+                            無待壓測排程
+                        </div>
+                    </div>
+                    <div class="flex items-end gap-2 mb-3 relative z-10">
                         <span id="prog-test-text" class="text-4xl font-black text-white">0</span>
                         <span id="prog-test-total" class="text-green-200 font-bold text-sm mb-1">/ 0 組</span>
                     </div>
-                    <div class="w-full bg-[#064E3B]/60 rounded-full h-3"><div id="prog-test-bar" class="bg-green-400 h-3 rounded-full transition-all duration-1000" style="width:0%"></div></div>
+                    <div class="w-full bg-[#064E3B]/60 rounded-full h-3 relative z-10"><div id="prog-test-bar" class="bg-green-400 h-3 rounded-full transition-all duration-1000" style="width:0%"></div></div>
                 </div>
             </div>
 
@@ -253,7 +257,7 @@
                         <button id="filter-smart-test" onclick="setSmartFilter('TEST')" class="px-4 py-2 rounded-lg text-sm font-bold text-slate-500 hover:text-slate-800 transition"><i class="fa-solid fa-flask mr-1"></i> 待看抗壓</button>
                     </div>
 
-                    <button onclick="scrollToTodo()" class="px-4 py-2.5 rounded-xl text-sm font-black bg-amber-100 text-amber-700 shadow-sm border border-amber-300 hover:bg-amber-200 transition hover:-translate-y-0.5"><i class="fa-solid fa-location-crosshairs mr-1.5"></i> 定位待辦</button>
+                    <button onclick="scrollToTodo()" class="px-4 py-2.5 rounded-xl text-sm font-black bg-amber-100 text-amber-700 shadow-sm border border-amber-300 hover:bg-amber-200 transition hover:-translate-y-0.5"><i class="fa-solid fa-location-crosshairs mr-1.5"></i> 定位當日待辦</button>
 
                     <div class="border-l-2 border-slate-200 pl-3 flex gap-2">
                         <button onclick="filterData('ALL')" id="btn-ALL" class="px-5 py-2.5 rounded-xl text-sm font-black bg-slate-800 text-white shadow-md border border-slate-900 transition hover:-translate-y-0.5">全區</button>
@@ -498,15 +502,41 @@
             window.renderTable(currentFilter);
         };
 
-        // 🔥 一鍵定位待辦邏輯
+        // 🔥 一鍵定位待辦邏輯 (修正：以「今天」為基準去尋找)
         window.scrollToTodo = () => {
-            window.setSmartFilter('ALL'); // 先顯示全部確保找得到
+            window.setSmartFilter('ALL'); // 先切回全部，避免找不到
             setTimeout(() => {
-                const rows = document.querySelectorAll('.modern-row:not(.completed-row)');
-                if(rows.length > 0) {
-                    rows[0].scrollIntoView({behavior: 'smooth', block: 'center'});
-                    rows[0].classList.add('bg-amber-50', 'ring-4', 'ring-amber-300');
-                    setTimeout(() => rows[0].classList.remove('bg-amber-50', 'ring-4', 'ring-amber-300'), 2500);
+                const today = new Date();
+                today.setHours(0,0,0,0);
+                
+                let targetId = null;
+                // 1. 先找「今天或今天以前」還沒做的事情 (最急迫)
+                for (let item of scheduleData) {
+                    const isS = window.statusSample[item.id];
+                    const isL = window.statusLab[item.id];
+                    const isT = window.statusTest[item.id];
+                    
+                    if (!isS && item.sampleDate <= today) { targetId = item.id; break; }
+                    if (!isL && item.collectDate <= today) { targetId = item.id; break; }
+                    if (!isT && item.testDate <= today) { targetId = item.id; break; }
+                }
+                
+                // 2. 如果今天沒有事情做，就找「未來最近」的那一天
+                if (!targetId) {
+                     for (let item of scheduleData) {
+                        if (!window.statusSample[item.id] || !window.statusLab[item.id] || !window.statusTest[item.id]) { 
+                            targetId = item.id; break; 
+                        }
+                     }
+                }
+
+                if (targetId) {
+                    const row = document.getElementById(`row-${targetId}`);
+                    if (row) {
+                        row.scrollIntoView({behavior: 'smooth', block: 'center'});
+                        row.classList.add('bg-amber-100', 'ring-4', 'ring-amber-400', 'transition-all', 'duration-500');
+                        setTimeout(() => row.classList.remove('bg-amber-100', 'ring-4', 'ring-amber-400'), 3000);
+                    }
                 } else {
                     window.showModal("任務皆已完成", "太棒了！所有表單中的排程皆已結案！", "success");
                 }
@@ -525,22 +555,30 @@
                 const isS = window.statusSample[item.id], isL = window.statusLab[item.id], isT = window.statusTest[item.id];
                 const pNum = window.pileNumbers[item.id] || '';
                 
-                if (currentSmartFilter === 'FIELD' && isL) return; 
-                if (currentSmartFilter === 'TEST' && (!isL || isT)) return; 
+                // 💡 智慧焦點過濾邏輯
+                if (currentSmartFilter === 'FIELD' && isL) return; // 現場待辦：若已收件就隱藏
+                if (currentSmartFilter === 'TEST' && (!isL || isT)) return; // 待看抗壓：如果還沒收件，或已經結案，就隱藏
+                
+                // 搜尋過濾
                 if (searchTerm && !item.id.toLowerCase().includes(searchTerm) && !pNum.includes(searchTerm)) return;
 
                 const tr = document.createElement('tr'); 
-                // 給尚未結案的第一列加上 id 以利定位
+                // 給每一列加上 ID，方便一鍵定位
+                tr.id = `row-${item.id}`;
                 tr.className = `modern-row row-hover divide-slate-200 divide-x-0 ${isT ? 'completed-row' : ''}`;
                 
-                // 🔥 優化 2：抗壓日自動倒數徽章
+                // 🔥 動態計算抗壓倒數徽章
                 let testBadge = '';
-                if (!isT && isL) { // 如果已經收件且尚未壓測，才需要倒數
+                if (!isT && isL) { // 已經收件但尚未抗壓
                     const diffTime = item.testDate - todayDate;
                     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                    if (diffDays === 0) testBadge = `<span class="ml-2 bg-red-600 text-white px-2 py-0.5 rounded text-[11px] font-black animate-pulse shadow-sm">今日壓測!</span>`;
-                    else if (diffDays > 0 && diffDays <= 3) testBadge = `<span class="ml-2 bg-amber-500 text-white px-2 py-0.5 rounded text-[11px] font-black shadow-sm">剩 ${diffDays} 天</span>`;
-                    else if (diffDays < 0) testBadge = `<span class="ml-2 bg-slate-500 text-white px-2 py-0.5 rounded text-[11px] font-black shadow-sm">逾期 ${Math.abs(diffDays)} 天</span>`;
+                    if (diffDays === 0) {
+                        testBadge = `<span class="ml-2 bg-red-600 text-white px-2 py-0.5 rounded text-[11px] font-black animate-pulse shadow-sm border border-red-700">今日壓測!</span>`;
+                    } else if (diffDays > 0 && diffDays <= 3) {
+                        testBadge = `<span class="ml-2 bg-amber-500 text-white px-2 py-0.5 rounded text-[11px] font-black shadow-sm border border-amber-600">剩 ${diffDays} 天</span>`;
+                    } else if (diffDays < 0) {
+                        testBadge = `<span class="ml-2 bg-slate-600 text-white px-2 py-0.5 rounded text-[11px] font-black shadow-sm border border-slate-700">逾期 ${Math.abs(diffDays)} 天</span>`;
+                    }
                 }
 
                 tr.innerHTML = `
@@ -560,6 +598,7 @@
             const usedA = new Set(); const usedB = new Set(); const workedDates = new Set();
             Object.entries(window.pileNumbers).forEach(([id, val]) => { const nums = (val.match(/\d+/g) || []).map(n => parseInt(n, 10)); if (nums.length > 0) { nums.forEach(n => { if (id.startsWith('A')) usedA.add(n); else if (id.startsWith('B')) usedB.add(n); }); const item = scheduleData.find(s => s.id === id); if (item) workedDates.add(window.toDateString(item.sampleDate)); } });
             const countA = usedA.size; const countB = usedB.size; const pilesCount = countA + countB; const workedDays = workedDates.size;
+            const todayDate = new Date(); todayDate.setHours(0,0,0,0);
             
             document.getElementById('prog-piles-ab').innerText = `A: ${countA} | B: ${countB}`;
             document.getElementById('prog-piles-text').innerText = pilesCount;
@@ -596,6 +635,40 @@
                 `;
             } else {
                 document.getElementById('prediction-metrics').innerHTML = `<div class="text-slate-500 font-bold px-6 py-3 bg-white/80 border border-slate-200 rounded-xl shadow-sm text-sm">系統累積數據不足，尚無法進行有效推估。</div>`;
+            }
+
+            // 🔥 尋找最近的抗壓日並倒數
+            let nextTestDate = null;
+            let nextTestDays = Infinity;
+            scheduleData.forEach(item => {
+                if (!window.statusTest[item.id] && window.statusLab[item.id]) { // 已收件但未抗壓
+                    const diffTime = item.testDate - todayDate;
+                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                    if (diffDays < nextTestDays) { // 找出最小的數字 (包含負數/逾期)
+                        nextTestDays = diffDays;
+                        nextTestDate = item.testDate;
+                    }
+                }
+            });
+
+            const nextTestEl = document.getElementById('next-test-info');
+            if (nextTestDate) {
+                let tagClass = "bg-green-100 text-green-800 border border-green-300";
+                let daysText = `剩 ${nextTestDays} 天`;
+                if (nextTestDays === 0) {
+                    tagClass = "bg-red-500 text-white animate-pulse border border-red-700";
+                    daysText = "今日壓測!";
+                } else if (nextTestDays <= 3 && nextTestDays > 0) {
+                    tagClass = "bg-amber-400 text-amber-900 border border-amber-500";
+                } else if (nextTestDays < 0) {
+                    tagClass = "bg-slate-600 text-white border border-slate-800";
+                    daysText = `逾期 ${Math.abs(nextTestDays)} 天`;
+                }
+                nextTestEl.innerHTML = `近期: ${window.formatMinguo(nextTestDate)} <span class="ml-1 font-black opacity-90">(${daysText})</span>`;
+                nextTestEl.className = `text-[12px] font-black px-2 py-0.5 rounded shadow-sm ${tagClass}`;
+            } else {
+                nextTestEl.innerHTML = "目前無待壓測排程";
+                nextTestEl.className = "text-[12px] font-bold text-green-200 bg-green-800 px-2 py-0.5 rounded border border-green-900";
             }
 
             let cS=0, cL=0, cT=0; scheduleData.forEach(i => { if(window.statusSample[i.id]) cS++; if(window.statusLab[i.id]) cL++; if(window.statusTest[i.id]) cT++; });
@@ -709,6 +782,7 @@
             resDiv.classList.remove('hidden');
         };
 
+        // 真實 API 邏輯 (完全保留)
         window.openMatrixModal = () => { window.renderMatrixGrid(); document.getElementById('matrix-modal').classList.remove('hidden'); };
         window.closeMatrixModal = () => { document.getElementById('matrix-modal').classList.add('hidden'); };
         window.renderMatrixGrid = () => {
@@ -856,7 +930,7 @@
             const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' }); 
             const link = document.createElement("a"); 
             link.href = URL.createObjectURL(blob); 
-            link.download = `預壘樁進度與試體追蹤表_V9.3.csv`; 
+            link.download = `預壘樁進度與試體追蹤表_V9.4.csv`; 
             link.click();
         };
 
