@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>衛生福利部防疫中心興建工程 - 試體管制系統 V8.8</title>
+    <title>衛生福利部防疫中心興建工程 - 試體管制系統 V9.0</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
@@ -75,8 +75,9 @@
         .cb-lab { accent-color: var(--color-orange-deep); }
         .cb-test { accent-color: var(--color-green-deep); }
         
-        .completed-row { background-color: #F8FAFC !important; opacity: 0.65; filter: grayscale(60%); }
-        .completed-row * { pointer-events: none; }
+        /* 🔥 修復痛點 1：取消 pointer-events: none，讓 Checkbox 永遠可以點擊取消！ */
+        .completed-row { background-color: #F8FAFC !important; opacity: 0.65; filter: grayscale(50%); transition: all 0.3s ease; }
+        .completed-row input[type="text"] { cursor: not-allowed; opacity: 0.8; } 
 
         .cal-tag {
             font-size: 13px;
@@ -107,7 +108,6 @@
         
         @keyframes pulse-border { 0% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.6); } 70% { box-shadow: 0 0 0 6px rgba(220, 38, 38, 0); } 100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0); } }
 
-        /* 🔥 AI Banner 動態炫光外框特效 */
         .ai-banner-wrapper {
             background: linear-gradient(90deg, #FDE68A, #FDBA74, #FDE68A);
             background-size: 200% 200%;
@@ -132,11 +132,11 @@
                     衛生福利部防疫中心興建工程 QC 管制
                 </h1>
                 <p class="text-slate-600 mt-2 text-base font-bold flex items-center gap-3">
-                    預壘樁試體管制排程系統 <span class="bg-slate-200 text-slate-800 px-3 py-1 rounded-md text-sm font-black border border-slate-300">V8.8 穩定除錯版</span>
+                    預壘樁試體管制排程系統 <span class="bg-slate-200 text-slate-800 px-3 py-1 rounded-md text-sm font-black border border-slate-300">V9.0 UX 極致體驗版</span>
                 </p>
             </div>
             <div id="sync-status" class="flex items-center gap-2 px-5 py-2.5 bg-[#EFF6FF] rounded-xl text-sm font-black text-blue-800 border border-blue-200 shadow-sm">
-                <i class="fa-solid fa-cloud-check"></i> 資料同步初始化...
+                <i class="fa-solid fa-cloud-check"></i> 資料雲端同步中
             </div>
         </div>
 
@@ -226,6 +226,7 @@
         </div>
 
         <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-300 space-y-6">
+            
             <div class="flex flex-col xl:flex-row justify-between items-center gap-4">
                 <div class="flex flex-wrap gap-3 items-center w-full xl:w-auto justify-center xl:justify-start">
                     <div class="bg-slate-200 p-1.5 rounded-xl flex gap-1 border border-slate-300 shadow-inner">
@@ -234,10 +235,20 @@
                     </div>
                 </div>
                 
-                <div class="flex flex-wrap gap-2 items-center w-full xl:w-auto justify-center xl:justify-end">
-                    <button onclick="filterData('ALL')" id="btn-ALL" class="px-6 py-2.5 rounded-lg text-sm font-black bg-slate-800 text-white shadow-md border border-slate-900 transition hover:-translate-y-0.5">全區樁號</button>
-                    <button onclick="filterData('A')" id="btn-A" class="px-6 py-2.5 rounded-lg text-sm font-black bg-white text-slate-700 border-2 border-slate-300 hover:bg-slate-100 shadow-sm transition hover:-translate-y-0.5">A 車打設</button>
-                    <button onclick="filterData('B')" id="btn-B" class="px-6 py-2.5 rounded-lg text-sm font-black bg-white text-slate-700 border-2 border-slate-300 hover:bg-slate-100 shadow-sm transition hover:-translate-y-0.5">B 車打設</button>
+                <div class="flex flex-wrap gap-3 items-center w-full xl:w-auto justify-center xl:justify-end">
+                    <div class="relative shadow-sm mr-2">
+                        <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                        <input type="text" id="search-input" onkeyup="renderTable(currentFilter)" placeholder="搜尋編號或樁號..." class="pl-10 pr-4 py-2.5 border-2 border-slate-300 rounded-xl text-sm font-bold outline-none focus:border-[#1E3A8A] w-52 md:w-64 bg-white transition text-slate-800">
+                    </div>
+
+                    <label class="flex items-center gap-2 cursor-pointer bg-white border-2 border-slate-300 px-4 py-2.5 rounded-xl hover:bg-slate-50 transition shadow-sm select-none mr-2">
+                        <input type="checkbox" id="toggle-hide-completed" onchange="renderTable(currentFilter)" class="w-4 h-4 accent-slate-800 cursor-pointer">
+                        <span class="text-sm font-black text-slate-700">隱藏已結案</span>
+                    </label>
+
+                    <button onclick="filterData('ALL')" id="btn-ALL" class="px-5 py-2.5 rounded-xl text-sm font-black bg-slate-800 text-white shadow-md border border-slate-900 transition">全區樁號</button>
+                    <button onclick="filterData('A')" id="btn-A" class="px-5 py-2.5 rounded-xl text-sm font-black bg-white text-slate-700 border-2 border-slate-300 hover:bg-slate-100 shadow-sm transition">A 車</button>
+                    <button onclick="filterData('B')" id="btn-B" class="px-5 py-2.5 rounded-xl text-sm font-black bg-white text-slate-700 border-2 border-slate-300 hover:bg-slate-100 shadow-sm transition">B 車</button>
                 </div>
             </div>
 
@@ -339,7 +350,7 @@
         </div>
     </div>
 
-    <div id="custom-modal" class="fixed inset-0 z-[100] flex items-center justify-center hidden bg-slate-900/70 backdrop-blur-sm transition-opacity">
+    <div id="custom-modal" class="fixed inset-0 z-[100] flex items-center justify-center hidden bg-slate-900/60 backdrop-blur-sm transition-opacity">
         <div class="bg-white rounded-3xl shadow-2xl max-w-sm w-full mx-4 overflow-hidden border-2 border-slate-300">
             <div class="p-6 border-b border-slate-200 flex items-center gap-3 text-lg font-black text-slate-800" id="custom-modal-header"></div>
             <div class="p-8 text-slate-700 text-base leading-relaxed font-bold" id="custom-modal-message"></div>
@@ -401,7 +412,6 @@
 
         const firebaseConfig = { apiKey: "AIzaSyAp1ZVuW95Api3kaQUPgttESZ0RGTEi8H8", authDomain: "cdc-qc-system.firebaseapp.com", projectId: "cdc-qc-system", storageBucket: "cdc-qc-system.firebasestorage.app", messagingSenderId: "745920606237", appId: "1:745920606237:web:7fb9c22a84de208e6e56f4" };
 
-        // 確保 V8.8 修正的變數全部都在
         window.exceptionDates = []; window.exceptionA = []; window.exceptionB = []; 
         window.extraWorkA = []; window.extraWorkB = []; 
         window.pileNumbers = {}; window.statusSample = {}; window.statusLab = {}; window.statusTest = {}; window.remarks = {}; window.contractorReports = {}; 
@@ -420,10 +430,7 @@
                         onSnapshot(doc(db, 'scheduleData', 'mainState'), (snapshot) => {
                             if (snapshot.exists()) {
                                 const data = snapshot.data();
-                                // 修正 V8.7 漏掉的兩個變數讀取
-                                window.exceptionDates = data.exceptionDates || []; 
-                                window.exceptionA = data.exceptionA || []; 
-                                window.exceptionB = data.exceptionB || [];
+                                window.exceptionDates = data.exceptionDates || []; window.exceptionA = data.exceptionA || []; window.exceptionB = data.exceptionB || [];
                                 window.extraWorkA = data.extraWorkA || []; window.extraWorkB = data.extraWorkB || []; 
                                 window.pileNumbers = data.pileNumbers || {}; window.statusSample = data.statusSample || {}; window.statusLab = data.statusLab || {};
                                 window.statusTest = data.statusTest || data.completionStatus || {}; window.remarks = data.remarks || {}; window.contractorReports = data.contractorReports || {};
@@ -443,7 +450,6 @@
 
         window.refreshAll = () => { window.generateSchedule(); window.renderTable(currentFilter); window.updateDashboard(); window.updateExtraUI(); if (currentView === 'calendar') window.renderCalendar(); };
 
-        // 行事曆生成邏輯 (已包含獨立停機與加班)
         window.generateSchedule = () => {
             scheduleData.length = 0; const startDateA = new Date(2026, 4, 5); const startDateB = new Date(2026, 4, 9); const endDate = new Date(2026, 6, 30); let cA = 1, cB = 1;
             for (let d = new Date(startDateA); d <= endDate; d.setDate(d.getDate() + 1)) {
@@ -465,16 +471,30 @@
 
         window.renderTable = (filter) => {
             const tbody = document.getElementById('schedule-body'); tbody.innerHTML = '';
+            
+            // 💡 痛點 2：隱藏已結案與搜尋邏輯
+            const hideCompleted = document.getElementById('toggle-hide-completed')?.checked;
+            const searchTerm = (document.getElementById('search-input')?.value || '').trim().toLowerCase();
+
             scheduleData.filter(i => filter === 'ALL' || i.machine === filter).forEach(item => {
                 const isS = window.statusSample[item.id], isL = window.statusLab[item.id], isT = window.statusTest[item.id];
+                const pNum = window.pileNumbers[item.id] || '';
+                
+                // 執行過濾：如果開啟隱藏且已結案，則跳過此列
+                if (hideCompleted && isT) return; 
+                // 執行搜尋：如果輸入搜尋字詞且不符合，則跳過此列
+                if (searchTerm && !item.id.toLowerCase().includes(searchTerm) && !pNum.includes(searchTerm)) return;
+
                 const tr = document.createElement('tr'); tr.className = `modern-row row-hover divide-slate-200 divide-x-0 ${isT ? 'completed-row' : ''}`;
+                
+                // 🔥 痛點 1 解決：移除 checkbox 上的 ${isT?'disabled':''}，確保永遠可以點擊取消！
                 tr.innerHTML = `
                     <td class="font-black text-slate-800 text-center">${item.id}</td>
                     <td><input type="text" class="pile-input" ${isT ? 'readonly' : ''} onchange="updatePile('${item.id}', this.value)" placeholder="輸入樁號 (例如: A12, A13)" value="${window.pileNumbers[item.id] || ''}"></td>
-                    <td class="bg-blue-50/70"><label class="flex items-center gap-2.5 cursor-pointer"><input type="checkbox" class="status-checkbox cb-sample" ${isS?'checked':''} ${isT?'disabled':''} onclick="toggleStatus('${item.id}', 'sample')"><span class="font-black whitespace-nowrap ${isS?'text-dimmed':'text-[#1E3A8A]'}">${window.formatMinguo(item.sampleDate)}</span></label></td>
+                    <td class="bg-blue-50/70"><label class="flex items-center gap-2.5 cursor-pointer w-full h-full"><input type="checkbox" class="status-checkbox cb-sample" ${isS?'checked':''} onclick="toggleStatus('${item.id}', 'sample')"><span class="font-black whitespace-nowrap ${isS?'text-dimmed':'text-[#1E3A8A]'}">${window.formatMinguo(item.sampleDate)}</span></label></td>
                     <td class="font-bold text-slate-600 whitespace-nowrap">${window.formatMinguo(item.demoldDate)}</td>
-                    <td class="bg-orange-50/70"><label class="flex items-center gap-2.5 cursor-pointer"><input type="checkbox" class="status-checkbox cb-lab" ${isL?'checked':''} ${isT?'disabled':''} onclick="toggleStatus('${item.id}', 'lab')"><span class="font-black whitespace-nowrap ${isL?'text-dimmed':'text-[#B45309]'}">${window.formatMinguo(item.collectDate)}</span></label></td>
-                    <td class="bg-green-50/70"><label class="flex items-center gap-2.5 cursor-pointer"><input type="checkbox" class="status-checkbox cb-test" ${isT?'checked':''} onclick="toggleStatus('${item.id}', 'test')"><span class="font-black whitespace-nowrap ${isT?'text-dimmed':'text-[#166534]'}">${window.formatMinguo(item.testDate)}</span></label></td>
+                    <td class="bg-orange-50/70"><label class="flex items-center gap-2.5 cursor-pointer w-full h-full"><input type="checkbox" class="status-checkbox cb-lab" ${isL?'checked':''} onclick="toggleStatus('${item.id}', 'lab')"><span class="font-black whitespace-nowrap ${isL?'text-dimmed':'text-[#B45309]'}">${window.formatMinguo(item.collectDate)}</span></label></td>
+                    <td class="bg-green-50/70"><label class="flex items-center gap-2.5 cursor-pointer w-full h-full"><input type="checkbox" class="status-checkbox cb-test" ${isT?'checked':''} onclick="toggleStatus('${item.id}', 'test')"><span class="font-black whitespace-nowrap ${isT?'text-dimmed':'text-[#166534]'}">${window.formatMinguo(item.testDate)}</span></label></td>
                     <td><input type="text" class="remark-input" ${isT?'readonly':''} onchange="updateRemark('${item.id}', this.value)" placeholder="點擊填寫..." value="${window.remarks[item.id]||''}"></td>
                 `;
                 tbody.appendChild(tr);
@@ -634,7 +654,7 @@
             resDiv.classList.remove('hidden');
         };
 
-        // ✅ 滿血回歸: 防呆矩陣
+        // ✅ 真實 API: 防呆矩陣
         window.openMatrixModal = () => { window.renderMatrixGrid(); document.getElementById('matrix-modal').classList.remove('hidden'); };
         window.closeMatrixModal = () => { document.getElementById('matrix-modal').classList.add('hidden'); };
         window.renderMatrixGrid = () => {
@@ -650,7 +670,7 @@
             document.getElementById('matrix-count-missing').innerText = statMissing; document.getElementById('matrix-count-ok').innerText = statOk; document.getElementById('matrix-count-error').innerText = statError;
         };
 
-        // ✅ 滿血回歸: 日報勾稽
+        // ✅ 真實 API: 日報勾稽
         window.openReconModal = () => { window.renderReconTable(); document.getElementById('recon-modal').classList.remove('hidden'); };
         window.closeReconModal = () => { document.getElementById('recon-modal').classList.add('hidden'); };
         window.updateContractorReport = (dateStr, val) => { const num = parseInt(val, 10); if (isNaN(num)) delete window.contractorReports[dateStr]; else window.contractorReports[dateStr] = num; window.saveDataToCloud(); window.renderReconTable(); };
@@ -679,7 +699,7 @@
             });
         };
 
-        // ✅ 滿血回歸: 抓取日報 API 串接
+        // ✅ 真實 API: 抓取日報 API 串接
         window.syncFromContractor = async () => {
             const btn = document.getElementById('btn-sync-csv');
             const originalHtml = btn.innerHTML;
@@ -741,7 +761,7 @@
             }
         };
 
-        // ✅ 滿血回歸: LINE 待辦推播 (Make Webhook)
+        // ✅ 真實 API: LINE 待辦推播 (Make Webhook)
         window.sendTomorrowAlert = async () => {
             const btn = document.getElementById('btn-alert');
             const originalHtml = btn.innerHTML;
@@ -775,7 +795,7 @@
             }
         };
 
-        // ✅ 滿血回歸: 匯出品管 CSV 功能
+        // ✅ 真實 API: 匯出品管 CSV 功能
         window.exportCSV = () => {
             let csv = "\uFEFF取樣編號,打設樁號,取樣日期,取樣狀態,實驗室收件,收件狀態,抗壓會驗,結案狀態,系統備註\n";
             scheduleData.forEach(i => { 
@@ -786,7 +806,7 @@
             const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' }); 
             const link = document.createElement("a"); 
             link.href = URL.createObjectURL(blob); 
-            link.download = `預壘樁進度與試體追蹤表_V8.8.csv`; 
+            link.download = `預壘樁進度與試體追蹤表_V9.0.csv`; 
             link.click();
         };
 
@@ -794,7 +814,7 @@
         window.updatePile = (id, val) => { const v = val.trim(); if (!v) delete window.pileNumbers[id]; else window.pileNumbers[id] = v; window.saveDataToCloud(); window.updateDashboard(); if (!document.getElementById('matrix-modal').classList.contains('hidden')) window.renderMatrixGrid(); if (!document.getElementById('recon-modal').classList.contains('hidden')) window.renderReconTable(); };
         window.updateRemark = (id, val) => { const v = val.trim(); if (!v) delete window.remarks[id]; else window.remarks[id] = v; window.saveDataToCloud(); };
         window.changeMonth = (o) => { currentCalDate.setMonth(currentCalDate.getMonth() + o); window.renderCalendar(); };
-        window.showModal = (title, msg, type) => { document.getElementById('custom-modal-header').innerText = title; document.getElementById('custom-modal-message').innerHTML = msg; document.getElementById('custom-modal').classList.remove('hidden'); };
+        window.showModal = (title, msg, type) => { document.getElementById('custom-modal-header').innerHTML = `<i class="fa-solid fa-${type === 'success' ? 'circle-check text-emerald-500' : 'triangle-exclamation text-red-500'}"></i> ${title}`; document.getElementById('custom-modal-message').innerHTML = msg; document.getElementById('custom-modal').classList.remove('hidden'); };
         window.closeModal = () => document.getElementById('custom-modal').classList.add('hidden');
         window.filterData = (f) => { currentFilter = f; window.renderTable(f); if(currentView==='calendar') window.renderCalendar(); };
 
