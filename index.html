@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>衛生福利部防疫中心興建工程 - 試體管制系統 V9.2</title>
+    <title>衛生福利部防疫中心興建工程 - 試體管制系統 V9.3</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
@@ -33,6 +33,7 @@
             background-color: #FFFFFF;
             color: #1E293B; 
             border-bottom: 2px solid #94A3B8; 
+            position: sticky; top: 0; z-index: 20;
         }
 
         .modern-row td { 
@@ -41,8 +42,13 @@
             line-height: 1.6;
             vertical-align: middle;
             border-bottom: 1px solid var(--border-color);
+            transition: all 0.2s ease;
         }
-        .modern-row:hover { background-color: #F1F5F9; transition: 0.1s; }
+        /* ✨ 優化 3: 深度聚焦 Hover 效果 */
+        .modern-row:hover:not(.completed-row) { 
+            background-color: #F1F5F9; 
+            box-shadow: inset 4px 0 0 0 var(--color-blue-deep);
+        }
 
         .pile-input { 
             border: 2px solid #94A3B8; 
@@ -131,7 +137,7 @@
                     衛生福利部防疫中心興建工程 QC 管制
                 </h1>
                 <p class="text-slate-600 mt-2 text-base font-bold flex items-center gap-3">
-                    預壘樁試體管制排程系統 <span class="bg-slate-200 text-slate-800 px-3 py-1 rounded-md text-sm font-black border border-slate-300">V9.2 順暢排序版</span>
+                    預壘樁試體管制排程系統 <span class="bg-slate-200 text-slate-800 px-3 py-1 rounded-md text-sm font-black border border-slate-300">V9.3 極致流暢版</span>
                 </p>
             </div>
             <div id="sync-status" class="flex items-center gap-2 px-5 py-2.5 bg-[#EFF6FF] rounded-xl text-sm font-black text-blue-800 border border-blue-200 shadow-sm">
@@ -238,7 +244,7 @@
                     
                     <div class="relative shadow-sm">
                         <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
-                        <input type="text" id="search-input" onkeyup="renderTable(currentFilter)" placeholder="搜尋編號或樁號..." class="pl-10 pr-4 py-2.5 border-2 border-slate-300 rounded-xl text-sm font-bold outline-none focus:border-[#1E3A8A] w-48 md:w-64 bg-white transition text-slate-800">
+                        <input type="text" id="search-input" onkeyup="renderTable(currentFilter)" placeholder="搜尋編號或樁號..." class="pl-10 pr-4 py-2.5 border-2 border-slate-300 rounded-xl text-sm font-bold outline-none focus:border-[#1E3A8A] w-48 md:w-56 bg-white transition text-slate-800">
                     </div>
 
                     <div class="bg-slate-100 p-1.5 rounded-xl flex gap-1 border border-slate-300 shadow-inner mr-2">
@@ -247,9 +253,13 @@
                         <button id="filter-smart-test" onclick="setSmartFilter('TEST')" class="px-4 py-2 rounded-lg text-sm font-bold text-slate-500 hover:text-slate-800 transition"><i class="fa-solid fa-flask mr-1"></i> 待看抗壓</button>
                     </div>
 
-                    <button onclick="filterData('ALL')" id="btn-ALL" class="px-5 py-2.5 rounded-xl text-sm font-black bg-slate-800 text-white shadow-md border border-slate-900 transition hover:-translate-y-0.5">全區</button>
-                    <button onclick="filterData('A')" id="btn-A" class="px-5 py-2.5 rounded-xl text-sm font-black bg-white text-slate-700 border-2 border-slate-300 hover:bg-slate-100 shadow-sm transition hover:-translate-y-0.5">A 車</button>
-                    <button onclick="filterData('B')" id="btn-B" class="px-5 py-2.5 rounded-xl text-sm font-black bg-white text-slate-700 border-2 border-slate-300 hover:bg-slate-100 shadow-sm transition hover:-translate-y-0.5">B 車</button>
+                    <button onclick="scrollToTodo()" class="px-4 py-2.5 rounded-xl text-sm font-black bg-amber-100 text-amber-700 shadow-sm border border-amber-300 hover:bg-amber-200 transition hover:-translate-y-0.5"><i class="fa-solid fa-location-crosshairs mr-1.5"></i> 定位待辦</button>
+
+                    <div class="border-l-2 border-slate-200 pl-3 flex gap-2">
+                        <button onclick="filterData('ALL')" id="btn-ALL" class="px-5 py-2.5 rounded-xl text-sm font-black bg-slate-800 text-white shadow-md border border-slate-900 transition hover:-translate-y-0.5">全區</button>
+                        <button onclick="filterData('A')" id="btn-A" class="px-5 py-2.5 rounded-xl text-sm font-black bg-white text-slate-700 border-2 border-slate-300 hover:bg-slate-100 shadow-sm transition hover:-translate-y-0.5">A 車</button>
+                        <button onclick="filterData('B')" id="btn-B" class="px-5 py-2.5 rounded-xl text-sm font-black bg-white text-slate-700 border-2 border-slate-300 hover:bg-slate-100 shadow-sm transition hover:-translate-y-0.5">B 車</button>
+                    </div>
                 </div>
             </div>
 
@@ -299,9 +309,9 @@
             </div>
         </div>
 
-        <div id="table-view" class="bg-white shadow-xl rounded-2xl border-2 border-slate-300 overflow-x-auto">
+        <div id="table-view" class="bg-white shadow-xl rounded-2xl border-2 border-slate-300 overflow-x-auto relative">
             <table class="w-full text-left border-collapse table-auto min-w-[1200px]">
-                <thead class="table-header sticky top-0 z-10 shadow-sm border-b-2 border-slate-300">
+                <thead class="table-header shadow-sm border-b-2 border-slate-300">
                     <tr>
                         <th class="w-[80px] whitespace-nowrap">編號</th>
                         <th class="w-[30%]">對應樁號 <i class="fa-solid fa-pen-to-square ml-1.5 opacity-60"></i></th>
@@ -488,35 +498,58 @@
             window.renderTable(currentFilter);
         };
 
+        // 🔥 一鍵定位待辦邏輯
+        window.scrollToTodo = () => {
+            window.setSmartFilter('ALL'); // 先顯示全部確保找得到
+            setTimeout(() => {
+                const rows = document.querySelectorAll('.modern-row:not(.completed-row)');
+                if(rows.length > 0) {
+                    rows[0].scrollIntoView({behavior: 'smooth', block: 'center'});
+                    rows[0].classList.add('bg-amber-50', 'ring-4', 'ring-amber-300');
+                    setTimeout(() => rows[0].classList.remove('bg-amber-50', 'ring-4', 'ring-amber-300'), 2500);
+                } else {
+                    window.showModal("任務皆已完成", "太棒了！所有表單中的排程皆已結案！", "success");
+                }
+            }, 100);
+        };
+
         window.renderTable = (filter) => {
             const tbody = document.getElementById('schedule-body'); tbody.innerHTML = '';
             
             const searchTerm = (document.getElementById('search-input')?.value || '').trim().toLowerCase();
-
-            // 🔥 移除 .reverse()，恢復「由近到遠（時間先後）」的自然排序！
             const filteredData = scheduleData.filter(i => filter === 'ALL' || i.machine === filter);
+            const todayDate = new Date();
+            todayDate.setHours(0,0,0,0);
 
             filteredData.forEach(item => {
                 const isS = window.statusSample[item.id], isL = window.statusLab[item.id], isT = window.statusTest[item.id];
                 const pNum = window.pileNumbers[item.id] || '';
                 
-                // 💡 智慧焦點過濾邏輯
-                if (currentSmartFilter === 'FIELD' && isL) return; // 現場待辦：若已收件就隱藏
-                if (currentSmartFilter === 'TEST' && (!isL || isT)) return; // 待看抗壓：如果還沒收件，或已經結案，就隱藏
-                
-                // 搜尋過濾
+                if (currentSmartFilter === 'FIELD' && isL) return; 
+                if (currentSmartFilter === 'TEST' && (!isL || isT)) return; 
                 if (searchTerm && !item.id.toLowerCase().includes(searchTerm) && !pNum.includes(searchTerm)) return;
 
-                const tr = document.createElement('tr'); tr.className = `modern-row row-hover divide-slate-200 divide-x-0 ${isT ? 'completed-row' : ''}`;
+                const tr = document.createElement('tr'); 
+                // 給尚未結案的第一列加上 id 以利定位
+                tr.className = `modern-row row-hover divide-slate-200 divide-x-0 ${isT ? 'completed-row' : ''}`;
                 
-                // 🔥 移除了 checkbox 的 disabled 屬性，確保可取消！
+                // 🔥 優化 2：抗壓日自動倒數徽章
+                let testBadge = '';
+                if (!isT && isL) { // 如果已經收件且尚未壓測，才需要倒數
+                    const diffTime = item.testDate - todayDate;
+                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                    if (diffDays === 0) testBadge = `<span class="ml-2 bg-red-600 text-white px-2 py-0.5 rounded text-[11px] font-black animate-pulse shadow-sm">今日壓測!</span>`;
+                    else if (diffDays > 0 && diffDays <= 3) testBadge = `<span class="ml-2 bg-amber-500 text-white px-2 py-0.5 rounded text-[11px] font-black shadow-sm">剩 ${diffDays} 天</span>`;
+                    else if (diffDays < 0) testBadge = `<span class="ml-2 bg-slate-500 text-white px-2 py-0.5 rounded text-[11px] font-black shadow-sm">逾期 ${Math.abs(diffDays)} 天</span>`;
+                }
+
                 tr.innerHTML = `
                     <td class="font-black text-slate-800 text-center">${item.id}</td>
                     <td><input type="text" class="pile-input" ${isT ? 'readonly' : ''} onchange="updatePile('${item.id}', this.value)" placeholder="輸入樁號 (例如: A12, A13)" value="${window.pileNumbers[item.id] || ''}"></td>
                     <td class="bg-blue-50/70"><label class="flex items-center gap-2.5 cursor-pointer w-full h-full"><input type="checkbox" class="status-checkbox cb-sample" ${isS?'checked':''} onclick="toggleStatus('${item.id}', 'sample')"><span class="font-black whitespace-nowrap ${isS?'text-dimmed':'text-[#1E3A8A]'}">${window.formatMinguo(item.sampleDate)}</span></label></td>
                     <td class="font-bold text-slate-600 whitespace-nowrap">${window.formatMinguo(item.demoldDate)}</td>
                     <td class="bg-orange-50/70"><label class="flex items-center gap-2.5 cursor-pointer w-full h-full"><input type="checkbox" class="status-checkbox cb-lab" ${isL?'checked':''} onclick="toggleStatus('${item.id}', 'lab')"><span class="font-black whitespace-nowrap ${isL?'text-dimmed':'text-[#B45309]'}">${window.formatMinguo(item.collectDate)}</span></label></td>
-                    <td class="bg-green-50/70"><label class="flex items-center gap-2.5 cursor-pointer w-full h-full"><input type="checkbox" class="status-checkbox cb-test" ${isT?'checked':''} onclick="toggleStatus('${item.id}', 'test')"><span class="font-black whitespace-nowrap ${isT?'text-dimmed':'text-[#166534]'}">${window.formatMinguo(item.testDate)}</span></label></td>
+                    <td class="bg-green-50/70"><label class="flex items-center gap-2.5 cursor-pointer w-full h-full"><input type="checkbox" class="status-checkbox cb-test" ${isT?'checked':''} onclick="toggleStatus('${item.id}', 'test')"><span class="font-black whitespace-nowrap flex items-center ${isT?'text-dimmed':'text-[#166534]'}">${window.formatMinguo(item.testDate)}${testBadge}</span></label></td>
                     <td><input type="text" class="remark-input" ${isT?'readonly':''} onchange="updateRemark('${item.id}', this.value)" placeholder="點擊填寫..." value="${window.remarks[item.id]||''}"></td>
                 `;
                 tbody.appendChild(tr);
@@ -823,7 +856,7 @@
             const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' }); 
             const link = document.createElement("a"); 
             link.href = URL.createObjectURL(blob); 
-            link.download = `預壘樁進度與試體追蹤表_V9.2.csv`; 
+            link.download = `預壘樁進度與試體追蹤表_V9.3.csv`; 
             link.click();
         };
 
