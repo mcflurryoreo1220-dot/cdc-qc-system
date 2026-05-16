@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>衛生福利部防疫中心興建工程 - 試體管制系統 V9.1</title>
+    <title>衛生福利部防疫中心興建工程 - 試體管制系統 V9.2</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
@@ -131,7 +131,7 @@
                     衛生福利部防疫中心興建工程 QC 管制
                 </h1>
                 <p class="text-slate-600 mt-2 text-base font-bold flex items-center gap-3">
-                    預壘樁試體管制排程系統 <span class="bg-slate-200 text-slate-800 px-3 py-1 rounded-md text-sm font-black border border-slate-300">V9.1 智慧焦點版</span>
+                    預壘樁試體管制排程系統 <span class="bg-slate-200 text-slate-800 px-3 py-1 rounded-md text-sm font-black border border-slate-300">V9.2 順暢排序版</span>
                 </p>
             </div>
             <div id="sync-status" class="flex items-center gap-2 px-5 py-2.5 bg-[#EFF6FF] rounded-xl text-sm font-black text-blue-800 border border-blue-200 shadow-sm">
@@ -418,7 +418,7 @@
         window.pileNumbers = {}; window.statusSample = {}; window.statusLab = {}; window.statusTest = {}; window.remarks = {}; window.contractorReports = {}; 
 
         const scheduleData = []; let currentFilter = 'ALL'; let currentView = 'table'; let currentCalDate = new Date(2026, 4, 1); 
-        let currentSmartFilter = 'ALL'; // 🔥 新增：智慧焦點過濾變數
+        let currentSmartFilter = 'ALL'; // 智慧焦點過濾變數
         const TOTAL_PILES_LIMIT = 613; let isCloudEnabled = false; let db, auth;
         
         const MAKE_WEBHOOK_URL = "https://hook.us2.make.com/3e3bd4bob7ptalfemcn6q982tyc0tjil";
@@ -429,6 +429,7 @@
                 const app = initializeApp(firebaseConfig); auth = getAuth(app); db = getFirestore(app); isCloudEnabled = true; await signInAnonymously(auth);
                 onAuthStateChanged(auth, (user) => {
                     if (user) {
+                        document.getElementById('sync-status').innerHTML = '<i class="fa-solid fa-cloud-check text-emerald-600"></i> 正式雲端同步中';
                         onSnapshot(doc(db, 'scheduleData', 'mainState'), (snapshot) => {
                             if (snapshot.exists()) {
                                 const data = snapshot.data();
@@ -471,18 +472,15 @@
             }
         };
 
-        // 🔥 V9.1 新增：智慧焦點切換邏輯
+        // 🔥 智慧焦點切換邏輯
         window.setSmartFilter = (type) => {
             currentSmartFilter = type;
-            // 更新 UI 狀態
             const btnAll = document.getElementById('filter-smart-all');
             const btnField = document.getElementById('filter-smart-field');
             const btnTest = document.getElementById('filter-smart-test');
             
-            // 重置所有樣式
             [btnAll, btnField, btnTest].forEach(b => b.className = "px-4 py-2 rounded-lg text-sm font-bold text-slate-500 hover:text-slate-800 transition");
             
-            // 點亮當前選擇的樣式
             if(type === 'ALL') btnAll.className = "px-4 py-2 rounded-lg text-sm font-black bg-white text-slate-800 shadow-sm border border-slate-200 transition";
             if(type === 'FIELD') btnField.className = "px-4 py-2 rounded-lg text-sm font-black bg-[#1E3A8A] text-white shadow-sm transition";
             if(type === 'TEST') btnTest.className = "px-4 py-2 rounded-lg text-sm font-black bg-[#166534] text-white shadow-sm transition";
@@ -495,8 +493,8 @@
             
             const searchTerm = (document.getElementById('search-input')?.value || '').trim().toLowerCase();
 
-            // 🔥 V9.1: 使用 .slice().reverse() 讓最新排程在最上方！
-            const filteredData = scheduleData.filter(i => filter === 'ALL' || i.machine === filter).slice().reverse();
+            // 🔥 移除 .reverse()，恢復「由近到遠（時間先後）」的自然排序！
+            const filteredData = scheduleData.filter(i => filter === 'ALL' || i.machine === filter);
 
             filteredData.forEach(item => {
                 const isS = window.statusSample[item.id], isL = window.statusLab[item.id], isT = window.statusTest[item.id];
@@ -511,6 +509,7 @@
 
                 const tr = document.createElement('tr'); tr.className = `modern-row row-hover divide-slate-200 divide-x-0 ${isT ? 'completed-row' : ''}`;
                 
+                // 🔥 移除了 checkbox 的 disabled 屬性，確保可取消！
                 tr.innerHTML = `
                     <td class="font-black text-slate-800 text-center">${item.id}</td>
                     <td><input type="text" class="pile-input" ${isT ? 'readonly' : ''} onchange="updatePile('${item.id}', this.value)" placeholder="輸入樁號 (例如: A12, A13)" value="${window.pileNumbers[item.id] || ''}"></td>
@@ -524,7 +523,6 @@
             });
         };
 
-        // ... 以下為原本 V8.8 的所有代碼，包含所有功能，完全沒有更動 ...
         window.updateDashboard = () => {
             const usedA = new Set(); const usedB = new Set(); const workedDates = new Set();
             Object.entries(window.pileNumbers).forEach(([id, val]) => { const nums = (val.match(/\d+/g) || []).map(n => parseInt(n, 10)); if (nums.length > 0) { nums.forEach(n => { if (id.startsWith('A')) usedA.add(n); else if (id.startsWith('B')) usedB.add(n); }); const item = scheduleData.find(s => s.id === id); if (item) workedDates.add(window.toDateString(item.sampleDate)); } });
@@ -825,7 +823,7 @@
             const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' }); 
             const link = document.createElement("a"); 
             link.href = URL.createObjectURL(blob); 
-            link.download = `預壘樁進度與試體追蹤表_V9.1.csv`; 
+            link.download = `預壘樁進度與試體追蹤表_V9.2.csv`; 
             link.click();
         };
 
