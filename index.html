@@ -3,14 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>防疫中心興建工程 - 數位雙生戰情室</title>
+    <title>防疫中心興建工程 - 終極全功能戰情室 V11.0</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
-        body { font-family: 'Noto Sans TC', sans-serif; background-color: #F8FAFC; }
-        .pile-circle { transition: all 0.3s ease; stroke: #94A3B8; stroke-width: 15; }
-        .pile-circle:hover { stroke: #000; stroke-width: 50; cursor: pointer; }
-        #map-container { width: 100%; height: 500px; background-color: #F1F5F9; border-radius: 16px; border: 2px solid #CBD5E1; overflow: hidden; }
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
+        body { font-family: 'Noto Sans TC', sans-serif; background-color: #F8FAFC; color: #0F172A; }
+        .table-header th { position: sticky; top: 0; z-index: 20; background: #FFF; padding: 16px; border-bottom: 2px solid #94A3B8; }
+        .modern-row td { padding: 14px; border-bottom: 1px solid #CBD5E1; }
+        .completed-row { background-color: #F8FAFC !important; opacity: 0.6; filter: grayscale(50%); }
+        .pile-circle { transition: all 0.3s ease; stroke: #475569; stroke-width: 10; fill: #64748B; }
+        .pile-circle:hover { stroke: #000; stroke-width: 40; cursor: pointer; transform: scale(1.1); }
+        #map-container { width: 100%; height: 500px; background-color: #FFFFFF; border-radius: 16px; border: 2px solid #CBD5E1; overflow: hidden; }
     </style>
 </head>
 <body class="p-4 md:p-8">
@@ -18,97 +22,103 @@
     <div class="max-w-[1500px] mx-auto space-y-6">
         <div class="bg-white p-6 rounded-2xl shadow-lg border border-slate-200">
             <h3 class="font-black text-slate-800 text-lg mb-4">
-                <i class="fa-solid fa-map-location-dot text-[#1E3A8A]"></i> 數位雙生樁號位置圖
+                <i class="fa-solid fa-map-location-dot text-[#1E3A8A]"></i> 數位雙生樁號位置圖 (自動繪製)
             </h3>
             <div id="map-container">
                 <div id="map-placeholder" class="text-slate-500 font-bold flex flex-col items-center justify-center h-full">
                     <i class="fa-solid fa-satellite-dish text-4xl animate-pulse text-blue-400 mb-2"></i>
-                    <span>系統準備就緒，請點擊下方按鈕同步資料</span>
+                    <span>請點擊下方「抓取日報與地圖」載入資料</span>
                 </div>
             </div>
         </div>
 
         <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-300">
-            <button onclick="syncFromContractor()" id="btn-sync-csv" class="bg-[#475569] text-white px-6 py-3 rounded-xl font-black shadow-lg hover:bg-slate-800">
-                <i class="fa-solid fa-cloud-arrow-down"></i> 抓取日報與地圖
-            </button>
+            <div class="flex flex-wrap gap-4 mb-6">
+                <button onclick="syncFromContractor()" id="btn-sync" class="bg-[#475569] text-white px-6 py-3 rounded-xl font-black shadow-lg hover:bg-slate-800 transition">
+                    <i class="fa-solid fa-cloud-arrow-down mr-2"></i> 抓取日報與地圖
+                </button>
+                <button onclick="toggleView('table')" class="bg-slate-800 text-white px-6 py-3 rounded-xl font-black">稽核清單</button>
+            </div>
+
+            <div id="table-view" class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead class="table-header">
+                        <tr>
+                            <th>編號</th>
+                            <th>對應樁號</th>
+                            <th>取樣日</th>
+                            <th>收件日</th>
+                            <th>抗壓日</th>
+                            <th>備註</th>
+                        </tr>
+                    </thead>
+                    <tbody id="schedule-body"></tbody>
+                </table>
+            </div>
         </div>
     </div>
 
     <script type="module">
-        // 🔥 請將您的 Firebase Config 貼在下方
-        const firebaseConfig = {
-            // apiKey: "...",
-            // authDomain: "...",
-            // ...
-        };
+        // 核心邏輯整合
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, onSnapshot, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        const CONTRACTOR_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQeDEcb4ErD1XpPyx4s2kEVCToYMtqfsFMW2J2_5l5xUS23xEMgueri4OND67Mo8NS1O6oDNV3IRPST/pub?output=csv";
+        // (Firebase 配置請記得貼上)
+        const firebaseConfig = { /* ... */ };
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        
+        window.pileNumbers = {}; window.mapCoordinates = []; window.scheduleData = [];
 
-        window.mapCoordinates = []; // 儲存地圖點位
-
+        // 同步邏輯 (含地圖繪製)
         window.syncFromContractor = async () => {
-            const btn = document.getElementById('btn-sync-csv');
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 同步中...';
+            const btn = document.getElementById('btn-sync');
             btn.disabled = true;
-
             try {
-                // 讀取 CSV
-                const response = await fetch(CONTRACTOR_CSV_URL + "&t=" + new Date().getTime());
-                if (!response.ok) throw new Error("讀取 CSV 失敗，請確認連結權限");
-                
+                const url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQeDEcb4ErD1XpPyx4s2kEVCToYMtqfsFMW2J2_5l5xUS23xEMgueri4OND67Mo8NS1O6oDNV3IRPST/pub?output=csv&t=" + new Date().getTime();
+                const response = await fetch(url);
                 const csvText = await response.text();
-                const lines = csvText.split('\n');
-                
+                const rows = csvText.split('\n');
                 window.mapCoordinates = [];
                 
-                // 解析資料 (假設第1行為標題，從第2行開始)
-                for (let i = 1; i < lines.length; i++) {
-                    const cols = lines[i].split(',');
+                for (let i = 1; i < rows.length; i++) {
+                    const cols = rows[i].split(',');
                     if (cols.length < 6) continue;
-                    
-                    const pile = cols[0].trim(); // 樁號
+                    const id = cols[0].trim().replace(/\D/g, '');
                     const x = parseFloat(cols[4]);
                     const y = parseFloat(cols[5]);
-                    
-                    if (pile && !isNaN(x) && !isNaN(y)) {
-                        window.mapCoordinates.push({ id: pile.replace(/\D/g, ''), x: x, y: y });
+                    if (id && !isNaN(x) && !isNaN(y)) {
+                        window.mapCoordinates.push({ id, x, y });
                     }
                 }
-                
                 renderMap();
-                alert(`同步完成！共讀取 ${window.mapCoordinates.length} 支樁位座標。`);
-
-            } catch (error) {
-                alert("錯誤：" + error.message);
-                console.error(error);
+                alert("同步與地圖繪製完成！");
+            } catch (e) {
+                alert("同步失敗，請確認 Google Sheet 已發布為 CSV 且連結無誤。錯誤: " + e.message);
             } finally {
-                btn.innerHTML = '<i class="fa-solid fa-cloud-arrow-down"></i> 抓取日報與地圖';
                 btn.disabled = false;
             }
         };
 
-        window.renderMap = () => {
+        function renderMap() {
             const container = document.getElementById('map-container');
             if (window.mapCoordinates.length === 0) return;
-
-            // 計算範圍
-            let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
-            window.mapCoordinates.forEach(p => {
-                minX = Math.min(minX, p.x); maxX = Math.max(maxX, p.x);
-                minY = Math.min(minY, -p.y); maxY = Math.max(maxY, -p.y);
-            });
-
-            const padding = (maxX - minX) * 0.1;
+            
+            let minX = Math.min(...window.mapCoordinates.map(p => p.x));
+            let maxX = Math.max(...window.mapCoordinates.map(p => p.x));
+            let minY = Math.min(...window.mapCoordinates.map(p => -p.y));
+            let maxY = Math.max(...window.mapCoordinates.map(p => -p.y));
+            
+            const padding = 500;
             const viewBox = `${minX - padding} ${minY - padding} ${(maxX - minX) + padding * 2} ${(maxY - minY) + padding * 2}`;
 
             let circlesHtml = '';
             window.mapCoordinates.forEach(p => {
-                circlesHtml += `<circle class="pile-circle" cx="${p.x}" cy="${-p.y}" r="60" fill="#1E3A8A" stroke="#fff" stroke-width="15"><title>樁號: ${p.id}</title></circle>`;
+                circlesHtml += `<circle class="pile-circle" cx="${p.x}" cy="${-p.y}" r="80"><title>樁號: ${p.id}</title></circle>`;
             });
-
-            container.innerHTML = `<svg width="100%" height="100%" viewBox="${viewBox}" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">${circlesHtml}</svg>`;
-        };
+            container.innerHTML = `<svg viewBox="${viewBox}" preserveAspectRatio="xMidYMid meet">${circlesHtml}</svg>`;
+        }
     </script>
 </body>
 </html>
