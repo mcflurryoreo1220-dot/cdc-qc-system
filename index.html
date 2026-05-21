@@ -1,73 +1,114 @@
-<script type="module">
-    // ... (Firebase 初始化代碼保留不變) ...
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>防疫中心興建工程 - 數位雙生戰情室</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body { font-family: 'Noto Sans TC', sans-serif; background-color: #F8FAFC; }
+        .pile-circle { transition: all 0.3s ease; stroke: #94A3B8; stroke-width: 15; }
+        .pile-circle:hover { stroke: #000; stroke-width: 50; cursor: pointer; }
+        #map-container { width: 100%; height: 500px; background-color: #F1F5F9; border-radius: 16px; border: 2px solid #CBD5E1; overflow: hidden; }
+    </style>
+</head>
+<body class="p-4 md:p-8">
 
-    window.syncFromContractor = async () => {
-        const btn = document.getElementById('btn-sync-csv');
-        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 抓取中...';
-        btn.disabled = true;
+    <div class="max-w-[1500px] mx-auto space-y-6">
+        <div class="bg-white p-6 rounded-2xl shadow-lg border border-slate-200">
+            <h3 class="font-black text-slate-800 text-lg mb-4">
+                <i class="fa-solid fa-map-location-dot text-[#1E3A8A]"></i> 數位雙生樁號位置圖
+            </h3>
+            <div id="map-container">
+                <div id="map-placeholder" class="text-slate-500 font-bold flex flex-col items-center justify-center h-full">
+                    <i class="fa-solid fa-satellite-dish text-4xl animate-pulse text-blue-400 mb-2"></i>
+                    <span>系統準備就緒，請點擊下方按鈕同步資料</span>
+                </div>
+            </div>
+        </div>
 
-        try {
-            // 🔥 加入時間戳記避免讀到舊快取
-            const cacheBuster = `&t=${new Date().getTime()}`;
-            const response = await fetch(CONTRACTOR_CSV_URL + cacheBuster);
-            
-            if (!response.ok) throw new Error("Google 無法回應 (Status: " + response.status + ")");
-            const csvText = await response.text();
-            
-            const lines = csvText.split('\n');
-            const groupedData = {};
-            window.mapCoordinates = []; 
-            
-            // 讀取 CSV (從第2行開始，避開標題)
-            for (let i = 1; i < lines.length; i++) {
-                if (!lines[i].trim()) continue;
-                const cols = lines[i].split(',');
-                // 依照您 Excel 的欄位順序：樁號(0), 日期(1), 機台(2), 順序(3), X(4), Y(5)
-                const rawPile = cols[0] ? cols[0].trim() : ''; 
-                const date = cols[1] ? cols[1].trim() : ''; 
-                const machine = cols[2] ? cols[2].trim() : '';
-                const pileNum = rawPile.replace(/\D/g, ''); 
-                const machLetter = machine.includes('A') ? 'A' : (machine.includes('B') ? 'B' : '');
-                const xStr = cols[4] ? cols[4].trim() : '';
-                const yStr = cols[5] ? cols[5].trim() : '';
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-300">
+            <button onclick="syncFromContractor()" id="btn-sync-csv" class="bg-[#475569] text-white px-6 py-3 rounded-xl font-black shadow-lg hover:bg-slate-800">
+                <i class="fa-solid fa-cloud-arrow-down"></i> 抓取日報與地圖
+            </button>
+        </div>
+    </div>
 
-                if (pileNum && xStr && yStr) {
-                    const x = parseFloat(xStr), y = parseFloat(yStr);
-                    if (!isNaN(x) && !isNaN(y)) window.mapCoordinates.push({ id: pileNum, x: x, y: y });
-                }
+    <script type="module">
+        // 🔥 請將您的 Firebase Config 貼在下方
+        const firebaseConfig = {
+            // apiKey: "...",
+            // authDomain: "...",
+            // ...
+        };
 
-                if (pileNum && date && machLetter) {
-                    const key = `${date}_${machLetter}`;
-                    if (!groupedData[key]) groupedData[key] = [];
-                    groupedData[key].push(pileNum);
-                }
-            }
+        const CONTRACTOR_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQeDEcb4ErD1XpPyx4s2kEVCToYMtqfsFMW2J2_5l5xUS23xEMgueri4OND67Mo8NS1O6oDNV3IRPST/pub?output=csv";
 
-            // 更新排程邏輯...
-            let updatedCount = 0;
-            scheduleData.forEach(item => {
-                const itemDateStr = window.toDateString(item.sampleDate);
-                const key = `${itemDateStr}_${item.machine}`;
-                if (groupedData[key]) {
-                    const newPileStr = groupedData[key].join('、');
-                    if (!window.statusTest[item.id] && window.pileNumbers[item.id] !== newPileStr) {
-                        window.pileNumbers[item.id] = newPileStr;
-                        updatedCount++;
+        window.mapCoordinates = []; // 儲存地圖點位
+
+        window.syncFromContractor = async () => {
+            const btn = document.getElementById('btn-sync-csv');
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 同步中...';
+            btn.disabled = true;
+
+            try {
+                // 讀取 CSV
+                const response = await fetch(CONTRACTOR_CSV_URL + "&t=" + new Date().getTime());
+                if (!response.ok) throw new Error("讀取 CSV 失敗，請確認連結權限");
+                
+                const csvText = await response.text();
+                const lines = csvText.split('\n');
+                
+                window.mapCoordinates = [];
+                
+                // 解析資料 (假設第1行為標題，從第2行開始)
+                for (let i = 1; i < lines.length; i++) {
+                    const cols = lines[i].split(',');
+                    if (cols.length < 6) continue;
+                    
+                    const pile = cols[0].trim(); // 樁號
+                    const x = parseFloat(cols[4]);
+                    const y = parseFloat(cols[5]);
+                    
+                    if (pile && !isNaN(x) && !isNaN(y)) {
+                        window.mapCoordinates.push({ id: pile.replace(/\D/g, ''), x: x, y: y });
                     }
                 }
+                
+                renderMap();
+                alert(`同步完成！共讀取 ${window.mapCoordinates.length} 支樁位座標。`);
+
+            } catch (error) {
+                alert("錯誤：" + error.message);
+                console.error(error);
+            } finally {
+                btn.innerHTML = '<i class="fa-solid fa-cloud-arrow-down"></i> 抓取日報與地圖';
+                btn.disabled = false;
+            }
+        };
+
+        window.renderMap = () => {
+            const container = document.getElementById('map-container');
+            if (window.mapCoordinates.length === 0) return;
+
+            // 計算範圍
+            let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+            window.mapCoordinates.forEach(p => {
+                minX = Math.min(minX, p.x); maxX = Math.max(maxX, p.x);
+                minY = Math.min(minY, -p.y); maxY = Math.max(maxY, -p.y);
             });
 
-            window.saveDataToCloud();
-            window.refreshAll();
-            window.showModal("同步成功", `已完成數據同步，並成功讀取 ${window.mapCoordinates.length} 支樁位座標！`, "success");
-            
-        } catch (error) { 
-            window.showModal("同步失敗", "詳細錯誤：" + error.message + "<br><br>請檢查：<br>1. Google Sheet 是否已按『發佈到網路』。<br>2. 是否選擇了『逗號分隔值(.csv)』格式。", "error");
-        } finally { 
-            btn.innerHTML = '<i class="fa-solid fa-cloud-arrow-down"></i> 抓取日報與地圖';
-            btn.disabled = false; 
-        }
-    };
-    
-    // ... (其餘邏輯維持不變) ...
-</script>
+            const padding = (maxX - minX) * 0.1;
+            const viewBox = `${minX - padding} ${minY - padding} ${(maxX - minX) + padding * 2} ${(maxY - minY) + padding * 2}`;
+
+            let circlesHtml = '';
+            window.mapCoordinates.forEach(p => {
+                circlesHtml += `<circle class="pile-circle" cx="${p.x}" cy="${-p.y}" r="60" fill="#1E3A8A" stroke="#fff" stroke-width="15"><title>樁號: ${p.id}</title></circle>`;
+            });
+
+            container.innerHTML = `<svg width="100%" height="100%" viewBox="${viewBox}" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">${circlesHtml}</svg>`;
+        };
+    </script>
+</body>
+</html>
