@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>衛生福利部防疫中心興建工程 - 試體管制系統 V9.4</title>
+    <title>衛生福利部防疫中心興建工程 - 試體管制系統 V10.0</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
@@ -17,6 +17,7 @@
             --color-blue-deep: #1E3A8A;  
             --color-orange-deep: #B45309; 
             --color-green-deep: #166534;  
+            --color-gray-light: #E2E8F0;
         }
 
         body { 
@@ -121,6 +122,29 @@
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
         }
         @keyframes gradient-shift { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+
+        /* 🔥 新增：地圖容器樣式 */
+        #map-container {
+            width: 100%;
+            height: 400px;
+            background-color: #F1F5F9;
+            border-radius: 12px;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            border: 2px solid #CBD5E1;
+            box-shadow: inset 0 2px 10px rgba(0,0,0,0.05);
+        }
+        .pile-circle {
+            transition: all 0.5s ease;
+            cursor: pointer;
+        }
+        .pile-circle:hover {
+            stroke: #000;
+            stroke-width: 50; /* 放大 hover 外框 */
+        }
     </style>
 </head>
 <body class="p-2 md:p-8">
@@ -136,7 +160,7 @@
                     衛生福利部防疫中心興建工程 QC 管制
                 </h1>
                 <p class="text-slate-600 mt-2 text-base font-bold flex items-center gap-3">
-                    預壘樁試體管制排程系統 <span class="bg-slate-200 text-slate-800 px-3 py-1 rounded-md text-sm font-black border border-slate-300">V9.4 智慧倒數特仕版</span>
+                    預壘樁試體管制排程系統 <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded-md text-sm font-black border border-blue-300 shadow-sm"><i class="fa-solid fa-map-location-dot"></i> V10.0 數位雙生地圖版</span>
                 </p>
             </div>
             <div id="sync-status" class="flex items-center gap-2 px-5 py-2.5 bg-[#EFF6FF] rounded-xl text-sm font-black text-blue-800 border border-blue-200 shadow-sm">
@@ -145,10 +169,27 @@
         </div>
 
         <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-300">
-            <h3 class="font-black text-slate-800 text-lg flex items-center gap-2 mb-6">
-                <i class="fa-solid fa-chart-line text-slate-500"></i> 全區 QC 進度戰情室
-            </h3>
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="font-black text-slate-800 text-lg flex items-center gap-2">
+                    <i class="fa-solid fa-map-location-dot text-[#1E3A8A]"></i> 數位雙生全區進度戰情地圖
+                </h3>
+                <div class="flex gap-4 text-xs font-bold text-slate-600 bg-slate-50 px-4 py-2 rounded-lg border border-slate-200">
+                    <div class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-[#E2E8F0] border border-slate-300"></span> 未施作</div>
+                    <div class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-[#1E3A8A]"></span> 取樣完成</div>
+                    <div class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-[#B45309]"></span> 已收件</div>
+                    <div class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-[#166534]"></span> 抗壓結案</div>
+                </div>
+            </div>
             
+            <div id="map-container">
+                <div id="map-placeholder" class="text-slate-500 font-bold flex flex-col items-center gap-3">
+                    <i class="fa-solid fa-satellite-dish text-4xl animate-pulse text-blue-400"></i>
+                    <span>請點擊下方「抓取日報同步」以載入座標與繪製地圖</span>
+                </div>
+                </div>
+        </div>
+
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-300">
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
                 <div class="border border-slate-800 rounded-xl p-5 bg-slate-700 shadow-md flex flex-col justify-between transition hover:shadow-lg">
                     <div class="flex justify-between items-center mb-3">
@@ -219,21 +260,6 @@
             </div>
         </div>
 
-        <div class="bg-white p-5 rounded-2xl border border-slate-300 shadow-sm">
-            <div class="flex items-center gap-2 mb-4">
-                <i class="fa-solid fa-calculator text-slate-600"></i>
-                <h4 class="font-black text-slate-800 text-base">現場斗仔體積防呆計算機 <span class="bg-slate-200 text-slate-700 px-2 py-0.5 rounded text-xs ml-2 font-black border border-slate-300">申報輔助</span></h4>
-            </div>
-            <div class="grid grid-cols-2 md:grid-cols-5 gap-4 items-end text-sm">
-                <div><label class="block text-slate-700 font-black mb-1 text-xs">砂 (每拌合/斗仔)</label><input type="number" id="calc-sand-bucket" class="w-full border-2 border-slate-300 rounded-lg px-3 py-2 text-slate-800 outline-none focus:border-slate-600 font-bold" value="4"></div>
-                <div><label class="block text-slate-700 font-black mb-1 text-xs">水泥 (每拌合/斗仔)</label><input type="number" id="calc-cem-bucket" class="w-full border-2 border-slate-300 rounded-lg px-3 py-2 text-slate-800 outline-none focus:border-slate-600 font-bold" value="2"></div>
-                <div><label class="block text-slate-700 font-black mb-1 text-xs">斗仔單個容積 (公升L)</label><input type="number" id="calc-vol" class="w-full border-2 border-slate-300 rounded-lg px-3 py-2 text-slate-800 outline-none focus:border-slate-600 font-bold" value="20"></div>
-                <div><label class="block text-slate-700 font-black mb-1 text-xs">本日總拌合盤數</label><input type="number" id="calc-batches" class="w-full border-2 border-slate-300 rounded-lg px-3 py-2 text-slate-800 outline-none focus:border-slate-600 font-bold" value="100"></div>
-                <div><button onclick="calculateMaterials()" class="w-full bg-slate-800 hover:bg-black text-white font-black py-2.5 rounded-lg transition shadow-md border border-slate-900">換算理論申報量</button></div>
-            </div>
-            <div id="calc-result" class="mt-4 p-4 bg-slate-100 border border-slate-300 rounded-lg text-slate-800 hidden shadow-inner text-base font-bold"></div>
-        </div>
-
         <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-300 space-y-6">
             
             <div class="flex flex-col xl:flex-row justify-between items-center gap-4">
@@ -275,8 +301,9 @@
                     <button onclick="openReconModal()" class="flex items-center justify-center gap-2 px-4 py-3.5 bg-[#B45309] text-white rounded-xl text-[15px] font-black hover:bg-[#78350F] transition shadow-md border border-[#78350F] hover:-translate-y-1 hover:shadow-lg">
                         <i class="fa-solid fa-scale-unbalanced text-xl opacity-80"></i> 數量申報勾稽
                     </button>
-                    <button onclick="syncFromContractor()" id="btn-sync-csv" class="flex items-center justify-center gap-2 px-4 py-3.5 bg-[#475569] text-white rounded-xl text-[15px] font-black hover:bg-[#334155] transition shadow-md border border-[#334155] hover:-translate-y-1 hover:shadow-lg">
-                        <i class="fa-solid fa-cloud-arrow-down text-xl opacity-80"></i> 抓取日報同步
+                    <button onclick="syncFromContractor()" id="btn-sync-csv" class="flex items-center justify-center gap-2 px-4 py-3.5 bg-[#475569] text-white rounded-xl text-[15px] font-black hover:bg-[#334155] transition shadow-md border border-[#334155] hover:-translate-y-1 hover:shadow-lg relative overflow-hidden">
+                        <span class="absolute inset-0 bg-white/20 animate-pulse"></span>
+                        <i class="fa-solid fa-cloud-arrow-down text-xl relative z-10"></i> <span class="relative z-10">抓取日報與地圖</span>
                     </button>
                     <button onclick="sendTomorrowAlert()" id="btn-alert" class="flex items-center justify-center gap-2 px-4 py-3.5 bg-slate-800 text-white rounded-xl text-[15px] font-black shadow-md hover:bg-black transition border border-slate-900 hover:-translate-y-1 hover:shadow-lg">
                         <i class="fa-solid fa-bell text-xl text-yellow-400"></i> LINE 推播測試
@@ -285,31 +312,6 @@
                         <i class="fa-solid fa-file-csv text-xl opacity-80"></i> 匯出品管 CSV
                     </button>
                 </div>
-            </div>
-        </div>
-
-        <div class="flex flex-wrap gap-4">
-            <div class="flex-1 p-4 bg-white rounded-2xl border border-slate-300 flex flex-wrap gap-3 items-center shadow-sm">
-                <span class="font-black text-slate-700 text-sm flex items-center gap-2"><i class="fa-solid fa-power-off text-red-600 text-lg"></i> 停機設定：</span>
-                <select id="exception-machine" class="border-2 border-slate-300 rounded-lg px-2 py-1.5 text-slate-800 text-sm font-black outline-none bg-slate-50">
-                    <option value="ALL">全區停機</option>
-                    <option value="A">A 車停機</option>
-                    <option value="B">B 車停機</option>
-                </select>
-                <input type="date" id="exception-date-input" class="border-2 border-slate-300 rounded-lg px-2 py-1.5 text-slate-800 text-sm font-bold outline-none focus:border-slate-500 bg-slate-50">
-                <button onclick="addExceptionDate()" class="bg-red-50 text-red-700 border-2 border-red-200 hover:bg-red-100 px-4 py-1.5 rounded-lg text-sm font-black transition shadow-sm">新增停機</button>
-                <div id="exception-list" class="flex flex-wrap gap-2 ml-1 w-full mt-2 empty:hidden"></div>
-            </div>
-
-            <div class="flex-1 p-4 bg-white rounded-2xl border border-slate-300 flex flex-wrap gap-3 items-center shadow-sm">
-                <span class="font-black text-slate-700 text-sm flex items-center gap-2"><i class="fa-solid fa-calendar-plus text-blue-600 text-lg"></i> 加班設定：</span>
-                <select id="extra-machine" class="border-2 border-slate-300 rounded-lg px-2 py-1.5 text-slate-800 text-sm font-black outline-none bg-slate-50">
-                    <option value="B">B 車</option>
-                    <option value="A">A 車</option>
-                </select>
-                <input type="date" id="extra-date-input" class="border-2 border-slate-300 rounded-lg px-2 py-1.5 text-slate-800 text-sm font-bold outline-none focus:border-slate-500 bg-slate-50">
-                <button onclick="addExtraDate()" class="bg-blue-50 text-blue-700 border-2 border-blue-200 hover:bg-blue-100 px-4 py-1.5 rounded-lg text-sm font-black transition shadow-sm">新增加班</button>
-                <div id="extra-list" class="flex flex-wrap gap-2 ml-1 w-full mt-2 empty:hidden"></div>
             </div>
         </div>
 
@@ -331,7 +333,6 @@
         </div>
 
         <div id="calendar-view" class="bg-white shadow-xl rounded-2xl p-6 hidden border-2 border-slate-300 overflow-x-auto">
-            
             <div class="flex flex-wrap gap-5 text-sm mb-6 bg-slate-100 p-4 rounded-xl border border-slate-300 shadow-inner">
                 <span class="font-black text-slate-700 mr-2 flex items-center gap-1.5"><i class="fa-solid fa-layer-group"></i> 標籤圖例：</span>
                 <div class="flex items-center gap-1.5"><span class="w-3 h-3 rounded" style="background-color: #1E3A8A"></span> <span class="text-slate-800 font-bold">取樣</span></div>
@@ -339,13 +340,11 @@
                 <div class="flex items-center gap-1.5"><span class="w-3 h-3 rounded" style="background-color: #B45309"></span> <span class="text-slate-800 font-bold">收件</span></div>
                 <div class="flex items-center gap-1.5"><span class="w-3 h-3 rounded" style="background-color: #166534"></span> <span class="text-slate-800 font-bold">結案</span></div>
             </div>
-
             <div class="flex justify-between items-center mb-6 sticky top-0 bg-white z-10 py-2">
                 <button onclick="changeMonth(-1)" class="w-12 h-12 flex items-center justify-center bg-white border-2 border-slate-300 rounded-xl text-slate-600 hover:bg-slate-100 transition shadow-sm font-black"><i class="fa-solid fa-chevron-left text-xl"></i></button>
                 <h2 id="calendar-title" class="text-2xl md:text-3xl font-black text-slate-800 tracking-tighter">民國 115 年 5 月</h2>
                 <button onclick="changeMonth(1)" class="w-12 h-12 flex items-center justify-center bg-white border-2 border-slate-300 rounded-xl text-slate-600 hover:bg-slate-100 transition shadow-sm font-black"><i class="fa-solid fa-chevron-right text-xl"></i></button>
             </div>
-            
             <div class="rounded-xl border-2 border-slate-300 overflow-hidden min-w-[1000px] shadow-sm">
                 <table class="w-full text-left border-collapse table-fixed" style="table-layout: fixed;">
                     <thead class="bg-slate-100 border-b-2 border-slate-300">
@@ -430,9 +429,12 @@
         window.exceptionDates = []; window.exceptionA = []; window.exceptionB = []; 
         window.extraWorkA = []; window.extraWorkB = []; 
         window.pileNumbers = {}; window.statusSample = {}; window.statusLab = {}; window.statusTest = {}; window.remarks = {}; window.contractorReports = {}; 
+        
+        // 🔥 V10.0 地圖資料全域變數
+        window.mapCoordinates = []; 
 
         const scheduleData = []; let currentFilter = 'ALL'; let currentView = 'table'; let currentCalDate = new Date(2026, 4, 1); 
-        let currentSmartFilter = 'ALL'; // 智慧焦點過濾變數
+        let currentSmartFilter = 'ALL'; 
         const TOTAL_PILES_LIMIT = 613; let isCloudEnabled = false; let db, auth;
         
         const MAKE_WEBHOOK_URL = "https://hook.us2.make.com/3e3bd4bob7ptalfemcn6q982tyc0tjil";
@@ -465,7 +467,14 @@
         window.formatMinguo = (d) => { const y=d.getFullYear()-1911; const m=String(d.getMonth()+1).padStart(2,'0'); const dt=String(d.getDate()).padStart(2,'0'); const day=["日","一","二","三","四","五","六"][d.getDay()]; return `${y}/${m}/${dt}(${day})`; };
         const addDays = (d, days) => { let r=new Date(d); r.setDate(r.getDate()+days); return r; };
 
-        window.refreshAll = () => { window.generateSchedule(); window.renderTable(currentFilter); window.updateDashboard(); window.updateExtraUI(); if (currentView === 'calendar') window.renderCalendar(); };
+        // 🔥 更新：每次重整表格時，連同地圖顏色一起更新！
+        window.refreshAll = () => { 
+            window.generateSchedule(); 
+            window.renderTable(currentFilter); 
+            window.updateDashboard(); 
+            if (currentView === 'calendar') window.renderCalendar(); 
+            window.updateMapColors(); // 刷新地圖燈號
+        };
 
         window.generateSchedule = () => {
             scheduleData.length = 0; const startDateA = new Date(2026, 4, 5); const startDateB = new Date(2026, 4, 9); const endDate = new Date(2026, 6, 30); let cA = 1, cB = 1;
@@ -486,7 +495,6 @@
             }
         };
 
-        // 🔥 智慧焦點切換邏輯
         window.setSmartFilter = (type) => {
             currentSmartFilter = type;
             const btnAll = document.getElementById('filter-smart-all');
@@ -502,15 +510,13 @@
             window.renderTable(currentFilter);
         };
 
-        // 🔥 一鍵定位待辦邏輯 (修正：以「今天」為基準去尋找)
         window.scrollToTodo = () => {
-            window.setSmartFilter('ALL'); // 先切回全部，避免找不到
+            window.setSmartFilter('ALL'); 
             setTimeout(() => {
                 const today = new Date();
                 today.setHours(0,0,0,0);
                 
                 let targetId = null;
-                // 1. 先找「今天或今天以前」還沒做的事情 (最急迫)
                 for (let item of scheduleData) {
                     const isS = window.statusSample[item.id];
                     const isL = window.statusLab[item.id];
@@ -521,7 +527,6 @@
                     if (!isT && item.testDate <= today) { targetId = item.id; break; }
                 }
                 
-                // 2. 如果今天沒有事情做，就找「未來最近」的那一天
                 if (!targetId) {
                      for (let item of scheduleData) {
                         if (!window.statusSample[item.id] || !window.statusLab[item.id] || !window.statusTest[item.id]) { 
@@ -555,21 +560,16 @@
                 const isS = window.statusSample[item.id], isL = window.statusLab[item.id], isT = window.statusTest[item.id];
                 const pNum = window.pileNumbers[item.id] || '';
                 
-                // 💡 智慧焦點過濾邏輯
-                if (currentSmartFilter === 'FIELD' && isL) return; // 現場待辦：若已收件就隱藏
-                if (currentSmartFilter === 'TEST' && (!isL || isT)) return; // 待看抗壓：如果還沒收件，或已經結案，就隱藏
-                
-                // 搜尋過濾
+                if (currentSmartFilter === 'FIELD' && isL) return; 
+                if (currentSmartFilter === 'TEST' && (!isL || isT)) return; 
                 if (searchTerm && !item.id.toLowerCase().includes(searchTerm) && !pNum.includes(searchTerm)) return;
 
                 const tr = document.createElement('tr'); 
-                // 給每一列加上 ID，方便一鍵定位
                 tr.id = `row-${item.id}`;
                 tr.className = `modern-row row-hover divide-slate-200 divide-x-0 ${isT ? 'completed-row' : ''}`;
                 
-                // 🔥 動態計算抗壓倒數徽章
                 let testBadge = '';
-                if (!isT && isL) { // 已經收件但尚未抗壓
+                if (!isT && isL) { 
                     const diffTime = item.testDate - todayDate;
                     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
                     if (diffDays === 0) {
@@ -583,7 +583,7 @@
 
                 tr.innerHTML = `
                     <td class="font-black text-slate-800 text-center">${item.id}</td>
-                    <td><input type="text" class="pile-input" ${isT ? 'readonly' : ''} onchange="updatePile('${item.id}', this.value)" placeholder="輸入樁號 (例如: A12, A13)" value="${window.pileNumbers[item.id] || ''}"></td>
+                    <td><input type="text" class="pile-input" ${isT ? 'readonly' : ''} onchange="updatePile('${item.id}', this.value)" placeholder="輸入樁號 (例如: 613, 609)" value="${window.pileNumbers[item.id] || ''}"></td>
                     <td class="bg-blue-50/70"><label class="flex items-center gap-2.5 cursor-pointer w-full h-full"><input type="checkbox" class="status-checkbox cb-sample" ${isS?'checked':''} onclick="toggleStatus('${item.id}', 'sample')"><span class="font-black whitespace-nowrap ${isS?'text-dimmed':'text-[#1E3A8A]'}">${window.formatMinguo(item.sampleDate)}</span></label></td>
                     <td class="font-bold text-slate-600 whitespace-nowrap">${window.formatMinguo(item.demoldDate)}</td>
                     <td class="bg-orange-50/70"><label class="flex items-center gap-2.5 cursor-pointer w-full h-full"><input type="checkbox" class="status-checkbox cb-lab" ${isL?'checked':''} onclick="toggleStatus('${item.id}', 'lab')"><span class="font-black whitespace-nowrap ${isL?'text-dimmed':'text-[#B45309]'}">${window.formatMinguo(item.collectDate)}</span></label></td>
@@ -637,14 +637,13 @@
                 document.getElementById('prediction-metrics').innerHTML = `<div class="text-slate-500 font-bold px-6 py-3 bg-white/80 border border-slate-200 rounded-xl shadow-sm text-sm">系統累積數據不足，尚無法進行有效推估。</div>`;
             }
 
-            // 🔥 尋找最近的抗壓日並倒數
             let nextTestDate = null;
             let nextTestDays = Infinity;
             scheduleData.forEach(item => {
-                if (!window.statusTest[item.id] && window.statusLab[item.id]) { // 已收件但未抗壓
+                if (!window.statusTest[item.id] && window.statusLab[item.id]) { 
                     const diffTime = item.testDate - todayDate;
                     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                    if (diffDays < nextTestDays) { // 找出最小的數字 (包含負數/逾期)
+                    if (diffDays < nextTestDays) { 
                         nextTestDays = diffDays;
                         nextTestDate = item.testDate;
                     }
@@ -742,38 +741,6 @@
             }
          };
 
-        window.addExceptionDate = () => { 
-            const m = document.getElementById('exception-machine').value; 
-            const val = document.getElementById('exception-date-input').value; 
-            if (val) { 
-                if (m === 'ALL' && !window.exceptionDates.includes(val)) window.exceptionDates.push(val); 
-                if (m === 'A' && !window.exceptionA.includes(val)) window.exceptionA.push(val); 
-                if (m === 'B' && !window.exceptionB.includes(val)) window.exceptionB.push(val); 
-                window.saveDataToCloud(); document.getElementById('exception-date-input').value = ""; window.refreshAll();
-            } 
-        };
-        window.removeExceptionDate = (m, val) => { 
-            if(m === 'ALL') window.exceptionDates = window.exceptionDates.filter(d => d !== val); 
-            if(m === 'A') window.exceptionA = window.exceptionA.filter(d => d !== val); 
-            if(m === 'B') window.exceptionB = window.exceptionB.filter(d => d !== val); 
-            window.saveDataToCloud(); window.refreshAll();
-        };
-        
-        window.addExtraDate = () => { const m = document.getElementById('extra-machine').value; const val = document.getElementById('extra-date-input').value; if (val) { if (m === 'A' && !window.extraWorkA.includes(val)) window.extraWorkA.push(val); if (m === 'B' && !window.extraWorkB.includes(val)) window.extraWorkB.push(val); window.saveDataToCloud(); document.getElementById('extra-date-input').value = ""; window.refreshAll(); } };
-        window.removeExtraDate = (m, val) => { if (m === 'A') window.extraWorkA = window.extraWorkA.filter(d => d !== val); if (m === 'B') window.extraWorkB = window.extraWorkB.filter(d => d !== val); window.saveDataToCloud(); window.refreshAll(); };
-
-        window.updateExtraUI = () => {
-            const expContainer = document.getElementById('exception-list'); expContainer.innerHTML = ""; 
-            const renderExTag = (m, val, label) => { const parts = val.split('-'); const tag = document.createElement('span'); tag.className = "bg-white text-red-700 px-2 py-1 rounded-md text-[13px] font-black border-2 border-red-200 shadow-sm"; tag.innerHTML = `${label}${parts[1]}/${parts[2]} <i class="fa-solid fa-xmark cursor-pointer ml-1 opacity-60 hover:opacity-100" onclick="removeExceptionDate('${m}', '${val}')"></i>`; expContainer.appendChild(tag); };
-            window.exceptionDates.forEach(val => renderExTag('ALL', val, '全區:'));
-            window.exceptionA.forEach(val => renderExTag('A', val, 'A車:'));
-            window.exceptionB.forEach(val => renderExTag('B', val, 'B車:'));
-
-            const extraContainer = document.getElementById('extra-list'); extraContainer.innerHTML = "";
-            const renderExWTag = (m, val) => { const parts = val.split('-'); const tag = document.createElement('span'); tag.className = "bg-white text-blue-700 px-2 py-1 rounded-md text-[13px] font-black border-2 border-blue-200 shadow-sm"; tag.innerHTML = `${m}車:${parts[1]}/${parts[2]} <i class="fa-solid fa-xmark cursor-pointer ml-1 opacity-60 hover:opacity-100" onclick="removeExtraDate('${m}', '${val}')"></i>`; extraContainer.appendChild(tag); };
-            window.extraWorkA.forEach(val => renderExWTag('A', val)); window.extraWorkB.forEach(val => renderExWTag('B', val));
-        };
-
         window.calculateMaterials = () => {
             const totalSandM3 = (parseFloat(document.getElementById('calc-sand-bucket').value)||0) * ((parseFloat(document.getElementById('calc-vol').value)||0)/1000) * (parseFloat(document.getElementById('calc-batches').value)||0);
             const totalCemTon = (parseFloat(document.getElementById('calc-cem-bucket').value)||0) * ((parseFloat(document.getElementById('calc-vol').value)||0)/1000) * (parseFloat(document.getElementById('calc-batches').value)||0) * 1.4;
@@ -782,7 +749,6 @@
             resDiv.classList.remove('hidden');
         };
 
-        // 真實 API 邏輯 (完全保留)
         window.openMatrixModal = () => { window.renderMatrixGrid(); document.getElementById('matrix-modal').classList.remove('hidden'); };
         window.closeMatrixModal = () => { document.getElementById('matrix-modal').classList.add('hidden'); };
         window.renderMatrixGrid = () => {
@@ -826,10 +792,11 @@
             });
         };
 
+        // 🔥 V10.0 核心引擎：解析 CSV 並繪製數位雙生地圖
         window.syncFromContractor = async () => {
             const btn = document.getElementById('btn-sync-csv');
             const originalHtml = btn.innerHTML;
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-xl opacity-80"></i> 抓取中...';
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-xl opacity-80"></i> 解析與繪製中...';
             btn.disabled = true;
 
             try {
@@ -839,16 +806,30 @@
                 
                 const lines = csvText.split('\n');
                 const groupedData = {};
+                window.mapCoordinates = []; // 清空地圖資料
                 
                 for (let i = 1; i < lines.length; i++) {
                     if (!lines[i].trim()) continue;
+                    // 解析 CSV 欄位：樁號(0), 施工日期(1), 機台(2), 施作順序(3), X座標(4), Y座標(5)
                     const cols = lines[i].split(',');
-                    const rawPile = cols[0] || ''; 
-                    const date = cols[1] || ''; 
-                    const machine = cols[2] || '';
+                    const rawPile = cols[0] ? cols[0].trim() : ''; 
+                    const date = cols[1] ? cols[1].trim() : ''; 
+                    const machine = cols[2] ? cols[2].trim() : '';
                     const pileNum = rawPile.replace(/\D/g, ''); 
                     const machLetter = machine.includes('A') ? 'A' : (machine.includes('B') ? 'B' : '');
+                    const xStr = cols[4] ? cols[4].trim() : '';
+                    const yStr = cols[5] ? cols[5].trim() : '';
 
+                    // 收集地圖座標 (只要有 X, Y 就記錄)
+                    if (pileNum && xStr && yStr) {
+                        const x = parseFloat(xStr);
+                        const y = parseFloat(yStr);
+                        if (!isNaN(x) && !isNaN(y)) {
+                            window.mapCoordinates.push({ id: pileNum, x: x, y: y });
+                        }
+                    }
+
+                    // 收集排程更新資料
                     if (pileNum && date && machLetter) {
                         const key = `${date}_${machLetter}`;
                         if (!groupedData[key]) groupedData[key] = [];
@@ -856,6 +837,7 @@
                     }
                 }
 
+                // 1. 更新表單排程
                 let updatedCount = 0;
                 scheduleData.forEach(item => {
                     const itemDateStr = window.toDateString(item.sampleDate);
@@ -872,19 +854,98 @@
                 });
 
                 window.saveDataToCloud();
+                
+                // 2. 繪製數位雙生地圖
+                renderMap();
+
                 window.refreshAll();
                 
                 if (updatedCount > 0) { 
-                    window.showModal("同步成功！", `已成功從現場施工日報自動更新了 <b class="text-blue-600 text-lg">${updatedCount}</b> 筆排程的樁號！`, "success"); 
+                    window.showModal("同步與繪製成功！", `已更新 <b class="text-blue-600 text-lg">${updatedCount}</b> 筆排程，並成功繪製全區數位雙生地圖！`, "success"); 
                 } else { 
-                    window.showModal("同步完成", "目前施工日報沒有新的樁號，或所有資料已是最新狀態。", "success"); 
+                    window.showModal("地圖載入完成", "地圖已繪製完成，目前無新的樁號排程需要更新。", "success"); 
                 }
             } catch (error) { 
                 window.showModal("同步失敗", "無法讀取施工組日報資料，請確認 CSV 網址是否正確且公開。", "error"); 
+                console.error(error);
             } finally { 
                 btn.innerHTML = originalHtml; 
                 btn.disabled = false; 
             }
+        };
+
+        // 🔥 新增：動態繪製 SVG 地圖函數
+        function renderMap() {
+            const container = document.getElementById('map-container');
+            if (window.mapCoordinates.length === 0) {
+                container.innerHTML = `<div class="text-slate-500 font-bold flex flex-col items-center gap-3"><i class="fa-solid fa-triangle-exclamation text-4xl text-red-400"></i><span>無法讀取座標，請檢查 CSV 格式。</span></div>`;
+                return;
+            }
+
+            // 計算邊界 (Bounding Box) 以自動縮放地圖
+            let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+            window.mapCoordinates.forEach(p => {
+                if (p.x < minX) minX = p.x;
+                if (p.x > maxX) maxX = p.x;
+                if (p.y < minY) minY = p.y;
+                if (p.y > maxY) maxY = p.y;
+            });
+
+            // 加上緩衝區 (Padding)
+            const padding = 1000;
+            const viewBox = `${minX - padding} ${minY - padding} ${(maxX - minX) + padding * 2} ${(maxY - minY) + padding * 2}`;
+
+            // 生成 SVG 圓點
+            let circlesHtml = '';
+            window.mapCoordinates.forEach(p => {
+                // Y 軸在 SVG 中是向下的，如果圖面倒反，可以在此處乘上 -1，這裡先直接使用原座標
+                circlesHtml += `<circle id="map-pile-${p.id}" class="pile-circle" cx="${p.x}" cy="${p.y}" r="250" fill="#E2E8F0" />`;
+            });
+
+            const svgHtml = `
+                <svg width="100%" height="100%" viewBox="${viewBox}" style="transform: scale(1, -1);" xmlns="http://www.w3.org/2000/svg">
+                    <g>
+                        ${circlesHtml}
+                    </g>
+                </svg>
+            `;
+            container.innerHTML = svgHtml;
+            window.updateMapColors(); // 繪製完立刻上色
+        }
+
+        // 🔥 新增：動態更新地圖顏色
+        window.updateMapColors = () => {
+            if (window.mapCoordinates.length === 0) return;
+
+            // 建立樁號狀態的對照表
+            const pileStatusMap = {};
+            scheduleData.forEach(item => {
+                const pNumStr = window.pileNumbers[item.id] || '';
+                if (!pNumStr) return;
+                
+                const nums = (pNumStr.match(/\d+/g) || []);
+                const isS = window.statusSample[item.id];
+                const isL = window.statusLab[item.id];
+                const isT = window.statusTest[item.id];
+
+                // 決定優先級顏色：綠色(結案) > 橘色(收件) > 藍色(取樣)
+                let targetColor = '#1E3A8A'; // 預設已打設(藍色)
+                if (isT) targetColor = '#166534'; // 綠色
+                else if (isL) targetColor = '#B45309'; // 橘色
+
+                nums.forEach(num => {
+                    pileStatusMap[num] = targetColor;
+                });
+            });
+
+            // 更新地圖上的每個圓點
+            window.mapCoordinates.forEach(p => {
+                const circleEl = document.getElementById(`map-pile-${p.id}`);
+                if (circleEl) {
+                    const color = pileStatusMap[p.id] || '#E2E8F0'; // 預設灰色(未打設)
+                    circleEl.setAttribute('fill', color);
+                }
+            });
         };
 
         window.sendTomorrowAlert = async () => {
@@ -930,12 +991,12 @@
             const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' }); 
             const link = document.createElement("a"); 
             link.href = URL.createObjectURL(blob); 
-            link.download = `預壘樁進度與試體追蹤表_V9.4.csv`; 
+            link.download = `預壘樁進度與試體追蹤表_V10.0.csv`; 
             link.click();
         };
 
         window.toggleStatus = (id, type) => { if (type === 'sample') window.statusSample[id] = !window.statusSample[id]; if (type === 'lab') window.statusLab[id] = !window.statusLab[id]; if (type === 'test') window.statusTest[id] = !window.statusTest[id]; window.saveDataToCloud(); window.refreshAll(); };
-        window.updatePile = (id, val) => { const v = val.trim(); if (!v) delete window.pileNumbers[id]; else window.pileNumbers[id] = v; window.saveDataToCloud(); window.updateDashboard(); if (!document.getElementById('matrix-modal').classList.contains('hidden')) window.renderMatrixGrid(); if (!document.getElementById('recon-modal').classList.contains('hidden')) window.renderReconTable(); };
+        window.updatePile = (id, val) => { const v = val.trim(); if (!v) delete window.pileNumbers[id]; else window.pileNumbers[id] = v; window.saveDataToCloud(); window.updateDashboard(); if (!document.getElementById('matrix-modal').classList.contains('hidden')) window.renderMatrixGrid(); if (!document.getElementById('recon-modal').classList.contains('hidden')) window.renderReconTable(); window.updateMapColors(); };
         window.updateRemark = (id, val) => { const v = val.trim(); if (!v) delete window.remarks[id]; else window.remarks[id] = v; window.saveDataToCloud(); };
         window.changeMonth = (o) => { currentCalDate.setMonth(currentCalDate.getMonth() + o); window.renderCalendar(); };
         window.showModal = (title, msg, type) => { document.getElementById('custom-modal-header').innerHTML = `<i class="fa-solid fa-${type === 'success' ? 'circle-check text-emerald-500' : 'triangle-exclamation text-red-500'}"></i> ${title}`; document.getElementById('custom-modal-message').innerHTML = msg; document.getElementById('custom-modal').classList.remove('hidden'); };
