@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>衛生福利部防疫中心興建工程 - 試體管制系統 完整修復版</title>
+    <title>衛生福利部防疫中心興建工程 - 試體管制系統 V12.1 滿血復活版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
@@ -110,9 +110,9 @@
         }
         @keyframes gradient-shift { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
 
-        /* 🔥 地圖容器樣式 */
+        /* 🔥 地圖容器樣式優化 */
         #map-container {
-            width: 100%; height: 450px; background-color: #F1F5F9; border-radius: 12px;
+            width: 100%; height: 500px; background-color: #F1F5F9; border-radius: 12px;
             overflow: hidden; display: flex; align-items: center; justify-content: center;
             position: relative; border: 2px solid #CBD5E1; box-shadow: inset 0 2px 10px rgba(0,0,0,0.05);
         }
@@ -133,7 +133,7 @@
                     衛生福利部防疫中心興建工程 QC 管制
                 </h1>
                 <p class="text-slate-600 mt-2 text-base font-bold flex items-center gap-3">
-                    預壘樁試體管制排程系統 <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded-md text-sm font-black border border-blue-300 shadow-sm"><i class="fa-solid fa-map-location-dot"></i> 完整恢復版</span>
+                    預壘樁試體管制排程系統 <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded-md text-sm font-black border border-blue-300 shadow-sm"><i class="fa-solid fa-map-location-dot"></i> V12.1 系統滿血復活版</span>
                 </p>
             </div>
             <div id="sync-status" class="flex items-center gap-2 px-5 py-2.5 bg-[#EFF6FF] rounded-xl text-sm font-black text-blue-800 border border-blue-200 shadow-sm">
@@ -156,7 +156,7 @@
             <div id="map-container">
                 <div id="map-placeholder" class="text-slate-500 font-bold flex flex-col items-center gap-3">
                     <i class="fa-solid fa-satellite-dish text-4xl animate-pulse text-blue-400"></i>
-                    <span>請點擊下方「抓取日報與地圖」以載入座標與繪製精緻地圖</span>
+                    <span>請點擊下方「抓取日報同步」以載入座標與繪製精緻地圖</span>
                 </div>
             </div>
         </div>
@@ -418,7 +418,7 @@
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // 🔥🔥🔥 重要：已經幫您恢復您的 Firebase 專屬設定，不需要改動！
+        // 🔥 使用您提供的 Firebase 金鑰
         const firebaseConfig = { 
             apiKey: "AIzaSyAp1ZVuW95Api3kaQUPgttESZ0RGTEi8H8", 
             authDomain: "cdc-qc-system.firebaseapp.com", 
@@ -725,7 +725,7 @@
         function renderMap() {
             const container = document.getElementById('map-container');
             if (window.mapCoordinates.length === 0) {
-                container.innerHTML = `<div class="text-slate-500 font-bold flex flex-col items-center gap-3"><i class="fa-solid fa-triangle-exclamation text-4xl text-red-400"></i><span>無法讀取座標，請檢查 CSV 格式。</span></div>`;
+                container.innerHTML = `<div class="text-slate-500 font-bold flex flex-col items-center gap-3"><i class="fa-solid fa-triangle-exclamation text-4xl text-red-400"></i><span>請點擊下方「抓取日報同步」以載入地圖座標</span></div>`;
                 return;
             }
 
@@ -738,8 +738,10 @@
                 if (invertedY > maxY) maxY = invertedY;
             });
 
-            const padding = 1500; 
-            const viewBox = `${minX - padding} ${minY - padding} ${(maxX - minX) + padding * 2} ${(maxY - minY) + padding * 2}`;
+            // 自適應範圍設定，避免擠在一起
+            const paddingX = (maxX - minX) * 0.1 || 500;
+            const paddingY = (maxY - minY) * 0.1 || 500;
+            const viewBox = `${minX - paddingX} ${minY - paddingY} ${(maxX - minX) + paddingX * 2} ${(maxY - minY) + paddingY * 2}`;
 
             const pileStatusMap = {};
             scheduleData.forEach(item => {
@@ -762,11 +764,11 @@
 
             let circlesHtml = '';
             mappedPoints.forEach(p => {
-                circlesHtml += `<circle id="map-pile-${p.id}" class="pile-circle" cx="${p.x}" cy="${-p.y}" r="80" fill="${p.fill}" stroke="${p.stroke}" stroke-width="15"><title>樁號: P${p.id}</title></circle>`;
+                circlesHtml += `<circle id="map-pile-${p.id}" class="pile-circle" cx="${p.x}" cy="${-p.y}" r="60" fill="${p.fill}" stroke="${p.stroke}" stroke-width="15"><title>樁號: P${p.id}</title></circle>`;
             });
 
             container.innerHTML = `
-                <svg width="100%" height="100%" viewBox="${viewBox}" xmlns="http://www.w3.org/2000/svg">
+                <svg width="100%" height="100%" viewBox="${viewBox}" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet">
                     <g>${circlesHtml}</g>
                 </svg>
             `;
@@ -828,7 +830,7 @@
                 window.refreshAll(); 
                 
                 if (updatedCount > 0) window.showModal("同步與繪製成功！", `已更新 <b class="text-blue-600 text-lg">${updatedCount}</b> 筆排程，並成功繪製全區數位雙生地圖！`, "success"); 
-                else window.showModal("地圖載入完成", "地圖已繪製完成，目前無新的樁號排程需要更新。", "success"); 
+                else window.showModal("地圖載入完成", "地圖已繪製完成，且資料已經是最新的。", "success"); 
             } catch (error) { 
                 window.showModal("同步失敗", "無法讀取施工組日報資料，請確認 CSV 網址是否正確且公開。", "error"); 
             } finally { 
@@ -956,7 +958,7 @@
             });
             const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' }); 
             const link = document.createElement("a"); link.href = URL.createObjectURL(blob); 
-            link.download = `預壘樁進度與試體追蹤表_V12.0.csv`; link.click();
+            link.download = `預壘樁進度與試體追蹤表_V12.1.csv`; link.click();
         };
 
         window.toggleStatus = (id, type) => { if (type === 'sample') window.statusSample[id] = !window.statusSample[id]; if (type === 'lab') window.statusLab[id] = !window.statusLab[id]; if (type === 'test') window.statusTest[id] = !window.statusTest[id]; window.saveDataToCloud(); window.refreshAll(); };
