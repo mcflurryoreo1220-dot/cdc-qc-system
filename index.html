@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>衛生福利部防疫中心興建工程 - 試體管制系統 V13.0 終極自動版</title>
+    <title>衛生福利部防疫中心興建工程 - 試體管制系統 V13.2 終極修復版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
@@ -45,7 +45,7 @@
                     <div class="w-12 h-12 rounded-xl bg-slate-800 text-white flex items-center justify-center shadow-md"><i class="fa-solid fa-building-shield"></i></div>
                     衛生福利部防疫中心興建工程 QC 管制
                 </h1>
-                <p class="text-slate-600 mt-2 text-base font-bold flex items-center gap-3">預壘樁試體管制排程系統 <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded-md text-sm font-black border border-blue-300 shadow-sm"><i class="fa-solid fa-bolt"></i> V13.0 API 自動穿牆版</span></p>
+                <p class="text-slate-600 mt-2 text-base font-bold flex items-center gap-3">預壘樁試體管制排程系統 <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded-md text-sm font-black border border-blue-300 shadow-sm"><i class="fa-solid fa-bolt"></i> V13.2 完整修復版</span></p>
             </div>
             <div id="sync-status" class="flex items-center gap-2 px-5 py-2.5 bg-[#EFF6FF] rounded-xl text-sm font-black text-blue-800 border border-blue-200 shadow-sm"><i class="fa-solid fa-cloud-check"></i> 資料雲端同步中</div>
         </div>
@@ -60,7 +60,7 @@
                     <div class="flex items-center gap-1.5"><span class="w-4 h-4 rounded-full bg-[#166534] border-[3px] border-[#14532D]"></span> 抗壓結案</div>
                 </div>
             </div>
-            <div id="map-container"><div id="map-placeholder" class="text-slate-500 font-bold flex flex-col items-center gap-3"><i class="fa-solid fa-satellite-dish text-4xl animate-pulse text-blue-400"></i><span>點擊下方「自動同步最新進度」即可載入</span></div></div>
+            <div id="map-container"><div id="map-placeholder" class="text-slate-500 font-bold flex flex-col items-center gap-3"><i class="fa-solid fa-satellite-dish text-4xl animate-pulse text-blue-400"></i><span>點擊下方「自動同步最新進度」即可載入地圖</span></div></div>
         </div>
 
         <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-300">
@@ -117,6 +117,24 @@
                         <button onclick="toggleView('calendar')" id="btn-view-cal" class="px-6 py-2.5 rounded-lg text-base font-black bg-transparent text-slate-700 hover:bg-slate-300 transition"><i class="fa-solid fa-calendar-week mr-2"></i> 月曆看板</button>
                     </div>
                 </div>
+                
+                <div class="flex flex-wrap gap-3 items-center w-full xl:w-auto justify-center xl:justify-end">
+                    <div class="relative shadow-sm">
+                        <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                        <input type="text" id="search-input" onkeyup="renderTable(currentFilter)" placeholder="搜尋編號或樁號..." class="pl-10 pr-4 py-2.5 border-2 border-slate-300 rounded-xl text-sm font-bold outline-none focus:border-[#1E3A8A] w-48 md:w-56 bg-white transition text-slate-800">
+                    </div>
+                    <div class="bg-slate-100 p-1.5 rounded-xl flex gap-1 border border-slate-300 shadow-inner mr-2">
+                        <button id="filter-smart-all" onclick="setSmartFilter('ALL')" class="px-4 py-2 rounded-lg text-sm font-black bg-white text-slate-800 shadow-sm border border-slate-200 transition">顯示全部</button>
+                        <button id="filter-smart-field" onclick="setSmartFilter('FIELD')" class="px-4 py-2 rounded-lg text-sm font-bold text-slate-500 hover:text-slate-800 transition"><i class="fa-solid fa-helmet-safety mr-1"></i> 現場待辦</button>
+                        <button id="filter-smart-test" onclick="setSmartFilter('TEST')" class="px-4 py-2 rounded-lg text-sm font-bold text-slate-500 hover:text-slate-800 transition"><i class="fa-solid fa-flask mr-1"></i> 待看抗壓</button>
+                    </div>
+                    <button onclick="scrollToTodo()" class="px-4 py-2.5 rounded-xl text-sm font-black bg-amber-100 text-amber-700 shadow-sm border border-amber-300 hover:bg-amber-200 transition hover:-translate-y-0.5"><i class="fa-solid fa-location-crosshairs mr-1.5"></i> 定位當日待辦</button>
+                    <div class="border-l-2 border-slate-200 pl-3 flex gap-2">
+                        <button onclick="filterData('ALL')" id="btn-ALL" class="px-5 py-2.5 rounded-xl text-sm font-black bg-slate-800 text-white shadow-md border border-slate-900 transition hover:-translate-y-0.5">全區</button>
+                        <button onclick="filterData('A')" id="btn-A" class="px-5 py-2.5 rounded-xl text-sm font-black bg-white text-slate-700 border-2 border-slate-300 hover:bg-slate-100 shadow-sm transition hover:-translate-y-0.5">A 車</button>
+                        <button onclick="filterData('B')" id="btn-B" class="px-5 py-2.5 rounded-xl text-sm font-black bg-white text-slate-700 border-2 border-slate-300 hover:bg-slate-100 shadow-sm transition hover:-translate-y-0.5">B 車</button>
+                    </div>
+                </div>
             </div>
 
             <div class="border-t border-slate-200 pt-6">
@@ -144,7 +162,7 @@
         <div id="table-view" class="bg-white shadow-xl rounded-2xl border-2 border-slate-300 overflow-x-auto relative">
             <table class="w-full text-left border-collapse table-auto min-w-[1200px]">
                 <thead class="table-header shadow-sm border-b-2 border-slate-300">
-                    <tr><th class="w-[80px]">編號</th><th class="w-[30%]">對應樁號</th><th class="bg-blue-50/50 text-[#1E3A8A]">取樣日(T)</th><th class="bg-slate-50 text-slate-700">拆模日(T+1)</th><th class="bg-orange-50/50 text-[#B45309]">收件日(二/五)</th><th class="bg-green-50/50 text-[#166534]">抗壓日(T+28)</th><th class="w-[20%] text-slate-600">備註 / 狀態</th></tr>
+                    <tr><th class="w-[80px]">編號</th><th class="w-[30%]">對應樁號 <i class="fa-solid fa-pen-to-square ml-1.5 opacity-60"></i></th><th class="bg-blue-50/50 text-[#1E3A8A]">取樣日(T)</th><th class="bg-slate-50 text-slate-700">拆模日(T+1)</th><th class="bg-orange-50/50 text-[#B45309]">收件日(二/五)</th><th class="bg-green-50/50 text-[#166534]">抗壓日(T+28)</th><th class="w-[20%] text-slate-600">備註 / 狀態</th></tr>
                 </thead>
                 <tbody id="schedule-body" class="bg-white divide-y divide-slate-200"></tbody>
             </table>
@@ -167,7 +185,7 @@
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // 🔥 1. 這裡已經是您專屬的 Firebase 金鑰！
+        // 🔥 已經幫您填妥您的 API Key
         const firebaseConfig = { 
             apiKey: "AIzaSyAp1ZVuW95Api3kaQUPgttESZ0RGTEi8H8", 
             authDomain: "cdc-qc-system.firebaseapp.com", 
@@ -177,7 +195,7 @@
             appId: "1:745920606237:web:7fb9c22a84de208e6e56f4" 
         };
         
-        // 🔥 2. 這裡已經填入您剛剛申請好的 GAS API 網址！
+        // 🔥 已經填入您剛剛申請好的 GAS API 網址
         const GAS_API_URL = "https://script.google.com/macros/s/AKfycbx1aCB8jyqFnPrekpu3QIAIWCaIpAeRIVjJOkDxTpzjOhw9oAk86NO4f1YhL6TkiZQedA/exec";
 
         window.exceptionDates = []; window.exceptionA = []; window.exceptionB = []; 
@@ -216,16 +234,26 @@
         window.formatMinguo = (d) => { const y=d.getFullYear()-1911; const m=String(d.getMonth()+1).padStart(2,'0'); const dt=String(d.getDate()).padStart(2,'0'); const day=["日","一","二","三","四","五","六"][d.getDay()]; return `${y}/${m}/${dt}(${day})`; };
         const addDays = (d, days) => { let r=new Date(d); r.setDate(r.getDate()+days); return r; };
 
-        window.refreshAll = () => { window.generateSchedule(); window.renderTable(currentFilter); window.updateDashboard(); if (currentView === 'calendar') window.renderCalendar(); if (window.mapCoordinates.length > 0) window.renderMap(); };
-
+        // 🔥 表格資料引擎 (這就是之前被遺漏的關鍵程式，現在回來了！)
         window.generateSchedule = () => {
-            scheduleData.length = 0; const startDateA = new Date(2026, 4, 5); const startDateB = new Date(2026, 4, 9); const endDate = new Date(2026, 6, 30); let cA = 1, cB = 1;
+            scheduleData.length = 0; 
+            const startDateA = new Date(2026, 4, 5); const startDateB = new Date(2026, 4, 9); const endDate = new Date(2026, 6, 30); 
+            let cA = 1, cB = 1;
             for (let d = new Date(startDateA); d <= endDate; d.setDate(d.getDate() + 1)) {
-                const dStr = window.toDateString(d); const isSun = d.getDay() === 0; const isExGlobal = window.exceptionDates.includes(dStr); const isExA = isExGlobal || window.exceptionA.includes(dStr); const isExB = isExGlobal || window.exceptionB.includes(dStr);
+                const dStr = window.toDateString(d); const isSun = d.getDay() === 0; 
+                const isExGlobal = window.exceptionDates.includes(dStr); const isExA = isExGlobal || window.exceptionA.includes(dStr); const isExB = isExGlobal || window.exceptionB.includes(dStr);
                 const makeR = (m, c, t) => { let dem = addDays(t, 1); if (dem.getDay() === 0) dem = addDays(dem, 1); let col = new Date(dem); while (col.getDay() !== 2 && col.getDay() !== 5) col = addDays(col, 1); let tes = addDays(t, 28); if (tes.getDay() === 6) tes = addDays(tes, 2); else if (tes.getDay() === 0) tes = addDays(tes, 1); return { id: `${m}${c}`, machine: m, sampleDate: new Date(t), demoldDate: dem, collectDate: col, testDate: tes }; };
                 if (d >= startDateA) { if ((!isSun && !isExA) || window.extraWorkA.includes(dStr)) scheduleData.push(makeR('A', cA++, new Date(d))); }
                 if (d >= startDateB) { if ((!isSun && !isExB) || window.extraWorkB.includes(dStr)) scheduleData.push(makeR('B', cB++, new Date(d))); }
             }
+        };
+
+        window.refreshAll = () => { 
+            window.generateSchedule(); 
+            window.renderTable(currentFilter); 
+            window.updateDashboard(); 
+            if (currentView === 'calendar') window.renderCalendar(); 
+            if (window.mapCoordinates.length > 0) window.renderMap(); 
         };
 
         window.renderTable = (filter) => {
@@ -236,9 +264,18 @@
             filteredData.forEach(item => {
                 const isS = window.statusSample[item.id], isL = window.statusLab[item.id], isT = window.statusTest[item.id];
                 const pNum = window.pileNumbers[item.id] || '';
+                if (currentSmartFilter === 'FIELD' && isL) return; 
+                if (currentSmartFilter === 'TEST' && (!isL || isT)) return; 
                 if (searchTerm && !item.id.toLowerCase().includes(searchTerm) && !pNum.includes(searchTerm)) return;
                 const tr = document.createElement('tr'); tr.id = `row-${item.id}`; tr.className = `modern-row row-hover divide-slate-200 divide-x-0 ${isT ? 'completed-row' : ''}`;
-                tr.innerHTML = `<td class="font-black text-slate-800 text-center">${item.id}</td><td><input type="text" class="pile-input" ${isT ? 'readonly' : ''} onchange="updatePile('${item.id}', this.value)" placeholder="輸入樁號 (例如: 613)" value="${window.pileNumbers[item.id] || ''}"></td><td class="bg-blue-50/70"><label class="flex items-center gap-2.5 cursor-pointer w-full h-full"><input type="checkbox" class="status-checkbox cb-sample" ${isS?'checked':''} onclick="toggleStatus('${item.id}', 'sample')"><span class="font-black whitespace-nowrap ${isS?'text-dimmed':'text-[#1E3A8A]'}">${window.formatMinguo(item.sampleDate)}</span></label></td><td class="font-bold text-slate-600 whitespace-nowrap">${window.formatMinguo(item.demoldDate)}</td><td class="bg-orange-50/70"><label class="flex items-center gap-2.5 cursor-pointer w-full h-full"><input type="checkbox" class="status-checkbox cb-lab" ${isL?'checked':''} onclick="toggleStatus('${item.id}', 'lab')"><span class="font-black whitespace-nowrap ${isL?'text-dimmed':'text-[#B45309]'}">${window.formatMinguo(item.collectDate)}</span></label></td><td class="bg-green-50/70"><label class="flex items-center gap-2.5 cursor-pointer w-full h-full"><input type="checkbox" class="status-checkbox cb-test" ${isT?'checked':''} onclick="toggleStatus('${item.id}', 'test')"><span class="font-black whitespace-nowrap flex items-center ${isT?'text-dimmed':'text-[#166534]'}">${window.formatMinguo(item.testDate)}</span></label></td><td><input type="text" class="remark-input" ${isT?'readonly':''} onchange="updateRemark('${item.id}', this.value)" placeholder="點擊填寫..." value="${window.remarks[item.id]||''}"></td>`;
+                let testBadge = '';
+                if (!isT && isL) { 
+                    const diffTime = item.testDate - todayDate; const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                    if (diffDays === 0) testBadge = `<span class="ml-2 bg-red-600 text-white px-2 py-0.5 rounded text-[11px] font-black animate-pulse shadow-sm border border-red-700">今日壓測!</span>`;
+                    else if (diffDays > 0 && diffDays <= 3) testBadge = `<span class="ml-2 bg-amber-500 text-white px-2 py-0.5 rounded text-[11px] font-black shadow-sm border border-amber-600">剩 ${diffDays} 天</span>`;
+                    else if (diffDays < 0) testBadge = `<span class="ml-2 bg-slate-600 text-white px-2 py-0.5 rounded text-[11px] font-black shadow-sm border border-slate-700">逾期 ${Math.abs(diffDays)} 天</span>`;
+                }
+                tr.innerHTML = `<td class="font-black text-slate-800 text-center">${item.id}</td><td><input type="text" class="pile-input" ${isT ? 'readonly' : ''} onchange="updatePile('${item.id}', this.value)" placeholder="輸入樁號 (例如: 613)" value="${window.pileNumbers[item.id] || ''}"></td><td class="bg-blue-50/70"><label class="flex items-center gap-2.5 cursor-pointer w-full h-full"><input type="checkbox" class="status-checkbox cb-sample" ${isS?'checked':''} onclick="toggleStatus('${item.id}', 'sample')"><span class="font-black whitespace-nowrap ${isS?'text-dimmed':'text-[#1E3A8A]'}">${window.formatMinguo(item.sampleDate)}</span></label></td><td class="font-bold text-slate-600 whitespace-nowrap">${window.formatMinguo(item.demoldDate)}</td><td class="bg-orange-50/70"><label class="flex items-center gap-2.5 cursor-pointer w-full h-full"><input type="checkbox" class="status-checkbox cb-lab" ${isL?'checked':''} onclick="toggleStatus('${item.id}', 'lab')"><span class="font-black whitespace-nowrap ${isL?'text-dimmed':'text-[#B45309]'}">${window.formatMinguo(item.collectDate)}</span></label></td><td class="bg-green-50/70"><label class="flex items-center gap-2.5 cursor-pointer w-full h-full"><input type="checkbox" class="status-checkbox cb-test" ${isT?'checked':''} onclick="toggleStatus('${item.id}', 'test')"><span class="font-black whitespace-nowrap flex items-center ${isT?'text-dimmed':'text-[#166534]'}">${window.formatMinguo(item.testDate)}${testBadge}</span></label></td><td><input type="text" class="remark-input" ${isT?'readonly':''} onchange="updateRemark('${item.id}', this.value)" placeholder="點擊填寫..." value="${window.remarks[item.id]||''}"></td>`;
                 tbody.appendChild(tr);
             });
         };
@@ -309,4 +346,51 @@
                 window.saveDataToCloud();
                 window.refreshAll(); 
                 
-                if (updatedCount > 0) window.showModal("同步與繪製成功！", `透過
+                if (updatedCount > 0) window.showModal("同步與繪製成功！", `透過 API 自動更新了 <b class="text-blue-600 text-lg">${updatedCount}</b> 筆排程，並成功繪製全區數位雙生地圖！`, "success"); 
+                else window.showModal("地圖載入完成", "地圖已繪製完成，且進度資料已經是最新的。", "success"); 
+            } catch (error) { 
+                window.showModal("API 同步失敗", error.message, "error"); 
+            } finally { 
+                btn.innerHTML = originalHtml; btn.disabled = false; 
+            }
+        };
+
+        function renderMap() {
+            const container = document.getElementById('map-container');
+            if (window.mapCoordinates.length === 0) return;
+            let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+            window.mapCoordinates.forEach(p => { if (p.x < minX) minX = p.x; if (p.x > maxX) maxX = p.x; const invertedY = -p.y; if (invertedY < minY) minY = invertedY; if (invertedY > maxY) maxY = invertedY; });
+            const paddingX = (maxX - minX) * 0.1 || 500; const paddingY = (maxY - minY) * 0.1 || 500;
+            const viewBox = `${minX - paddingX} ${minY - paddingY} ${(maxX - minX) + paddingX * 2} ${(maxY - minY) + paddingY * 2}`;
+            const pileStatusMap = {};
+            scheduleData.forEach(item => {
+                const pNumStr = window.pileNumbers[item.id] || '';
+                if (!pNumStr) return;
+                const nums = (pNumStr.match(/\d+/g) || []);
+                const isS = window.statusSample[item.id], isL = window.statusLab[item.id], isT = window.statusTest[item.id];
+                let targetColor = '#1E3A8A', targetStroke = '#172554', zIndex = 1; 
+                if (isT) { targetColor = '#166534'; targetStroke = '#14532D'; zIndex = 3; } else if (isL) { targetColor = '#B45309'; targetStroke = '#78350F'; zIndex = 2; }
+                nums.forEach(num => { pileStatusMap[num] = { fill: targetColor, stroke: targetStroke, z: zIndex }; });
+            });
+            const mappedPoints = window.mapCoordinates.map(p => { const status = pileStatusMap[p.id] || { fill: '#FFFFFF', stroke: '#94A3B8', z: 0 }; return { ...p, ...status }; }).sort((a, b) => a.z - b.z);
+            let circlesHtml = '';
+            mappedPoints.forEach(p => { circlesHtml += `<circle id="map-pile-${p.id}" class="pile-circle" cx="${p.x}" cy="${-p.y}" r="60" fill="${p.fill}" stroke="${p.stroke}" stroke-width="15"><title>樁號: P${p.id}</title></circle>`; });
+            container.innerHTML = `<svg width="100%" height="100%" viewBox="${viewBox}" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet"><g>${circlesHtml}</g></svg>`;
+        }
+
+        window.toggleStatus = (id, type) => { if (type === 'sample') window.statusSample[id] = !window.statusSample[id]; if (type === 'lab') window.statusLab[id] = !window.statusLab[id]; if (type === 'test') window.statusTest[id] = !window.statusTest[id]; window.saveDataToCloud(); window.refreshAll(); };
+        window.updatePile = (id, val) => { const v = val.trim(); if (!v) delete window.pileNumbers[id]; else window.pileNumbers[id] = v; window.saveDataToCloud(); window.refreshAll(); };
+        window.updateRemark = (id, val) => { const v = val.trim(); if (!v) delete window.remarks[id]; else window.remarks[id] = v; window.saveDataToCloud(); };
+        window.toggleView = (v) => { currentView = v; document.getElementById('table-view').classList.toggle('hidden', v !== 'table'); document.getElementById('calendar-view').classList.toggle('hidden', v !== 'calendar'); };
+        window.openMatrixModal = () => { document.getElementById('matrix-modal').classList.remove('hidden'); };
+        window.closeMatrixModal = () => { document.getElementById('matrix-modal').classList.add('hidden'); };
+        window.openReconModal = () => { document.getElementById('recon-modal').classList.remove('hidden'); };
+        window.closeReconModal = () => { document.getElementById('recon-modal').classList.add('hidden'); };
+        window.showModal = (title, msg, type) => { document.getElementById('custom-modal-header').innerHTML = `<i class="fa-solid fa-${type === 'success' ? 'circle-check text-emerald-500' : 'triangle-exclamation text-red-500'}"></i> ${title}`; document.getElementById('custom-modal-message').innerHTML = msg; document.getElementById('custom-modal').classList.remove('hidden'); };
+        window.closeModal = () => document.getElementById('custom-modal').classList.add('hidden');
+        window.setSmartFilter = (type) => { currentSmartFilter = type; window.renderTable(currentFilter); };
+
+        initFirebase();
+    </script>
+</body>
+</html>
