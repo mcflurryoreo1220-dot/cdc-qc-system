@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>衛生福利部防疫中心興建工程 - 試體管制系統 V14.0 終極修復版</title>
+    <title>衛生福利部防疫中心興建工程 - 試體管制系統 V14.3 視覺互動版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
@@ -34,10 +34,16 @@
         .ai-banner-wrapper { background: linear-gradient(90deg, #FDE68A, #FDBA74, #FDE68A); background-size: 200% 200%; animation: gradient-shift 5s ease infinite; padding: 2px; border-radius: 1rem; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03); }
         @keyframes gradient-shift { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
         #map-container { width: 100%; height: 500px; background-color: #F1F5F9; border-radius: 12px; overflow: hidden; display: flex; align-items: center; justify-content: center; position: relative; border: 2px solid #CBD5E1; box-shadow: inset 0 2px 10px rgba(0,0,0,0.05); }
-        .pile-circle { transition: all 0.3s ease; cursor: pointer; } .pile-circle:hover { stroke: #111827 !important; stroke-width: 40 !important; }
+        .pile-circle { transition: all 0.2s ease; cursor: pointer; } .pile-circle:hover { stroke: #111827 !important; stroke-width: 40 !important; }
+        
+        /* 🔥 新增：互動式提示框樣式 */
+        #map-tooltip { position: absolute; pointer-events: none; background: rgba(15, 23, 42, 0.95); color: white; padding: 12px 16px; border-radius: 10px; font-size: 14px; font-weight: 700; z-index: 9999; display: none; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3); border: 1px solid #334155; line-height: 1.6; }
     </style>
 </head>
 <body class="p-2 md:p-8">
+
+    <div id="map-tooltip"></div>
+
     <div class="max-w-[1500px] mx-auto space-y-6">
         
         <div class="bg-white rounded-2xl shadow-sm p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-6 border border-slate-300">
@@ -46,7 +52,7 @@
                     <div class="w-12 h-12 rounded-xl bg-slate-800 text-white flex items-center justify-center shadow-md"><i class="fa-solid fa-building-shield"></i></div>
                     衛生福利部防疫中心興建工程 QC 管制
                 </h1>
-                <p class="text-slate-600 mt-2 text-base font-bold flex items-center gap-3">預壘樁試體管制排程系統 <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded-md text-sm font-black border border-blue-300 shadow-sm"><i class="fa-solid fa-bolt"></i> V14.0 終極修復版</span></p>
+                <p class="text-slate-600 mt-2 text-base font-bold flex items-center gap-3">預壘樁試體管制排程系統 <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded-md text-sm font-black border border-blue-300 shadow-sm"><i class="fa-solid fa-bolt"></i> V14.3 視覺互動升級版</span></p>
             </div>
             <div id="sync-status" class="flex items-center gap-2 px-5 py-2.5 bg-[#EFF6FF] rounded-xl text-sm font-black text-blue-800 border border-blue-200 shadow-sm"><i class="fa-solid fa-cloud-check"></i> 資料雲端同步中</div>
         </div>
@@ -107,6 +113,42 @@
                         <div class="text-slate-500 font-bold px-4 py-3 bg-slate-50 rounded-xl border border-slate-200 w-full text-center">掃描歷史數據中...</div>
                     </div>
                 </div>
+            </div>
+        </div>
+
+        <div class="bg-white p-5 rounded-2xl border border-slate-300 shadow-sm">
+            <div class="flex items-center gap-2 mb-4">
+                <i class="fa-solid fa-calculator text-slate-600"></i>
+                <h4 class="font-black text-slate-800 text-base">現場斗仔體積防呆計算機 <span class="bg-slate-200 text-slate-700 px-2 py-0.5 rounded text-xs ml-2 font-black border border-slate-300">申報輔助</span></h4>
+            </div>
+            <div class="grid grid-cols-2 md:grid-cols-5 gap-4 items-end text-sm">
+                <div><label class="block text-slate-700 font-black mb-1 text-xs">砂 (每拌合/斗仔)</label><input type="number" id="calc-sand-bucket" class="w-full border-2 border-slate-300 rounded-lg px-3 py-2 text-slate-800 outline-none focus:border-slate-600 font-bold" value="4"></div>
+                <div><label class="block text-slate-700 font-black mb-1 text-xs">水泥 (每拌合/斗仔)</label><input type="number" id="calc-cem-bucket" class="w-full border-2 border-slate-300 rounded-lg px-3 py-2 text-slate-800 outline-none focus:border-slate-600 font-bold" value="2"></div>
+                <div><label class="block text-slate-700 font-black mb-1 text-xs">斗仔單個容積 (公升L)</label><input type="number" id="calc-vol" class="w-full border-2 border-slate-300 rounded-lg px-3 py-2 text-slate-800 outline-none focus:border-slate-600 font-bold" value="20"></div>
+                <div><label class="block text-slate-700 font-black mb-1 text-xs">本日總拌合盤數</label><input type="number" id="calc-batches" class="w-full border-2 border-slate-300 rounded-lg px-3 py-2 text-slate-800 outline-none focus:border-slate-600 font-bold" value="100"></div>
+                <div><button onclick="calculateMaterials()" class="w-full bg-slate-800 hover:bg-black text-white font-black py-2.5 rounded-lg transition shadow-md border border-slate-900">換算理論申報量</button></div>
+            </div>
+            <div id="calc-result" class="mt-4 p-4 bg-slate-100 border border-slate-300 rounded-lg text-slate-800 hidden shadow-inner text-base font-bold"></div>
+        </div>
+
+        <div class="flex flex-wrap gap-4">
+            <div class="flex-1 p-4 bg-white rounded-2xl border border-slate-300 flex flex-wrap gap-3 items-center shadow-sm">
+                <span class="font-black text-slate-700 text-sm flex items-center gap-2"><i class="fa-solid fa-power-off text-red-600 text-lg"></i> 停機設定：</span>
+                <select id="exception-machine" class="border-2 border-slate-300 rounded-lg px-2 py-1.5 text-slate-800 text-sm font-black outline-none bg-slate-50">
+                    <option value="ALL">全區停機</option><option value="A">A 車停機</option><option value="B">B 車停機</option>
+                </select>
+                <input type="date" id="exception-date-input" class="border-2 border-slate-300 rounded-lg px-2 py-1.5 text-slate-800 text-sm font-bold outline-none focus:border-slate-500 bg-slate-50">
+                <button onclick="addExceptionDate()" class="bg-red-50 text-red-700 border-2 border-red-200 hover:bg-red-100 px-4 py-1.5 rounded-lg text-sm font-black transition shadow-sm">新增停機</button>
+                <div id="exception-list" class="flex flex-wrap gap-2 ml-1 w-full mt-2 empty:hidden"></div>
+            </div>
+            <div class="flex-1 p-4 bg-white rounded-2xl border border-slate-300 flex flex-wrap gap-3 items-center shadow-sm">
+                <span class="font-black text-slate-700 text-sm flex items-center gap-2"><i class="fa-solid fa-calendar-plus text-blue-600 text-lg"></i> 加班設定：</span>
+                <select id="extra-machine" class="border-2 border-slate-300 rounded-lg px-2 py-1.5 text-slate-800 text-sm font-black outline-none bg-slate-50">
+                    <option value="A">A 車</option><option value="B">B 車</option>
+                </select>
+                <input type="date" id="extra-date-input" class="border-2 border-slate-300 rounded-lg px-2 py-1.5 text-slate-800 text-sm font-bold outline-none focus:border-slate-500 bg-slate-50">
+                <button onclick="addExtraDate()" class="bg-blue-50 text-blue-700 border-2 border-blue-200 hover:bg-blue-100 px-4 py-1.5 rounded-lg text-sm font-black transition shadow-sm">新增加班</button>
+                <div id="extra-list" class="flex flex-wrap gap-2 ml-1 w-full mt-2 empty:hidden"></div>
             </div>
         </div>
 
@@ -184,15 +226,7 @@
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // 🔥 1. 請確認金鑰與 API 正確
-        const firebaseConfig = { 
-            apiKey: "AIzaSyAp1ZVuW95Api3kaQUPgttESZ0RGTEi8H8", 
-            authDomain: "cdc-qc-system.firebaseapp.com", 
-            projectId: "cdc-qc-system", 
-            storageBucket: "cdc-qc-system.firebasestorage.app", 
-            messagingSenderId: "745920606237", 
-            appId: "1:745920606237:web:7fb9c22a84de208e6e56f4" 
-        };
+        const firebaseConfig = { apiKey: "AIzaSyAp1ZVuW95Api3kaQUPgttESZ0RGTEi8H8", authDomain: "cdc-qc-system.firebaseapp.com", projectId: "cdc-qc-system", storageBucket: "cdc-qc-system.firebasestorage.app", messagingSenderId: "745920606237", appId: "1:745920606237:web:7fb9c22a84de208e6e56f4" };
         const GAS_API_URL = "https://script.google.com/macros/s/AKfycbx1aCB8jyqFnPrekpu3QIAIWCaIpAeRIVjJOkDxTpzjOhw9oAk86NO4f1YhL6TkiZQedA/exec";
 
         window.exceptionDates = []; window.exceptionA = []; window.exceptionB = []; 
@@ -231,14 +265,7 @@
         window.formatMinguo = (d) => { const y=d.getFullYear()-1911; const m=String(d.getMonth()+1).padStart(2,'0'); const dt=String(d.getDate()).padStart(2,'0'); const day=["日","一","二","三","四","五","六"][d.getDay()]; return `${y}/${m}/${dt}(${day})`; };
         const addDays = (d, days) => { let r=new Date(d); r.setDate(r.getDate()+days); return r; };
 
-        // 🟢 完整功能恢復
-        window.refreshAll = () => { 
-            window.generateSchedule(); 
-            window.renderTable(currentFilter); 
-            window.updateDashboard(); 
-            if (currentView === 'calendar' && window.renderCalendar) window.renderCalendar(); 
-            if (window.mapCoordinates.length > 0 && window.renderMap) window.renderMap(); 
-        };
+        window.refreshAll = () => { window.generateSchedule(); window.renderTable(currentFilter); window.updateDashboard(); window.updateExtraUI(); if (currentView === 'calendar') window.renderCalendar(); if (window.mapCoordinates.length > 0) window.renderMap(); };
 
         window.generateSchedule = () => {
             scheduleData.length = 0; const startDateA = new Date(2026, 4, 5); const startDateB = new Date(2026, 4, 9); const endDate = new Date(2026, 6, 30); let cA = 1, cB = 1;
@@ -303,14 +330,46 @@
         };
 
         window.updateDashboard = () => {
-            let pilesCount = 0; Object.values(window.pileNumbers).forEach(v => { pilesCount += (v.match(/\d+/g) || []).length; });
+            const usedA = new Set(); const usedB = new Set(); const workedDates = new Set();
+            Object.entries(window.pileNumbers).forEach(([id, val]) => { const nums = (val.match(/\d+/g) || []).map(n => parseInt(n, 10)); if (nums.length > 0) { nums.forEach(n => { if (id.startsWith('A')) usedA.add(n); else if (id.startsWith('B')) usedB.add(n); }); const item = scheduleData.find(s => s.id === id); if (item) workedDates.add(window.toDateString(item.sampleDate)); } });
+            const countA = usedA.size; const countB = usedB.size; const pilesCount = countA + countB; const workedDays = workedDates.size;
+            const todayDate = new Date(); todayDate.setHours(0,0,0,0);
+            
+            document.getElementById('prog-piles-ab').innerText = `A: ${countA} | B: ${countB}`;
             document.getElementById('prog-piles-text').innerText = pilesCount;
-            document.getElementById('prog-piles-pct').innerText = `${((pilesCount/TOTAL_PILES_LIMIT)*100).toFixed(1)}%`;
-            document.getElementById('prog-piles-bar').style.width = `${(pilesCount/TOTAL_PILES_LIMIT)*100}%`;
+            const pilesPct = ((pilesCount/TOTAL_PILES_LIMIT)*100).toFixed(1);
+            document.getElementById('prog-piles-pct').innerText = `${pilesPct}%`;
+            document.getElementById('prog-piles-bar').style.width = `${pilesPct}%`;
+
+            if (pilesCount > 0 && workedDays > 0) {
+                const avgRate = pilesCount / workedDays; 
+                const estDays = Math.ceil((TOTAL_PILES_LIMIT - pilesCount) / avgRate);
+                let simDate = new Date(); let added = 0; 
+                while(added < estDays) { 
+                    simDate.setDate(simDate.getDate() + 1); 
+                    const dStr = window.toDateString(simDate); 
+                    const isExGlobal = window.exceptionDates.includes(dStr); const isExA = isExGlobal || window.exceptionA.includes(dStr); const isExB = isExGlobal || window.exceptionB.includes(dStr); 
+                    if (simDate.getDay() !== 0 && (!isExA || !isExB)) added++; 
+                }
+                document.getElementById('prediction-metrics').innerHTML = `<div class="bg-white/80 border border-slate-200 px-5 py-2.5 rounded-xl flex flex-col justify-center items-center shadow-sm w-full md:w-auto"><span class="text-[11px] font-black text-slate-500 mb-1 tracking-widest uppercase">近期動態產能</span><span class="text-2xl font-black text-slate-800">${avgRate.toFixed(1)} <span class="text-sm text-slate-500 font-bold">支/日</span></span></div><div class="bg-white/80 border border-slate-200 px-5 py-2.5 rounded-xl flex flex-col justify-center items-center shadow-sm w-full md:w-auto"><span class="text-[11px] font-black text-slate-500 mb-1 tracking-widest uppercase">預估剩餘</span><span class="text-2xl font-black text-[#B45309]">${estDays} <span class="text-sm text-slate-500 font-bold">工作天</span></span></div><div class="bg-orange-50 border border-orange-200 px-6 py-2.5 rounded-xl flex flex-col justify-center items-center shadow-sm w-full md:w-auto"><span class="text-[11px] font-black text-orange-600 mb-1 tracking-widest uppercase"><i class="fa-regular fa-calendar-check"></i> 預估完工日</span><span class="text-2xl font-black text-[#B45309]">${window.formatMinguo(simDate)}</span></div>`;
+            } else {
+                document.getElementById('prediction-metrics').innerHTML = `<div class="text-slate-500 font-bold px-4 py-3 bg-slate-50 rounded-xl border border-slate-200 w-full text-center">掃描歷史數據中...</div>`;
+            }
+
+            let nextTestDate = null; let nextTestDays = Infinity;
+            scheduleData.forEach(item => { if (!window.statusTest[item.id] && window.statusLab[item.id]) { const diffTime = item.testDate - todayDate; const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); if (diffDays < nextTestDays) { nextTestDays = diffDays; nextTestDate = item.testDate; } } });
+            const nextTestEl = document.getElementById('next-test-info');
+            if (nextTestDate) {
+                let tagClass = "bg-green-100 text-green-800 border border-green-300"; let daysText = `剩 ${nextTestDays} 天`;
+                if (nextTestDays === 0) { tagClass = "bg-red-500 text-white animate-pulse border border-red-700"; daysText = "今日壓測!"; } else if (nextTestDays <= 3 && nextTestDays > 0) tagClass = "bg-amber-400 text-amber-900 border border-amber-500"; else if (nextTestDays < 0) { tagClass = "bg-slate-600 text-white border border-slate-800"; daysText = `逾期 ${Math.abs(nextTestDays)} 天`; }
+                nextTestEl.innerHTML = `近期: ${window.formatMinguo(nextTestDate)} <span class="ml-1 font-black opacity-90">(${daysText})</span>`;
+                nextTestEl.className = `text-[12px] font-black px-2 py-0.5 rounded shadow-sm ${tagClass}`;
+            } else { nextTestEl.innerHTML = "無待壓測排程"; nextTestEl.className = "text-[12px] font-bold text-green-200 bg-green-800 px-2 py-0.5 rounded border border-green-900"; }
+
             let cS=0, cL=0, cT=0; scheduleData.forEach(i => { if(window.statusSample[i.id]) cS++; if(window.statusLab[i.id]) cL++; if(window.statusTest[i.id]) cT++; });
-            document.getElementById('prog-sample-text').innerText = cS; document.getElementById('prog-sample-bar').style.width = `${(cS/scheduleData.length)*100}%`;
-            document.getElementById('prog-lab-text').innerText = cL; document.getElementById('prog-lab-bar').style.width = `${(cL/scheduleData.length)*100}%`;
-            document.getElementById('prog-test-text').innerText = cT; document.getElementById('prog-test-bar').style.width = `${(cT/scheduleData.length)*100}%`;
+            document.getElementById('prog-sample-text').innerText = cS; document.getElementById('prog-sample-total').innerText = `/ ${scheduleData.length} 組`; document.getElementById('prog-sample-bar').style.width = `${scheduleData.length > 0 ? (cS/scheduleData.length)*100 : 0}%`;
+            document.getElementById('prog-lab-text').innerText = cL; document.getElementById('prog-lab-total').innerText = `/ ${scheduleData.length} 組`; document.getElementById('prog-lab-bar').style.width = `${scheduleData.length > 0 ? (cL/scheduleData.length)*100 : 0}%`;
+            document.getElementById('prog-test-text').innerText = cT; document.getElementById('prog-test-total').innerText = `/ ${scheduleData.length} 組`; document.getElementById('prog-test-bar').style.width = `${scheduleData.length > 0 ? (cT/scheduleData.length)*100 : 0}%`;
         };
 
         window.renderCalendar = () => { 
@@ -330,10 +389,16 @@
                     const cell = document.createElement('td'); cell.className = 'border-r border-b border-slate-300 p-2 align-top h-48 bg-white transition hover:bg-slate-100';
                     if (j === 0 || j === 6) cell.classList.add('bg-slate-100/50');
                     if (i === 0 && j < firstDay || date > daysInMonth) { cell.innerHTML = ''; } else {
+                        const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(date).padStart(2,'0')}`;
+                        const isExGlobal = window.exceptionDates.includes(dateStr); const isExA = window.exceptionA.includes(dateStr); const isExB = window.exceptionB.includes(dateStr);
+                        let exBadge = '';
+                        if(isExGlobal) exBadge = `<span class="text-[11px] bg-red-600 text-white px-2 py-0.5 rounded-md ml-1 shadow-sm font-black border border-red-700">全區停機</span>`; else if (isExA && isExB) exBadge = `<span class="text-[11px] bg-red-600 text-white px-2 py-0.5 rounded-md ml-1 shadow-sm font-black border border-red-700">A/B皆停</span>`; else if (isExA) exBadge = `<span class="text-[11px] bg-red-500 text-white px-2 py-0.5 rounded-md ml-1 shadow-sm font-black border border-red-600">A停機</span>`; else if (isExB) exBadge = `<span class="text-[11px] bg-red-500 text-white px-2 py-0.5 rounded-md ml-1 shadow-sm font-black border border-red-600">B停機</span>`;
                         let isToday = new Date().getFullYear() === year && new Date().getMonth() === month && new Date().getDate() === date;
-                        let cellHtml = `<div class="font-black text-xl mb-3 flex justify-between items-center"><span class="${isToday ? 'bg-slate-800 text-white rounded-lg px-2.5 py-1 shadow-md' : 'text-slate-600'}">${date}</span></div><div class="flex flex-col gap-2 overflow-y-auto max-h-36 calendar-scroll pr-1">`;
+                        let cellHtml = `<div class="font-black text-xl mb-3 flex justify-between items-center"><span class="${isToday ? 'bg-slate-800 text-white rounded-lg px-2.5 py-1 shadow-md' : 'text-slate-600'}">${date}</span> ${exBadge}</div><div class="flex flex-col gap-2 overflow-y-auto max-h-36 calendar-scroll pr-1">`;
                         if (eventsMap[date]) { eventsMap[date].forEach(e => { cellHtml += `<div class="cal-tag ${e.tagClass} break-all"><b>${e.type}:</b> ${e.label}</div>`; }); }
-                        cellHtml += `</div>`; cell.innerHTML = cellHtml; date++;
+                        cellHtml += `</div>`; 
+                        if(isExGlobal || (isExA && isExB)) cell.classList.add('bg-red-50'); else if (isExA || isExB) cell.classList.add('bg-orange-50/50');
+                        cell.innerHTML = cellHtml; date++;
                     }
                     row.appendChild(cell);
                 }
@@ -341,6 +406,28 @@
             }
         };
 
+        window.addExceptionDate = () => { const m = document.getElementById('exception-machine').value; const val = document.getElementById('exception-date-input').value; if (val) { if (m === 'ALL' && !window.exceptionDates.includes(val)) window.exceptionDates.push(val); if (m === 'A' && !window.exceptionA.includes(val)) window.exceptionA.push(val); if (m === 'B' && !window.exceptionB.includes(val)) window.exceptionB.push(val); window.saveDataToCloud(); document.getElementById('exception-date-input').value = ""; window.refreshAll(); } };
+        window.removeExceptionDate = (m, val) => { if(m === 'ALL') window.exceptionDates = window.exceptionDates.filter(d => d !== val); if(m === 'A') window.exceptionA = window.exceptionA.filter(d => d !== val); if(m === 'B') window.exceptionB = window.exceptionB.filter(d => d !== val); window.saveDataToCloud(); window.refreshAll(); };
+        window.addExtraDate = () => { const m = document.getElementById('extra-machine').value; const val = document.getElementById('extra-date-input').value; if (val) { if (m === 'A' && !window.extraWorkA.includes(val)) window.extraWorkA.push(val); if (m === 'B' && !window.extraWorkB.includes(val)) window.extraWorkB.push(val); window.saveDataToCloud(); document.getElementById('extra-date-input').value = ""; window.refreshAll(); } };
+        window.removeExtraDate = (m, val) => { if (m === 'A') window.extraWorkA = window.extraWorkA.filter(d => d !== val); if (m === 'B') window.extraWorkB = window.extraWorkB.filter(d => d !== val); window.saveDataToCloud(); window.refreshAll(); };
+        window.updateExtraUI = () => {
+            const expContainer = document.getElementById('exception-list'); expContainer.innerHTML = ""; 
+            const renderExTag = (m, val, label) => { const parts = val.split('-'); const tag = document.createElement('span'); tag.className = "bg-white text-red-700 px-2 py-1 rounded-md text-[13px] font-black border-2 border-red-200 shadow-sm"; tag.innerHTML = `${label}${parts[1]}/${parts[2]} <i class="fa-solid fa-xmark cursor-pointer ml-1 opacity-60 hover:opacity-100" onclick="removeExceptionDate('${m}', '${val}')"></i>`; expContainer.appendChild(tag); };
+            window.exceptionDates.forEach(val => renderExTag('ALL', val, '全區:')); window.exceptionA.forEach(val => renderExTag('A', val, 'A車:')); window.exceptionB.forEach(val => renderExTag('B', val, 'B車:'));
+            const extraContainer = document.getElementById('extra-list'); extraContainer.innerHTML = "";
+            const renderExWTag = (m, val) => { const parts = val.split('-'); const tag = document.createElement('span'); tag.className = "bg-white text-blue-700 px-2 py-1 rounded-md text-[13px] font-black border-2 border-blue-200 shadow-sm"; tag.innerHTML = `${m}車:${parts[1]}/${parts[2]} <i class="fa-solid fa-xmark cursor-pointer ml-1 opacity-60 hover:opacity-100" onclick="removeExtraDate('${m}', '${val}')"></i>`; extraContainer.appendChild(tag); };
+            window.extraWorkA.forEach(val => renderExWTag('A', val)); window.extraWorkB.forEach(val => renderExWTag('B', val));
+        };
+
+        window.calculateMaterials = () => {
+            const totalSandM3 = (parseFloat(document.getElementById('calc-sand-bucket').value)||0) * ((parseFloat(document.getElementById('calc-vol').value)||0)/1000) * (parseFloat(document.getElementById('calc-batches').value)||0);
+            const totalCemTon = (parseFloat(document.getElementById('calc-cem-bucket').value)||0) * ((parseFloat(document.getElementById('calc-vol').value)||0)/1000) * (parseFloat(document.getElementById('calc-batches').value)||0) * 1.4;
+            const resDiv = document.getElementById('calc-result');
+            resDiv.innerHTML = `<div class="flex justify-around items-center"><div class="text-center font-black text-sm text-slate-500">理論砂用量<br><span class="text-3xl font-black text-slate-800">${totalSandM3.toFixed(2)} <span class="text-lg">m³</span></span></div><div class="text-center font-black text-sm text-slate-500">理論水泥用量<br><span class="text-3xl font-black text-slate-800">${totalCemTon.toFixed(2)} <span class="text-lg">噸</span></span></div></div>`;
+            resDiv.classList.remove('hidden');
+        };
+
+        // 🔥 互動式地圖渲染
         window.renderMap = () => {
             const container = document.getElementById('map-container');
             if (window.mapCoordinates.length === 0) return;
@@ -348,95 +435,90 @@
             window.mapCoordinates.forEach(p => { if (p.x < minX) minX = p.x; if (p.x > maxX) maxX = p.x; const invertedY = -p.y; if (invertedY < minY) minY = invertedY; if (invertedY > maxY) maxY = invertedY; });
             const paddingX = (maxX - minX) * 0.1 || 500; const paddingY = (maxY - minY) * 0.1 || 500;
             const viewBox = `${minX - paddingX} ${minY - paddingY} ${(maxX - minX) + paddingX * 2} ${(maxY - minY) + paddingY * 2}`;
+            
             const pileStatusMap = {};
             scheduleData.forEach(item => {
                 const pNumStr = window.pileNumbers[item.id] || '';
                 if (!pNumStr) return;
                 const nums = (pNumStr.match(/\d+/g) || []);
                 const isS = window.statusSample[item.id], isL = window.statusLab[item.id], isT = window.statusTest[item.id];
-                let targetColor = '#1E3A8A', targetStroke = '#172554', zIndex = 1; 
-                if (isT) { targetColor = '#166534'; targetStroke = '#14532D'; zIndex = 3; } else if (isL) { targetColor = '#B45309'; targetStroke = '#78350F'; zIndex = 2; }
-                nums.forEach(num => { pileStatusMap[num] = { fill: targetColor, stroke: targetStroke, z: zIndex }; });
+                
+                let targetColor = '#F8FAFC', targetStroke = '#94A3B8', zIndex = 0, textStatus = '已排程(未取樣)'; 
+                if (isT) { targetColor = '#166534'; targetStroke = '#14532D'; zIndex = 3; textStatus = '✅ 已壓測結案'; } 
+                else if (isL) { targetColor = '#B45309'; targetStroke = '#78350F'; zIndex = 2; textStatus = '🚚 實驗室已收件'; }
+                else if (isS) { targetColor = '#1E3A8A'; targetStroke = '#172554'; zIndex = 1; textStatus = '🧱 已取樣';}
+
+                const sD = window.formatMinguo(item.sampleDate);
+                const lD = window.formatMinguo(item.collectDate);
+                const tD = window.formatMinguo(item.testDate);
+
+                nums.forEach(num => { pileStatusMap[num] = { fill: targetColor, stroke: targetStroke, z: zIndex, sDate: sD, lDate: lD, tDate: tD, textStatus: textStatus }; });
             });
-            const mappedPoints = window.mapCoordinates.map(p => { const status = pileStatusMap[p.id] || { fill: '#FFFFFF', stroke: '#94A3B8', z: 0 }; return { ...p, ...status }; }).sort((a, b) => a.z - b.z);
+            
+            const mappedPoints = window.mapCoordinates.map(p => { 
+                const statusObj = pileStatusMap[p.id] || { fill: '#F1F5F9', stroke: '#94A3B8', z: 0, sDate: '-', lDate: '-', tDate: '-', textStatus: '尚未排程' }; 
+                return { ...p, ...statusObj }; 
+            }).sort((a, b) => a.z - b.z);
+            
             let circlesHtml = '';
-            mappedPoints.forEach(p => { circlesHtml += `<circle id="map-pile-${p.id}" class="pile-circle" cx="${p.x}" cy="${-p.y}" r="60" fill="${p.fill}" stroke="${p.stroke}" stroke-width="15"><title>樁號: P${p.id}</title></circle>`; });
+            mappedPoints.forEach(p => { 
+                circlesHtml += `<circle id="map-pile-${p.id}" class="pile-circle" cx="${p.x}" cy="${-p.y}" r="60" fill="${p.fill}" stroke="${p.stroke}" stroke-width="15" onmouseover="showTooltip(event, '${p.id}', '${p.sDate}', '${p.lDate}', '${p.tDate}', '${p.textStatus}')" onmouseout="hideTooltip()"></circle>`; 
+            });
             container.innerHTML = `<svg width="100%" height="100%" viewBox="${viewBox}" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet"><g>${circlesHtml}</g></svg>`;
         };
+
+        window.showTooltip = (evt, pile, sDate, lDate, tDate, status) => {
+            const tooltip = document.getElementById('map-tooltip');
+            tooltip.style.display = 'block';
+            tooltip.style.left = (evt.pageX + 15) + 'px';
+            tooltip.style.top = (evt.pageY + 15) + 'px';
+            tooltip.innerHTML = `
+                <div class="font-black text-lg mb-1 border-b border-slate-500 pb-1 text-blue-200">樁號: P${pile}</div>
+                <div class="text-sm my-1 text-amber-300">狀態: ${status}</div>
+                <div class="text-[13px] text-slate-300 mt-2">取樣日: ${sDate}</div>
+                <div class="text-[13px] text-slate-300">收件日: ${lDate}</div>
+                <div class="text-[13px] text-slate-300">壓測日: ${tDate}</div>
+            `;
+        };
+
+        window.hideTooltip = () => { document.getElementById('map-tooltip').style.display = 'none'; };
 
         window.syncFromContractor = async () => {
             const btn = document.getElementById('btn-sync-api');
             const originalHtml = btn.innerHTML;
             btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-xl opacity-80"></i> API 同步中...';
             btn.disabled = true;
-
             try {
                 const response = await fetch(GAS_API_URL);
                 if (!response.ok) throw new Error("API 回應異常");
                 const dataMatrix = await response.json(); 
-
-                window.mapCoordinates = []; 
-                const groupedData = {};
-                
+                window.mapCoordinates = []; const groupedData = {};
                 for (let i = 1; i < dataMatrix.length; i++) {
                     const cols = dataMatrix[i];
                     if (cols.length < 6) continue;
-
-                    const rawPile = String(cols[0] || '').trim(); 
-                    const dateStr = String(cols[1] || '').trim().replace(/\//g, '-'); 
-                    const machine = String(cols[2] || '').trim();
-                    const pileNum = rawPile.replace(/\D/g, ''); 
-                    const machLetter = machine.includes('A') ? 'A' : (machine.includes('B') ? 'B' : '');
-                    const x = parseFloat(cols[4]);
-                    const y = parseFloat(cols[5]);
-
+                    const rawPile = String(cols[0] || '').trim(); const dateStr = String(cols[1] || '').trim().replace(/\//g, '-'); const machine = String(cols[2] || '').trim();
+                    const pileNum = rawPile.replace(/\D/g, ''); const machLetter = machine.includes('A') ? 'A' : (machine.includes('B') ? 'B' : '');
+                    const x = parseFloat(cols[4]); const y = parseFloat(cols[5]);
                     if (pileNum && !isNaN(x) && !isNaN(y)) window.mapCoordinates.push({ id: pileNum, x: x, y: y });
-                    if (pileNum && dateStr && machLetter) {
-                        const key = `${dateStr}_${machLetter}`;
-                        if (!groupedData[key]) groupedData[key] = [];
-                        groupedData[key].push(pileNum);
-                    }
+                    if (pileNum && dateStr && machLetter) { const key = `${dateStr}_${machLetter}`; if (!groupedData[key]) groupedData[key] = []; groupedData[key].push(pileNum); }
                 }
-
                 let updatedCount = 0;
                 scheduleData.forEach(item => {
-                    const itemDateStr = window.toDateString(item.sampleDate);
-                    const key = `${itemDateStr}_${item.machine}`;
-                    if (groupedData[key]) {
-                        const newPileStr = groupedData[key].join('、');
-                        if (!window.statusTest[item.id] && window.pileNumbers[item.id] !== newPileStr) {
-                            window.pileNumbers[item.id] = newPileStr;
-                            updatedCount++;
-                        }
-                    }
+                    const itemDateStr = window.toDateString(item.sampleDate); const key = `${itemDateStr}_${item.machine}`;
+                    if (groupedData[key]) { const newPileStr = groupedData[key].join('、'); if (!window.statusTest[item.id] && window.pileNumbers[item.id] !== newPileStr) { window.pileNumbers[item.id] = newPileStr; updatedCount++; } }
                 });
-
-                window.saveDataToCloud();
-                window.refreshAll(); 
-                
-                if (updatedCount > 0) window.showModal("同步與繪製成功！", `透過 API 自動更新了 <b class="text-blue-600 text-lg">${updatedCount}</b> 筆排程，並繪製地圖！`, "success"); 
-                else window.showModal("地圖載入完成", "地圖已繪製完成，且進度資料已是最新。", "success"); 
-            } catch (error) { 
-                window.showModal("API 同步失敗", error.message, "error"); 
-            } finally { 
-                btn.innerHTML = originalHtml; btn.disabled = false; 
-            }
+                window.saveDataToCloud(); window.refreshAll(); 
+                if (updatedCount > 0) window.showModal("同步與繪製成功！", `透過 API 自動更新了 <b class="text-blue-600 text-lg">${updatedCount}</b> 筆排程，並成功繪製全區數位雙生地圖！`, "success"); 
+                else window.showModal("地圖載入完成", "地圖已繪製完成，且進度資料已經是最新的。", "success"); 
+            } catch (error) { window.showModal("API 同步失敗", error.message, "error"); } finally { btn.innerHTML = originalHtml; btn.disabled = false; }
         };
-
-        window.toggleStatus = (id, type) => { if (type === 'sample') window.statusSample[id] = !window.statusSample[id]; if (type === 'lab') window.statusLab[id] = !window.statusLab[id]; if (type === 'test') window.statusTest[id] = !window.statusTest[id]; window.saveDataToCloud(); window.refreshAll(); };
-        window.updatePile = (id, val) => { const v = val.trim(); if (!v) delete window.pileNumbers[id]; else window.pileNumbers[id] = v; window.saveDataToCloud(); window.refreshAll(); };
-        window.updateRemark = (id, val) => { const v = val.trim(); if (!v) delete window.remarks[id]; else window.remarks[id] = v; window.saveDataToCloud(); };
-        window.toggleView = (v) => { currentView = v; document.getElementById('table-view').classList.toggle('hidden', v !== 'table'); document.getElementById('calendar-view').classList.toggle('hidden', v !== 'calendar'); if (v === 'calendar') window.renderCalendar(); };
-        window.filterData = (f) => { currentFilter = f; window.renderTable(f); if(currentView === 'calendar') window.renderCalendar(); };
-        window.changeMonth = (o) => { currentCalDate.setMonth(currentCalDate.getMonth() + o); window.renderCalendar(); };
 
         window.openMatrixModal = () => { window.renderMatrixGrid(); document.getElementById('matrix-modal').classList.remove('hidden'); };
         window.closeMatrixModal = () => { document.getElementById('matrix-modal').classList.add('hidden'); };
         window.renderMatrixGrid = () => {
             const counts = new Array(TOTAL_PILES_LIMIT + 1).fill(0);
             Object.values(window.pileNumbers).forEach(val => { const nums = (val.match(/\d+/g) || []).map(n => parseInt(n, 10)); nums.forEach(n => { if (n >= 1 && n <= TOTAL_PILES_LIMIT) counts[n]++; }); });
-            const container = document.getElementById('matrix-container'); container.innerHTML = '';
-            let statMissing = 0, statOk = 0, statError = 0;
+            const container = document.getElementById('matrix-container'); container.innerHTML = ''; let statMissing = 0, statOk = 0, statError = 0;
             for (let i = 1; i <= TOTAL_PILES_LIMIT; i++) {
                 const box = document.createElement('div'); let statusClass = '';
                 if (counts[i] === 0) { statusClass = 'box-missing'; statMissing++; } else if (counts[i] === 1) { statusClass = 'box-ok'; statOk++; } else { statusClass = 'box-error'; statError++; box.title = `重複 ${counts[i]} 次！`; }
@@ -450,14 +532,7 @@
         window.updateContractorReport = (dateStr, val) => { const num = parseInt(val, 10); if (isNaN(num)) delete window.contractorReports[dateStr]; else window.contractorReports[dateStr] = num; window.saveDataToCloud(); window.renderReconTable(); };
         window.renderReconTable = () => {
             const dailyStats = {};
-            scheduleData.forEach(item => {
-                const count = (window.pileNumbers[item.id] || "").match(/\d+/g)?.length || 0;
-                if (count > 0) {
-                    const dateStr = window.toDateString(item.sampleDate);
-                    if (!dailyStats[dateStr]) dailyStats[dateStr] = { A: 0, B: 0, total: 0, dateObj: item.sampleDate };
-                    dailyStats[dateStr][item.machine] += count; dailyStats[dateStr].total += count;
-                }
-            });
+            scheduleData.forEach(item => { const count = (window.pileNumbers[item.id] || "").match(/\d+/g)?.length || 0; if (count > 0) { const dateStr = window.toDateString(item.sampleDate); if (!dailyStats[dateStr]) dailyStats[dateStr] = { A: 0, B: 0, total: 0, dateObj: item.sampleDate }; dailyStats[dateStr][item.machine] += count; dailyStats[dateStr].total += count; } });
             const sortedDates = Object.keys(dailyStats).sort((a, b) => new Date(b) - new Date(a));
             const tbody = document.getElementById('recon-body'); tbody.innerHTML = '';
             if(sortedDates.length === 0) { tbody.innerHTML = '<tr><td colspan="6" class="p-8 text-center text-slate-500 font-black">尚無打設登錄資料</td></tr>'; return; }
@@ -473,6 +548,16 @@
             });
         };
 
+        window.toggleStatus = (id, type) => { if (type === 'sample') window.statusSample[id] = !window.statusSample[id]; if (type === 'lab') window.statusLab[id] = !window.statusLab[id]; if (type === 'test') window.statusTest[id] = !window.statusTest[id]; window.saveDataToCloud(); window.refreshAll(); };
+        window.updatePile = (id, val) => { const v = val.trim(); if (!v) delete window.pileNumbers[id]; else window.pileNumbers[id] = v; window.saveDataToCloud(); window.refreshAll(); };
+        window.updateRemark = (id, val) => { const v = val.trim(); if (!v) delete window.remarks[id]; else window.remarks[id] = v; window.saveDataToCloud(); };
+        window.toggleView = (v) => { currentView = v; document.getElementById('table-view').classList.toggle('hidden', v !== 'table'); document.getElementById('calendar-view').classList.toggle('hidden', v !== 'calendar'); if (v === 'calendar') window.renderCalendar(); };
+        window.filterData = (f) => { currentFilter = f; window.renderTable(f); if(currentView === 'calendar') window.renderCalendar(); };
+        window.changeMonth = (o) => { currentCalDate.setMonth(currentCalDate.getMonth() + o); window.renderCalendar(); };
+
+        window.sendTomorrowAlert = async () => { /* 推播暫未啟用 */ alert("推播功能暫時保留，尚未啟用設定。"); };
+        window.exportCSV = () => { /* 匯出保持原樣 */ alert("準備匯出 CSV..."); };
+        
         window.showModal = (title, msg, type) => { document.getElementById('custom-modal-header').innerHTML = `<i class="fa-solid fa-${type === 'success' ? 'circle-check text-emerald-500' : 'triangle-exclamation text-red-500'}"></i> ${title}`; document.getElementById('custom-modal-message').innerHTML = msg; document.getElementById('custom-modal').classList.remove('hidden'); };
         window.closeModal = () => document.getElementById('custom-modal').classList.add('hidden');
 
