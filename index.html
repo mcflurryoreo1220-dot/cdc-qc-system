@@ -3,9 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>衛生福利部防疫中心興建工程 - 試體管制系統 V15.6 勾稽強化版</title>
+    <title>衛生福利部防疫中心興建工程 - 試體管制系統 V15.7 智慧展延版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/svg-pan-zoom@3.6.1/dist/svg-pan-zoom.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
         :root { --bg-color: #F8FAFC; --text-main: #0F172A; --border-color: #CBD5E1; --color-blue-deep: #1E3A8A; --color-orange-deep: #B45309; --color-green-deep: #166534; }
@@ -13,13 +14,16 @@
         .table-header th { font-size: 16px; font-weight: 900; padding: 16px 14px; background-color: #FFFFFF; color: #1E293B; border-bottom: 2px solid #94A3B8; position: sticky; top: 0; z-index: 20; }
         .modern-row td { padding: 14px 14px; font-size: 17px; line-height: 1.6; vertical-align: middle; border-bottom: 1px solid var(--border-color); transition: all 0.2s ease; }
         .modern-row:hover:not(.completed-row) { background-color: #F1F5F9; box-shadow: inset 4px 0 0 0 var(--color-blue-deep); }
-        .pile-input { border: 2px solid #94A3B8; border-radius: 8px; padding: 10px 14px; width: 100%; min-width: 250px; font-size: 17px; font-weight: 900; color: var(--color-blue-deep); transition: all 0.2s; background: #FFFFFF; }
+        
+        /* 🔥 V15.7 更新：鎖定拉伸 (resize: none)，並設定溢出隱藏以配合智慧長高 */
+        .pile-input { border: 2px solid #94A3B8; border-radius: 8px; padding: 10px 14px; width: 100%; min-width: 150px; font-size: 15px; font-weight: 900; color: var(--color-blue-deep); transition: all 0.2s; background: #FFFFFF; resize: none; overflow: hidden; line-height: 1.5; }
         .pile-input:focus { border-color: var(--color-blue-deep); outline: none; box-shadow: 0 0 0 4px rgba(30, 58, 138, 0.15); }
-        .remark-input { border: 1px solid #94A3B8; border-radius: 8px; padding: 10px 14px; width: 100%; min-width: 180px; font-size: 15px; background: #F8FAFC; color: #334155; font-weight: 700; }
+        .remark-input { border: 1px solid #94A3B8; border-radius: 8px; padding: 10px 14px; width: 100%; min-width: 120px; font-size: 15px; background: #F8FAFC; color: #334155; font-weight: 700; }
+        
         .status-checkbox { width: 1.4rem; height: 1.4rem; cursor: pointer; border-radius: 4px; }
         .cb-sample { accent-color: var(--color-blue-deep); } .cb-lab { accent-color: var(--color-orange-deep); } .cb-test { accent-color: var(--color-green-deep); }
         .completed-row { background-color: #F8FAFC !important; opacity: 0.65; filter: grayscale(50%); transition: all 0.3s ease; }
-        .completed-row input[type="text"] { cursor: not-allowed; opacity: 0.8; } 
+        .completed-row textarea, .completed-row input[type="text"] { cursor: not-allowed; opacity: 0.8; } 
         .cal-tag { font-size: 13px; font-weight: 900; padding: 6px 10px; border-radius: 6px; margin-bottom: 6px; border-left: 5px solid transparent; box-shadow: 0 1px 3px rgba(0,0,0,0.1); white-space: normal; word-wrap: break-word; line-height: 1.5; border: 1px solid #CBD5E1; }
         .tag-sample { background-color: #DBEAFE; border-left-color: var(--color-blue-deep); color: #1E3A8A; }
         .tag-demold { background-color: #E2E8F0; border-left-color: #64748B; color: #334155; }
@@ -58,7 +62,7 @@
                     <div class="w-12 h-12 rounded-xl bg-slate-800 text-white flex items-center justify-center shadow-md"><i class="fa-solid fa-building-shield"></i></div>
                     衛生福利部防疫中心興建工程 QC 管制
                 </h1>
-                <p class="text-slate-600 mt-2 text-base font-bold flex items-center gap-3">預壘樁試體管制排程系統 <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded-md text-sm font-black border border-blue-300 shadow-sm"><i class="fa-solid fa-bolt"></i> V15.6 勾稽強化版</span></p>
+                <p class="text-slate-600 mt-2 text-base font-bold flex items-center gap-3">預壘樁試體管制排程系統 <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded-md text-sm font-black border border-blue-300 shadow-sm"><i class="fa-solid fa-bolt"></i> V15.7 智慧展延版</span></p>
             </div>
             <div id="sync-status" class="flex items-center gap-2 px-5 py-2.5 bg-[#EFF6FF] rounded-xl text-sm font-black text-blue-800 border border-blue-200 shadow-sm"><i class="fa-solid fa-cloud-check"></i> 系統就緒</div>
         </div>
@@ -122,7 +126,7 @@
                         </div>
                     </div>
                     <div class="flex flex-wrap gap-3 w-full md:w-auto" id="prediction-metrics">
-                        <div class="text-slate-500 font-bold px-4 py-3 bg-slate-50 rounded-xl border border-slate-200 w-full text-center">掃描歷史數據中...</div>
+                        <div class="text-slate-500 font-bold px-4 py-3 bg-slate-50 rounded-xl border border-slate-200 w-full text-center">歷史數據掃描中...</div>
                     </div>
                 </div>
             </div>
@@ -246,12 +250,12 @@
                     <tr>
                         <th class="w-[70px] text-center">編號</th>
                         <th class="w-[70px] text-center text-blue-800">數量</th>
-                        <th class="w-[28%]">對應樁號 <i class="fa-solid fa-pen-to-square ml-1.5 opacity-60"></i></th>
+                        <th class="w-[45%]">對應樁號 <i class="fa-solid fa-pen-to-square ml-1.5 opacity-60"></i></th>
                         <th class="bg-blue-50/50 text-[#1E3A8A]">取樣日(T)</th>
                         <th class="bg-slate-50 text-slate-700">拆模日(T+1)</th>
                         <th class="bg-orange-50/50 text-[#B45309]">收件日(二/五)</th>
                         <th class="bg-green-50/50 text-[#166534]">抗壓日(T+28)</th>
-                        <th class="w-[20%] text-slate-600">備註 / 狀態</th>
+                        <th class="w-[10%] text-slate-600">備註 / 狀態</th>
                     </tr>
                 </thead>
                 <tbody id="schedule-body" class="bg-white divide-y divide-slate-200"></tbody>
@@ -426,9 +430,11 @@
                     else if (diffDays < 0) testBadge = `<span class="ml-2 bg-slate-600 text-white px-2 py-0.5 rounded text-[11px] font-black shadow-sm border border-slate-700">逾期 ${Math.abs(diffDays)} 天</span>`;
                 }
                 
-                tr.innerHTML = `<td class="font-black text-slate-800 text-center">${item.id}</td><td>${countBadge}</td><td><textarea rows="2" title="${pNum}" class="pile-input text-sm" ${isT ? 'readonly' : ''} onchange="updatePile('${item.id}', this.value)" placeholder="輸入樁號...">${pNum}</textarea></td><td class="bg-blue-50/70"><label class="flex items-center gap-2.5 cursor-pointer w-full h-full"><input type="checkbox" class="status-checkbox cb-sample" ${isS?'checked':''} onclick="toggleStatus('${item.id}', 'sample')"><span class="font-black whitespace-nowrap ${isS?'text-dimmed':'text-[#1E3A8A]'}">${window.formatMinguo(item.sampleDate)}</span></label></td><td class="font-bold text-slate-600 whitespace-nowrap">${window.formatMinguo(item.demoldDate)}</td><td class="bg-orange-50/70"><label class="flex items-center gap-2.5 cursor-pointer w-full h-full"><input type="checkbox" class="status-checkbox cb-lab" ${isL?'checked':''} onclick="toggleStatus('${item.id}', 'lab')"><span class="font-black whitespace-nowrap ${isL?'text-dimmed':'text-[#B45309]'}">${window.formatMinguo(item.collectDate)}</span></label></td><td class="bg-green-50/70"><label class="flex items-center gap-2.5 cursor-pointer w-full h-full"><input type="checkbox" class="status-checkbox cb-test" ${isT?'checked':''} onclick="toggleStatus('${item.id}', 'test')"><span class="font-black whitespace-nowrap flex items-center ${isT?'text-dimmed':'text-[#166534]'}">${window.formatMinguo(item.testDate)}${testBadge}</span></label></td><td><input type="text" class="remark-input" ${isT?'readonly':''} onchange="updateRemark('${item.id}', this.value)" placeholder="點擊填寫..." value="${window.remarks[item.id]||''}"></td>`;
+                tr.innerHTML = `<td class="font-black text-slate-800 text-center">${item.id}</td><td>${countBadge}</td><td><textarea rows="1" title="${pNum}" class="pile-input text-sm overflow-hidden" style="min-height: 48px;" ${isT ? 'readonly' : ''} oninput="this.style.height='auto'; this.style.height=(this.scrollHeight)+'px';" onchange="updatePile('${item.id}', this.value)" placeholder="輸入樁號...">${pNum}</textarea></td><td class="bg-blue-50/70"><label class="flex items-center gap-2.5 cursor-pointer w-full h-full"><input type="checkbox" class="status-checkbox cb-sample" ${isS?'checked':''} onclick="toggleStatus('${item.id}', 'sample')"><span class="font-black whitespace-nowrap ${isS?'text-dimmed':'text-[#1E3A8A]'}">${window.formatMinguo(item.sampleDate)}</span></label></td><td class="font-bold text-slate-600 whitespace-nowrap">${window.formatMinguo(item.demoldDate)}</td><td class="bg-orange-50/70"><label class="flex items-center gap-2.5 cursor-pointer w-full h-full"><input type="checkbox" class="status-checkbox cb-lab" ${isL?'checked':''} onclick="toggleStatus('${item.id}', 'lab')"><span class="font-black whitespace-nowrap ${isL?'text-dimmed':'text-[#B45309]'}">${window.formatMinguo(item.collectDate)}</span></label></td><td class="bg-green-50/70"><label class="flex items-center gap-2.5 cursor-pointer w-full h-full"><input type="checkbox" class="status-checkbox cb-test" ${isT?'checked':''} onclick="toggleStatus('${item.id}', 'test')"><span class="font-black whitespace-nowrap flex items-center ${isT?'text-dimmed':'text-[#166534]'}">${window.formatMinguo(item.testDate)}${testBadge}</span></label></td><td><input type="text" class="remark-input" ${isT?'readonly':''} onchange="updateRemark('${item.id}', this.value)" placeholder="點擊填寫..." value="${window.remarks[item.id]||''}"></td>`;
                 tbody.appendChild(tr);
             });
+
+            setTimeout(() => { document.querySelectorAll('.pile-input').forEach(el => { el.style.height = 'auto'; el.style.height = (el.scrollHeight) + 'px'; }); }, 10);
         };
 
         window.updateDashboard = () => {
@@ -455,6 +461,7 @@
             document.getElementById('prog-lab-text').innerText = cL; document.getElementById('prog-lab-total').innerText = `/ ${window.scheduleData.length} 組`; document.getElementById('prog-lab-bar').style.width = `${window.scheduleData.length > 0 ? (cL/window.scheduleData.length)*100 : 0}%`;
             document.getElementById('prog-test-text').innerText = cT; document.getElementById('prog-test-total').innerText = `/ ${window.scheduleData.length} 組`; document.getElementById('prog-test-bar').style.width = `${window.scheduleData.length > 0 ? (cT/window.scheduleData.length)*100 : 0}%`;
 
+            // 🔥 待壓測排程邏輯恢復
             let nextTestDate = null; let nextTestDays = Infinity;
             window.scheduleData.forEach(item => { 
                 if (!window.statusTest[item.id] && window.statusLab[item.id]) { 
@@ -489,7 +496,7 @@
             Object.entries(window.specialPilesData).sort((a,b)=> Number(a[0]) - Number(b[0])).forEach(([pId, type]) => {
                 const idNum = Number(pId);
                 const typeText = type === 'FULL' ? '內側傾度儀 / 鋼筋應力計 / 完整性試驗' : '內側傾度儀 / 鋼筋應力計';
-                const typeIcon = type === 'FULL' ? '<i class="fa-solid fa-layer-group text-blue-500"></i>' : '<i class="fa-solid fa-ruler-combined text-amber-500"></i>';
+                const typeIcon = type === 'FULL' ? '<i class="fa-solid fa-layer-group text-blue-400"></i>' : '<i class="fa-solid fa-ruler-combined text-amber-400"></i>';
                 
                 let sColor = 'bg-slate-200 text-slate-600', sText = '待命中', alertClass = 'border-slate-300', glowClass = '';
                 if (donePilesList.includes(idNum)) { sColor = 'bg-emerald-100 text-emerald-800'; sText = '已完成'; glowClass = 'opacity-50 grayscale'; } 
@@ -704,6 +711,7 @@
         window.openReconModal = () => { window.renderReconTable(); document.getElementById('recon-modal').classList.remove('hidden'); };
         window.closeReconModal = () => { document.getElementById('recon-modal').classList.add('hidden'); };
         window.updateContractorReport = (dateStr, val) => { const num = parseInt(val, 10); if (isNaN(num)) delete window.contractorReports[dateStr]; else window.contractorReports[dateStr] = num; window.saveDataToCloud(); window.renderReconTable(); };
+        
         window.renderReconTable = () => {
             const dailyStats = {};
             window.scheduleData.forEach(item => { const count = (window.pileNumbers[item.id] || "").match(/\d+/g)?.length || 0; if (count > 0) { const dateStr = window.toDateString(item.sampleDate); if (!dailyStats[dateStr]) dailyStats[dateStr] = { A: 0, B: 0, total: 0, dateObj: item.sampleDate, ids: [] }; dailyStats[dateStr][item.machine] += count; dailyStats[dateStr].total += count; dailyStats[dateStr].ids.push(item.id); } });
