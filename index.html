@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>衛生福利部防疫中心興建工程 - 試體管制系統 V16.0 大數據版</title>
+    <title>衛生福利部防疫中心興建工程 - 試體管制系統 V16.1 大數據分流版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/svg-pan-zoom@3.6.1/dist/svg-pan-zoom.min.js"></script>
@@ -14,52 +14,55 @@
         body { font-family: 'Noto Sans TC', sans-serif; background-color: var(--bg-color); color: var(--text-main); letter-spacing: 0.01em; }
         
         /* 表格與基礎 UI */
-        .table-header th { font-size: 15px; font-weight: 900; padding: 16px 10px; background-color: #FFFFFF; color: #1E293B; border-bottom: 2px solid #94A3B8; position: sticky; top: 0; z-index: 20; }
-        .modern-row td { padding: 12px 10px; font-size: 16px; line-height: 1.6; vertical-align: top; border-bottom: 1px solid var(--border-color); transition: all 0.2s ease; }
+        .table-header th { font-size: 14px; font-weight: 900; padding: 12px 8px; background-color: #FFFFFF; color: #1E293B; border-bottom: 2px solid #94A3B8; position: sticky; top: 0; z-index: 20; text-align: center; }
+        .modern-row td { padding: 8px 6px; font-size: 14px; line-height: 1.4; vertical-align: middle; border-bottom: 1px solid var(--border-color); transition: all 0.2s ease; text-align: center; }
         .modern-row:hover:not(.completed-row) { background-color: #F1F5F9; box-shadow: inset 4px 0 0 0 var(--color-blue-deep); }
         
-        .pile-input { border: 2px solid #94A3B8; border-radius: 8px; padding: 10px; width: 100%; font-size: 15px; font-weight: 900; color: var(--color-blue-deep); transition: all 0.2s; background: #FFFFFF; resize: none; overflow: hidden; line-height: 1.5; word-break: break-word; }
+        /* 縮小輸入框，優化排版 */
+        .pile-input { border: 2px solid #94A3B8; border-radius: 6px; padding: 6px 8px; width: 100%; font-size: 13px; font-weight: 900; color: var(--color-blue-deep); transition: all 0.2s; background: #FFFFFF; resize: none; overflow: hidden; line-height: 1.4; word-break: break-word; text-align: left; }
         .pile-input:focus { border-color: var(--color-blue-deep); outline: none; box-shadow: 0 0 0 4px rgba(30, 58, 138, 0.15); }
-        .remark-input { border: 1px solid #94A3B8; border-radius: 8px; padding: 10px; width: 100%; font-size: 14px; background: #F8FAFC; color: #334155; font-weight: 700; }
+        .remark-input { border: 1px solid #94A3B8; border-radius: 6px; padding: 6px 8px; width: 100%; font-size: 13px; background: #F8FAFC; color: #334155; font-weight: 700; text-align: left; }
         
-        .status-checkbox { width: 1.4rem; height: 1.4rem; cursor: pointer; border-radius: 4px; }
+        .status-checkbox { width: 1.2rem; height: 1.2rem; cursor: pointer; border-radius: 4px; }
         .cb-sample { accent-color: var(--color-blue-deep); } .cb-lab { accent-color: var(--color-orange-deep); } .cb-test { accent-color: var(--color-green-deep); }
-        .completed-row { background-color: #F8FAFC !important; opacity: 0.65; filter: grayscale(50%); transition: all 0.3s ease; }
+        .completed-row { background-color: #F8FAFC !important; opacity: 0.7; transition: all 0.3s ease; }
         .completed-row textarea, .completed-row input[type="text"] { cursor: not-allowed; opacity: 0.8; } 
         
-        .cal-tag { font-size: 13px; font-weight: 900; padding: 6px 10px; border-radius: 6px; margin-bottom: 6px; border-left: 5px solid transparent; box-shadow: 0 1px 3px rgba(0,0,0,0.1); white-space: normal; word-wrap: break-word; line-height: 1.5; border: 1px solid #CBD5E1; }
+        .cal-tag { font-size: 12px; font-weight: 900; padding: 4px 8px; border-radius: 4px; margin-bottom: 4px; border-left: 4px solid transparent; box-shadow: 0 1px 2px rgba(0,0,0,0.1); white-space: normal; word-wrap: break-word; line-height: 1.4; border: 1px solid #CBD5E1; }
         .tag-sample { background-color: #DBEAFE; border-left-color: var(--color-blue-deep); color: #1E3A8A; }
         .tag-demold { background-color: #E2E8F0; border-left-color: #64748B; color: #334155; }
         .tag-lab { background-color: #FEF3C7; border-left-color: var(--color-orange-deep); color: #92400E; }
         .tag-test { background-color: #D1FAE5; border-left-color: var(--color-green-deep); color: #065F46; }
-        .calendar-scroll::-webkit-scrollbar { width: 6px; } .calendar-scroll::-webkit-scrollbar-thumb { background-color: #94A3B8; border-radius: 10px; }
+        .calendar-scroll::-webkit-scrollbar { width: 4px; } .calendar-scroll::-webkit-scrollbar-thumb { background-color: #94A3B8; border-radius: 8px; }
         
         /* 雷達與防呆矩陣 */
-        .matrix-box { width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; font-size: 0.95rem; font-weight: 900; border-radius: 8px; transition: all 0.2s; cursor: default; }
+        .matrix-box { width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; font-size: 0.9rem; font-weight: 900; border-radius: 6px; transition: all 0.2s; cursor: default; }
         .box-missing { background-color: #F1F5F9; color: #64748B; border: 1px solid #CBD5E1; } 
         .box-ok { background-color: var(--color-blue-deep); color: #FFFFFF; border: 1px solid #172554; box-shadow: 0 2px 4px rgba(30, 58, 138, 0.3); } 
         .box-error { background-color: #DC2626; color: #FFFFFF; border: 1px solid #991B1B; box-shadow: 0 0 8px rgba(220, 38, 38, 0.6); animation: pulse-border 2s infinite; } 
         
-        /* V16.0 圖表與分頁 */
-        .nav-tab { padding: 12px 24px; font-weight: 900; cursor: pointer; transition: all 0.2s; border-bottom: 4px solid transparent; color: #64748B; display: flex; align-items: center; gap: 8px; font-size: 16px; }
+        /* V16.1 分頁與圖表 */
+        .nav-tab { padding: 10px 20px; font-weight: 900; cursor: pointer; transition: all 0.2s; border-bottom: 4px solid transparent; color: #64748B; display: flex; align-items: center; gap: 6px; font-size: 15px; }
         .nav-tab.active { border-bottom-color: #2563EB; color: #2563EB; background: #EFF6FF; border-radius: 8px 8px 0 0; }
-        .sys-card { background: #FFFFFF; border-radius: 16px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); border: 1px solid #E2E8F0; }
-        .strength-input { border: 2px solid #CBD5E1; border-radius: 6px; padding: 6px 4px; text-align: center; font-weight: 900; font-family: 'JetBrains Mono', monospace; width: 60px; font-size: 14px; color: #1E3A8A; transition: border-color 0.2s; }
+        .sys-card { background: #FFFFFF; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); border: 1px solid #E2E8F0; }
+        
+        /* 🔥 V16.1 強度輸入框極致緊縮 */
+        .strength-input { border: 2px solid #CBD5E1; border-radius: 4px; padding: 4px 2px; text-align: center; font-weight: 900; font-family: 'JetBrains Mono', monospace; width: 45px; font-size: 12px; color: #1E3A8A; transition: border-color 0.2s; }
         .strength-input:focus { border-color: #2563EB; outline: none; }
-        .avg-display { font-family: 'JetBrains Mono', monospace; font-weight: 900; font-size: 16px; padding: 4px 8px; border-radius: 6px; display: inline-block; min-width: 60px; text-align: center; }
+        .avg-display { font-family: 'JetBrains Mono', monospace; font-weight: 900; font-size: 14px; padding: 4px 6px; border-radius: 4px; display: inline-block; min-width: 50px; text-align: center; }
         .avg-pass { background-color: #D1FAE5; color: #065F46; border: 1px solid #34D399; }
         .avg-fail { background-color: #FEE2E2; color: #991B1B; border: 1px solid #F87171; }
-        .avg-none { background-color: #F1F5F9; color: #94A3B8; }
+        .avg-none { background-color: #F1F5F9; color: #94A3B8; border: 1px solid #CBD5E1; }
 
         /* 地圖動畫 */
-        #map-container { width: 100%; height: 550px; background-color: #F8FAFC; border-radius: 12px; overflow: hidden; position: relative; border: 2px solid #CBD5E1; box-shadow: inset 0 2px 10px rgba(0,0,0,0.05); cursor: grab; max-width: 100%; }
+        #map-container { width: 100%; height: 500px; background-color: #F8FAFC; border-radius: 12px; overflow: hidden; position: relative; border: 2px solid #CBD5E1; box-shadow: inset 0 2px 10px rgba(0,0,0,0.05); cursor: grab; max-width: 100%; }
         .pile-circle { transition: all 0.2s ease; cursor: pointer; }
         .pile-circle:hover:not(.highlight-pile) { stroke: #111827 !important; stroke-width: 40 !important; }
         .highlight-pile { stroke: #EF4444 !important; fill: #FCA5A5 !important; stroke-width: 80 !important; animation: map-pulse 1s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
         @keyframes map-pulse { 0%, 100% { opacity: 1; } 50% { opacity: .6; } }
-        #map-tooltip { position: absolute; pointer-events: none; background: rgba(15, 23, 42, 0.95); color: white; padding: 14px 18px; border-radius: 12px; font-size: 14px; font-weight: 700; z-index: 9999; display: none; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3); border: 1px solid #334155; line-height: 1.6; }
+        #map-tooltip { position: absolute; pointer-events: none; background: rgba(15, 23, 42, 0.95); color: white; padding: 12px 16px; border-radius: 8px; font-size: 13px; font-weight: 700; z-index: 9999; display: none; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3); border: 1px solid #334155; line-height: 1.5; }
         
-        .ai-banner-wrapper { background: linear-gradient(90deg, #FDE68A, #FDBA74, #FDE68A); background-size: 200% 200%; animation: gradient-shift 5s ease infinite; padding: 2px; border-radius: 1rem; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); }
+        .ai-banner-wrapper { background: linear-gradient(90deg, #FDE68A, #FDBA74, #FDE68A); background-size: 200% 200%; animation: gradient-shift 5s ease infinite; padding: 2px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); }
         @keyframes gradient-shift { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
         
         details > summary { list-style: none; }
@@ -77,291 +80,282 @@
         }
     </style>
 </head>
-<body class="p-2 md:p-6 relative">
+<body class="p-2 md:p-4 relative">
 
     <div id="map-tooltip"></div>
 
-    <div class="max-w-[1600px] mx-auto space-y-6">
+    <div class="max-w-[1600px] mx-auto space-y-4">
         
-        <div class="bg-white rounded-2xl shadow-sm p-5 md:p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border border-slate-300">
+        <div class="bg-white rounded-xl shadow-sm p-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-3 border border-slate-300">
             <div>
-                <h1 class="text-xl md:text-3xl font-black text-slate-800 flex items-center gap-4 tracking-tight">
-                    <div class="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-slate-800 text-white flex items-center justify-center shadow-md"><i class="fa-solid fa-building-shield"></i></div>
+                <h1 class="text-xl md:text-2xl font-black text-slate-800 flex items-center gap-3 tracking-tight">
+                    <div class="w-10 h-10 rounded-lg bg-slate-800 text-white flex items-center justify-center shadow"><i class="fa-solid fa-building-shield"></i></div>
                     防疫中心興建工程 QC 管制
                 </h1>
-                <p class="text-slate-600 mt-2 text-sm md:text-base font-bold flex flex-wrap items-center gap-2 md:gap-3">預壘樁試體管制排程系統 <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded-md text-xs md:text-sm font-black border border-blue-300 shadow-sm"><i class="fa-solid fa-chart-pie"></i> V16.0 數據分析版</span></p>
+                <p class="text-slate-600 mt-1 text-sm font-bold flex flex-wrap items-center gap-2">預壘樁試體管制排程系統 <span class="bg-blue-100 text-blue-800 px-2 py-0.5 rounded text-xs font-black border border-blue-300 shadow-sm"><i class="fa-solid fa-chart-pie"></i> V16.1 大數據分流版</span></p>
             </div>
             
-            <div class="flex items-center gap-4">
-                <div class="flex items-center gap-2 px-4 py-2 bg-slate-50 rounded-xl border border-slate-200 shadow-inner">
-                    <span class="text-xs font-black text-slate-500 uppercase tracking-wider">設計強度(fc')</span>
+            <div class="flex items-center gap-3">
+                <div class="flex items-center gap-2 px-3 py-1.5 bg-slate-50 rounded-lg border border-slate-200 shadow-inner">
+                    <span class="text-[11px] font-black text-slate-500 uppercase">設計強度(fc')</span>
                     <div class="flex items-center gap-1">
-                        <input type="number" id="target-strength" value="140" onchange="window.updateCharts()" class="w-16 border border-slate-300 rounded text-center font-black text-blue-700 focus:outline-none focus:border-blue-500 py-1">
+                        <input type="number" id="target-strength" value="140" onchange="window.updateCharts()" class="w-14 border border-slate-300 rounded text-center font-black text-blue-700 text-sm py-0.5 focus:border-blue-500 outline-none">
                         <span class="text-[10px] font-bold text-slate-400">kgf/cm²</span>
                     </div>
                 </div>
-                <div id="sync-status" class="flex items-center gap-2 px-4 py-3 bg-[#EFF6FF] rounded-xl text-xs md:text-sm font-black text-blue-800 border border-blue-200 shadow-sm"><i class="fa-solid fa-cloud-check"></i> 系統就緒</div>
+                <div id="sync-status" class="flex items-center gap-2 px-3 py-2 bg-[#EFF6FF] rounded-lg text-xs font-black text-blue-800 border border-blue-200 shadow-sm"><i class="fa-solid fa-cloud-check"></i> 系統就緒</div>
             </div>
         </div>
 
-        <div class="flex border-b-2 border-slate-200 pl-4 no-print">
-            <div id="tab-schedule" class="nav-tab active" onclick="switchView('schedule')"><i class="fa-solid fa-calendar-check"></i> 試體打設與查驗排程</div>
-            <div id="tab-analytics" class="nav-tab" onclick="switchView('analytics')"><i class="fa-solid fa-chart-line"></i> 28天抗壓強度大數據分析報告</div>
+        <div class="flex border-b-2 border-slate-200 pl-2 no-print">
+            <div id="tab-schedule" class="nav-tab active" onclick="switchView('schedule')"><i class="fa-solid fa-calendar-check"></i> 試體打設與排程</div>
+            <div id="tab-analytics" class="nav-tab" onclick="switchView('analytics')"><i class="fa-solid fa-chart-line"></i> 28天大數據分析與AI診斷</div>
         </div>
 
-        <div id="view-schedule" class="space-y-6">
+        <div id="view-schedule" class="space-y-4">
 
-            <div class="bg-white p-5 md:p-6 rounded-2xl shadow-sm border border-slate-300 relative">
-                <div class="flex flex-col xl:flex-row justify-between items-start xl:items-center mb-5 gap-4">
-                    <h3 class="font-black text-slate-800 text-base md:text-lg flex items-center gap-2"><i class="fa-solid fa-map-location-dot text-[#1E3A8A]"></i> 數位雙生全區進度戰情地圖 <span class="text-[10px] md:text-xs bg-slate-200 text-slate-600 px-2 py-1 rounded-md ml-2 border border-slate-300">支援縮放/拖曳</span></h3>
-                    <div class="flex flex-wrap gap-4 items-center w-full xl:w-auto">
+            <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-300 relative">
+                <div class="flex flex-col xl:flex-row justify-between items-start xl:items-center mb-4 gap-3">
+                    <h3 class="font-black text-slate-800 text-base flex items-center gap-2"><i class="fa-solid fa-map-location-dot text-[#1E3A8A]"></i> 全區進度地圖 <span class="text-[10px] bg-slate-200 text-slate-600 px-2 py-0.5 rounded ml-1 border border-slate-300">支援縮放</span></h3>
+                    <div class="flex flex-wrap gap-3 items-center w-full xl:w-auto">
                         <div class="flex gap-2 w-full md:w-auto">
-                            <input type="text" id="map-search-input" placeholder="搜尋樁號定位 (如: 613)" class="border-2 border-slate-300 rounded-lg px-3 py-1.5 shadow-sm outline-none text-sm font-bold w-full md:w-48 focus:border-[#1E3A8A]">
-                            <button onclick="searchMapPile()" class="bg-blue-600 text-white px-4 py-1.5 rounded-lg text-sm font-black shadow-md hover:bg-blue-700 transition whitespace-nowrap">閃爍定位</button>
+                            <input type="text" id="map-search-input" placeholder="搜尋樁號 (如: 613)" class="border border-slate-300 rounded px-2 py-1 shadow-sm outline-none text-xs font-bold w-full md:w-40 focus:border-[#1E3A8A]">
+                            <button onclick="searchMapPile()" class="bg-blue-600 text-white px-3 py-1 rounded text-xs font-black shadow hover:bg-blue-700 transition">閃爍</button>
                         </div>
-                        <div class="flex gap-3 text-[11px] font-black text-slate-600 bg-slate-50 px-3 py-2 rounded-lg border border-slate-200 shadow-inner flex-wrap">
-                            <div class="flex items-center gap-1.5"><span class="w-3.5 h-3.5 rounded-full bg-[#F1F5F9] border-[3px] border-[#CBD5E1]"></span> 未排程</div>
-                            <div class="flex items-center gap-1.5"><span class="w-3.5 h-3.5 rounded-full bg-[#FFFFFF] border-[3px] border-[#1E3A8A]"></span> 已排程</div>
-                            <div class="flex items-center gap-1.5"><span class="w-3.5 h-3.5 rounded-full bg-[#1E3A8A] border-[3px] border-[#172554]"></span> 已取樣</div>
-                            <div class="flex items-center gap-1.5"><span class="w-3.5 h-3.5 rounded-full bg-[#B45309] border-[3px] border-[#78350F]"></span> 已收件</div>
-                            <div class="flex items-center gap-1.5"><span class="w-3.5 h-3.5 rounded-full bg-[#166534] border-[3px] border-[#14532D]"></span> 壓測結案</div>
-                            <div class="flex items-center gap-1.5 ml-0 md:ml-2 md:border-l-2 md:border-slate-300 md:pl-3 border-t-2 border-slate-200 md:border-t-0 mt-2 md:mt-0 pt-2 md:pt-0 w-full md:w-auto">
-                                <i class="fa-solid fa-star text-blue-400 text-sm drop-shadow-md"></i> 安全監測樁(全項)
-                            </div>
-                            <div class="flex items-center gap-1.5">
-                                <i class="fa-solid fa-star text-amber-400 text-sm drop-shadow-md"></i> 安全監測樁(部分)
-                            </div>
+                        <div class="flex gap-2 text-[10px] font-black text-slate-600 bg-slate-50 px-2 py-1 rounded border border-slate-200 shadow-inner flex-wrap items-center">
+                            <div class="flex items-center gap-1"><span class="w-3 h-3 rounded-full bg-[#F1F5F9] border-2 border-[#CBD5E1]"></span> 未排程</div>
+                            <div class="flex items-center gap-1"><span class="w-3 h-3 rounded-full bg-[#FFFFFF] border-2 border-[#1E3A8A]"></span> 已排程</div>
+                            <div class="flex items-center gap-1"><span class="w-3 h-3 rounded-full bg-[#1E3A8A] border-2 border-[#172554]"></span> 已取樣</div>
+                            <div class="flex items-center gap-1"><span class="w-3 h-3 rounded-full bg-[#B45309] border-2 border-[#78350F]"></span> 已收件</div>
+                            <div class="flex items-center gap-1"><span class="w-3 h-3 rounded-full bg-[#166534] border-2 border-[#14532D]"></span> 壓測結案</div>
                         </div>
                     </div>
                 </div>
-                <div id="map-container"><div class="text-center p-10 text-slate-400 font-bold flex flex-col items-center gap-3"><i class="fa-solid fa-spinner fa-spin text-4xl text-blue-400"></i><span>繪製中...</span></div></div>
+                <div id="map-container"><div class="text-center p-10 text-slate-400 font-bold flex flex-col items-center gap-2"><i class="fa-solid fa-spinner fa-spin text-3xl text-blue-400"></i><span>繪製中...</span></div></div>
             </div>
 
-            <details class="bg-white rounded-2xl shadow-sm border border-slate-300 group" open>
-                <summary class="font-black text-slate-800 text-sm md:text-base p-4 cursor-pointer flex items-center gap-2 outline-none select-none hover:bg-slate-50 transition border-b border-slate-100">
-                    <i class="fa-solid fa-satellite-dish text-blue-600 animate-pulse"></i> 展開 / 收摺：安全監測樁 T-2 智慧預警陣列
-                    <span class="bg-slate-100 text-slate-500 px-2 py-1 rounded text-[10px] md:text-xs ml-auto font-black border border-slate-200">點擊膠囊旁的 ✏️ 可換樁</span>
-                    <i class="fa-solid fa-chevron-down ml-2 chevron transition-transform duration-300 text-slate-400"></i>
+            <details class="bg-white rounded-xl shadow-sm border border-slate-300 group" open>
+                <summary class="font-black text-slate-800 text-sm p-3 cursor-pointer flex items-center gap-2 outline-none select-none hover:bg-slate-50 transition border-b border-slate-100">
+                    <i class="fa-solid fa-satellite-dish text-blue-600 animate-pulse"></i> 展開/收摺：安全監測樁預警陣列
+                    <i class="fa-solid fa-chevron-down ml-auto chevron transition-transform duration-300 text-slate-400"></i>
                 </summary>
-                <div class="p-4 bg-slate-50 rounded-b-2xl">
-                    <div id="special-pile-radar" class="flex flex-wrap gap-2.5 items-center">
-                        <div class="text-slate-400 text-sm font-bold">系統掃描中...</div>
+                <div class="p-3 bg-slate-50 rounded-b-xl">
+                    <div id="special-pile-radar" class="flex flex-wrap gap-2 items-center">
+                        <div class="text-slate-400 text-xs font-bold">掃描中...</div>
                     </div>
                 </div>
             </details>
 
-            <div class="bg-white p-5 md:p-6 rounded-2xl shadow-sm border border-slate-300">
-                <h3 class="font-black text-slate-800 text-lg flex items-center gap-2 mb-4 md:mb-6"><i class="fa-solid fa-chart-line text-slate-500"></i> 全區 QC 進度戰情室</h3>
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-5">
-                    <div class="border border-slate-800 rounded-xl p-4 md:p-5 bg-slate-700 shadow-md flex flex-col justify-between transition hover:shadow-lg">
-                        <div class="flex justify-between items-center mb-3"><span class="text-slate-200 font-bold text-xs md:text-sm tracking-wide">1. 打設總進度</span><span id="prog-piles-ab" class="text-[10px] md:text-xs font-black text-white bg-slate-900 px-2 py-1 rounded border border-slate-700 shadow-inner">A: 0 | B: 0</span></div>
-                        <div class="flex items-end gap-2 mb-3"><span id="prog-piles-text" class="text-3xl md:text-4xl font-black text-white">0</span><span class="text-slate-300 font-bold text-xs md:text-sm mb-1"> / 613 支 <span id="prog-piles-pct" class="ml-1 bg-blue-500/40 text-white px-1.5 md:px-2 py-0.5 rounded text-[10px] md:text-xs border border-blue-400/50 font-black">0.0%</span></span></div>
-                        <div class="w-full bg-slate-900 rounded-full h-2 md:h-3"><div id="prog-piles-bar" class="bg-blue-400 h-2 md:h-3 rounded-full transition-all duration-1000" style="width:0%"></div></div>
+            <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-300">
+                <h3 class="font-black text-slate-800 text-base flex items-center gap-2 mb-3"><i class="fa-solid fa-chart-line text-slate-500"></i> 全區 QC 進度</h3>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                    <div class="border border-slate-800 rounded-lg p-3 bg-slate-700 shadow-md flex flex-col justify-between">
+                        <div class="flex justify-between items-center mb-2"><span class="text-slate-200 font-bold text-xs tracking-wide">1. 打設總進度</span><span id="prog-piles-ab" class="text-[9px] font-black text-white bg-slate-900 px-1.5 py-0.5 rounded">A: 0 | B: 0</span></div>
+                        <div class="flex items-end gap-1 mb-2"><span id="prog-piles-text" class="text-2xl font-black text-white">0</span><span class="text-slate-300 font-bold text-[10px] mb-1"> / 613 支 <span id="prog-piles-pct" class="ml-1 bg-blue-500/40 text-white px-1 py-0.5 rounded border border-blue-400/50">0.0%</span></span></div>
+                        <div class="w-full bg-slate-900 rounded-full h-2"><div id="prog-piles-bar" class="bg-blue-400 h-2 rounded-full transition-all duration-1000" style="width:0%"></div></div>
                     </div>
-                    <div class="border border-[#1E3A8A] rounded-xl p-4 md:p-5 bg-[#1E3A8A] shadow-md flex flex-col justify-between transition hover:shadow-lg">
-                        <div class="text-blue-100 font-bold text-xs md:text-sm tracking-wide mb-3">2. 試體取樣率</div>
-                        <div class="flex items-end gap-2 mb-3"><span id="prog-sample-text" class="text-3xl md:text-4xl font-black text-white">0</span><span id="prog-sample-total" class="text-blue-200 font-bold text-xs md:text-sm mb-1">/ 0 組</span></div>
-                        <div class="w-full bg-[#0F172A]/50 rounded-full h-2 md:h-3"><div id="prog-sample-bar" class="bg-blue-400 h-2 md:h-3 rounded-full transition-all duration-1000" style="width:0%"></div></div>
+                    <div class="border border-[#1E3A8A] rounded-lg p-3 bg-[#1E3A8A] shadow-md flex flex-col justify-between">
+                        <div class="text-blue-100 font-bold text-xs tracking-wide mb-2">2. 試體取樣率</div>
+                        <div class="flex items-end gap-1 mb-2"><span id="prog-sample-text" class="text-2xl font-black text-white">0</span><span id="prog-sample-total" class="text-blue-200 font-bold text-[10px] mb-1">/ 0 組</span></div>
+                        <div class="w-full bg-[#0F172A]/50 rounded-full h-2"><div id="prog-sample-bar" class="bg-blue-400 h-2 rounded-full transition-all duration-1000" style="width:0%"></div></div>
                     </div>
-                    <div class="border border-[#B45309] rounded-xl p-4 md:p-5 bg-[#B45309] shadow-md flex flex-col justify-between transition hover:shadow-lg">
-                        <div class="text-orange-100 font-bold text-xs md:text-sm tracking-wide mb-3">3. 實驗室收件進度</div>
-                        <div class="flex items-end gap-2 mb-3"><span id="prog-lab-text" class="text-3xl md:text-4xl font-black text-white">0</span><span id="prog-lab-total" class="text-orange-200 font-bold text-xs md:text-sm mb-1">/ 0 組</span></div>
-                        <div class="w-full bg-[#78350F]/50 rounded-full h-2 md:h-3"><div id="prog-lab-bar" class="bg-orange-300 h-2 md:h-3 rounded-full transition-all duration-1000" style="width:0%"></div></div>
+                    <div class="border border-[#B45309] rounded-lg p-3 bg-[#B45309] shadow-md flex flex-col justify-between">
+                        <div class="text-orange-100 font-bold text-xs tracking-wide mb-2">3. 實驗室收件進度</div>
+                        <div class="flex items-end gap-1 mb-2"><span id="prog-lab-text" class="text-2xl font-black text-white">0</span><span id="prog-lab-total" class="text-orange-200 font-bold text-[10px] mb-1">/ 0 組</span></div>
+                        <div class="w-full bg-[#78350F]/50 rounded-full h-2"><div id="prog-lab-bar" class="bg-orange-300 h-2 rounded-full transition-all duration-1000" style="width:0%"></div></div>
                     </div>
-                    <div class="border border-[#166534] rounded-xl p-4 md:p-5 bg-[#166534] shadow-md flex flex-col justify-between transition hover:shadow-lg relative overflow-hidden">
-                        <div class="flex justify-between items-start mb-2 relative z-10"><div class="text-green-100 font-bold text-xs md:text-sm tracking-wide mt-1">4. 抗壓會驗結案率</div><div id="next-test-info" class="text-[10px] md:text-[11px] font-black text-green-200 bg-green-800 px-2 py-0.5 rounded shadow-sm">無待壓測排程</div></div>
-                        <div class="flex items-end gap-2 mb-3 relative z-10"><span id="prog-test-text" class="text-3xl md:text-4xl font-black text-white">0</span><span id="prog-test-total" class="text-green-200 font-bold text-xs md:text-sm mb-1">/ 0 組</span></div>
-                        <div class="w-full bg-[#064E3B]/60 rounded-full h-2 md:h-3 relative z-10"><div id="prog-test-bar" class="bg-green-400 h-2 md:h-3 rounded-full transition-all duration-1000" style="width:0%"></div></div>
+                    <div class="border border-[#166534] rounded-lg p-3 bg-[#166534] shadow-md flex flex-col justify-between relative overflow-hidden">
+                        <div class="flex justify-between items-start mb-1 relative z-10"><div class="text-green-100 font-bold text-xs tracking-wide">4. 抗壓結案率</div><div id="next-test-info" class="text-[9px] font-black text-green-200 bg-green-800 px-1.5 py-0.5 rounded">無排程</div></div>
+                        <div class="flex items-end gap-1 mb-2 relative z-10"><span id="prog-test-text" class="text-2xl font-black text-white">0</span><span id="prog-test-total" class="text-green-200 font-bold text-[10px] mb-1">/ 0 組</span></div>
+                        <div class="w-full bg-[#064E3B]/60 rounded-full h-2 relative z-10"><div id="prog-test-bar" class="bg-green-400 h-2 rounded-full transition-all duration-1000" style="width:0%"></div></div>
                     </div>
                 </div>
 
-                <div class="mt-4 md:mt-6 ai-banner-wrapper">
-                    <div class="bg-white/95 backdrop-blur-md rounded-xl p-4 md:p-5 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 h-full">
-                        <div class="flex items-center gap-3 md:gap-4">
-                            <div class="relative flex h-10 w-10 md:h-14 md:w-14 items-center justify-center shrink-0">
-                                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-20"></span>
-                                <div class="relative bg-gradient-to-br from-amber-400 to-orange-600 w-10 h-10 md:w-12 md:h-12 rounded-lg md:rounded-xl flex items-center justify-center text-white shadow-md md:shadow-lg border border-orange-300"><i class="fa-solid fa-wand-magic-sparkles text-lg md:text-xl"></i></div>
-                            </div>
+                <div class="mt-4 ai-banner-wrapper">
+                    <div class="bg-white/95 backdrop-blur-md rounded-lg p-3 flex flex-col md:flex-row items-center justify-between gap-3 h-full">
+                        <div class="flex items-center gap-2">
+                            <div class="relative bg-gradient-to-br from-amber-400 to-orange-600 w-8 h-8 rounded-lg flex items-center justify-center text-white shadow"><i class="fa-solid fa-wand-magic-sparkles text-sm"></i></div>
                             <div>
-                                <h4 class="font-black text-slate-800 text-sm md:text-lg flex items-center gap-2">AI 智慧產能與風險推估 <span class="bg-amber-100 text-amber-700 px-2 py-0.5 rounded text-[8px] md:text-[10px] uppercase border border-amber-200">Beta</span></h4>
-                                <p class="text-[11px] md:text-sm font-bold text-slate-500 mt-0.5">基於現場實際打設數據進行動態模型演算</p>
+                                <h4 class="font-black text-slate-800 text-sm">AI 智慧產能推估 <span class="bg-amber-100 text-amber-700 px-1 py-0.5 rounded text-[8px]">Beta</span></h4>
                             </div>
                         </div>
-                        <div class="flex flex-wrap gap-2 md:gap-3 w-full lg:w-auto" id="prediction-metrics">
-                            <div class="text-slate-500 font-bold px-4 py-2 bg-slate-50 rounded-lg border border-slate-200 w-full text-center text-sm">歷史數據掃描中...</div>
+                        <div class="flex gap-2" id="prediction-metrics">
+                            <span class="text-xs text-slate-500 font-bold">歷史數據掃描中...</span>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <details class="bg-white p-4 md:p-5 rounded-2xl border border-slate-300 shadow-sm group">
-                <summary class="font-black text-slate-800 text-sm md:text-base cursor-pointer flex items-center gap-2 outline-none border-b border-slate-100 pb-2">
-                    <i class="fa-solid fa-calculator text-slate-600"></i> 展開 / 收摺：現場斗仔體積防呆計算機
-                    <span class="bg-slate-200 text-slate-700 px-2 py-0.5 rounded text-[10px] md:text-xs ml-auto font-black border border-slate-300">申報輔助</span>
-                    <i class="fa-solid fa-chevron-down ml-2 chevron transition-transform duration-300"></i>
-                </summary>
-                <div class="grid grid-cols-2 md:grid-cols-5 gap-3 md:gap-4 items-end text-xs md:text-sm mt-4">
-                    <div><label class="block text-slate-700 font-black mb-1">砂 (每拌合/斗仔)</label><input type="number" id="calc-sand-bucket" class="w-full border-2 border-slate-300 rounded-lg px-2 md:px-3 py-1.5 md:py-2 text-slate-800 outline-none focus:border-slate-600 font-bold" value="4"></div>
-                    <div><label class="block text-slate-700 font-black mb-1">水泥 (每拌合/斗仔)</label><input type="number" id="calc-cem-bucket" class="w-full border-2 border-slate-300 rounded-lg px-2 md:px-3 py-1.5 md:py-2 text-slate-800 outline-none focus:border-slate-600 font-bold" value="2"></div>
-                    <div><label class="block text-slate-700 font-black mb-1">斗仔單個容積 (公升L)</label><input type="number" id="calc-vol" class="w-full border-2 border-slate-300 rounded-lg px-2 md:px-3 py-1.5 md:py-2 text-slate-800 outline-none focus:border-slate-600 font-bold" value="20"></div>
-                    <div><label class="block text-slate-700 font-black mb-1">本日總拌合盤數</label><input type="number" id="calc-batches" class="w-full border-2 border-slate-300 rounded-lg px-2 md:px-3 py-1.5 md:py-2 text-slate-800 outline-none focus:border-slate-600 font-bold" value="100"></div>
-                    <div><button onclick="calculateMaterials()" class="w-full bg-slate-800 hover:bg-black text-white font-black py-1.5 md:py-2.5 rounded-lg transition shadow-md border border-slate-900 h-[38px] md:h-[46px]">換算</button></div>
-                </div>
-                <div id="calc-result" class="mt-4 p-3 md:p-4 bg-slate-50 border border-slate-200 rounded-lg text-slate-800 hidden shadow-inner text-sm md:text-base font-bold"></div>
-            </details>
-
-            <details class="bg-white p-4 md:p-5 rounded-2xl border border-slate-300 shadow-sm group">
-                <summary class="font-black text-slate-800 text-sm md:text-base cursor-pointer flex items-center gap-2 outline-none border-b border-slate-100 pb-2">
-                    <i class="fa-solid fa-power-off text-slate-600"></i> 展開 / 收摺：停機與加班例外設定
+            <details class="bg-white p-4 rounded-xl border border-slate-300 shadow-sm group">
+                <summary class="font-black text-slate-800 text-sm cursor-pointer flex items-center gap-2 outline-none border-b border-slate-100 pb-2">
+                    <i class="fa-solid fa-power-off text-slate-600"></i> 展開/收摺：例外設定與防呆計算機
                     <i class="fa-solid fa-chevron-down ml-auto chevron transition-transform duration-300"></i>
                 </summary>
-                <div class="flex flex-col lg:flex-row gap-4 mt-4">
-                    <div class="flex-1 p-3 md:p-4 bg-slate-50 rounded-xl border border-slate-200 flex flex-wrap gap-2 md:gap-3 items-center shadow-sm">
-                        <span class="font-black text-slate-700 text-xs md:text-sm flex items-center gap-1 md:gap-2"><i class="fa-solid fa-stop-circle text-red-600"></i> 停機：</span>
-                        <select id="exception-machine" class="border-2 border-slate-300 rounded-lg px-2 py-1 md:py-1.5 text-slate-800 text-xs md:text-sm font-black outline-none bg-white"><option value="ALL">全區停機</option><option value="A">A 車停機</option><option value="B">B 車停機</option></select>
-                        <input type="date" id="exception-date-input" class="border-2 border-slate-300 rounded-lg px-2 py-1 md:py-1.5 text-slate-800 text-xs md:text-sm font-bold outline-none bg-white w-32 md:w-auto">
-                        <button onclick="addExceptionDate()" class="bg-red-50 text-red-700 border border-red-300 hover:bg-red-100 px-3 md:px-4 py-1 md:py-1.5 rounded-lg text-xs md:text-sm font-black transition shadow-sm whitespace-nowrap">新增</button>
-                        <div id="exception-list" class="flex flex-wrap gap-2 w-full mt-2 empty:hidden"></div>
+                <div class="flex flex-col lg:flex-row gap-3 mt-3">
+                    <div class="flex-1 p-2 bg-slate-50 rounded border border-slate-200 flex flex-wrap gap-2 items-center">
+                        <span class="font-black text-slate-700 text-xs"><i class="fa-solid fa-stop-circle text-red-600"></i> 停機：</span>
+                        <select id="exception-machine" class="border border-slate-300 rounded px-1 py-0.5 text-xs font-black"><option value="ALL">全區</option><option value="A">A車</option><option value="B">B車</option></select>
+                        <input type="date" id="exception-date-input" class="border border-slate-300 rounded px-1 py-0.5 text-xs font-bold">
+                        <button onclick="addExceptionDate()" class="bg-red-50 text-red-700 border border-red-300 px-2 py-0.5 rounded text-xs font-black">新增</button>
+                        <div id="exception-list" class="flex flex-wrap gap-1 w-full mt-1 empty:hidden"></div>
                     </div>
-                    <div class="flex-1 p-3 md:p-4 bg-slate-50 rounded-xl border border-slate-200 flex flex-wrap gap-2 md:gap-3 items-center shadow-sm">
-                        <span class="font-black text-slate-700 text-xs md:text-sm flex items-center gap-1 md:gap-2"><i class="fa-solid fa-play-circle text-blue-600"></i> 加班：</span>
-                        <select id="extra-machine" class="border-2 border-slate-300 rounded-lg px-2 py-1 md:py-1.5 text-slate-800 text-xs md:text-sm font-black outline-none bg-white"><option value="A">A 車</option><option value="B">B 車</option></select>
-                        <input type="date" id="extra-date-input" class="border-2 border-slate-300 rounded-lg px-2 py-1 md:py-1.5 text-slate-800 text-xs md:text-sm font-bold outline-none bg-white w-32 md:w-auto">
-                        <button onclick="addExtraDate()" class="bg-blue-50 text-blue-700 border border-blue-300 hover:bg-blue-100 px-3 md:px-4 py-1 md:py-1.5 rounded-lg text-xs md:text-sm font-black transition shadow-sm whitespace-nowrap">新增</button>
-                        <div id="extra-list" class="flex flex-wrap gap-2 w-full mt-2 empty:hidden"></div>
+                    <div class="flex-1 p-2 bg-slate-50 rounded border border-slate-200 flex flex-wrap gap-2 items-center">
+                        <span class="font-black text-slate-700 text-xs"><i class="fa-solid fa-play-circle text-blue-600"></i> 加班：</span>
+                        <select id="extra-machine" class="border border-slate-300 rounded px-1 py-0.5 text-xs font-black"><option value="A">A車</option><option value="B">B車</option></select>
+                        <input type="date" id="extra-date-input" class="border border-slate-300 rounded px-1 py-0.5 text-xs font-bold">
+                        <button onclick="addExtraDate()" class="bg-blue-50 text-blue-700 border border-blue-300 px-2 py-0.5 rounded text-xs font-black">新增</button>
+                        <div id="extra-list" class="flex flex-wrap gap-1 w-full mt-1 empty:hidden"></div>
                     </div>
                 </div>
             </details>
 
-            <div class="bg-white p-5 md:p-6 rounded-2xl shadow-sm border border-slate-300 space-y-4 md:space-y-6">
-                <div class="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4">
-                    <div class="flex flex-wrap gap-2 md:gap-3 items-center w-full xl:w-auto">
-                        <div class="bg-slate-200 p-1 md:p-1.5 rounded-xl flex gap-1 border border-slate-300 shadow-inner w-full md:w-auto justify-center">
-                            <button onclick="toggleView('table')" id="btn-view-table" class="px-4 md:px-6 py-2 md:py-2.5 rounded-lg text-sm md:text-base font-black bg-slate-800 text-white shadow-md transition w-1/2 md:w-auto"><i class="fa-solid fa-list-check mr-2"></i> 稽核表</button>
-                            <button onclick="toggleView('calendar')" id="btn-view-cal" class="px-4 md:px-6 py-2 md:py-2.5 rounded-lg text-sm md:text-base font-black bg-transparent text-slate-700 hover:bg-slate-300 transition w-1/2 md:w-auto"><i class="fa-solid fa-calendar-week mr-2"></i> 月曆看板</button>
+            <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-300 space-y-4">
+                <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-3">
+                    <div class="flex gap-2">
+                        <div class="relative shadow-sm">
+                            <i class="fa-solid fa-magnifying-glass absolute left-2 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                            <input type="text" id="search-input" onkeyup="renderTable(window.currentFilter)" placeholder="搜尋樁號..." class="pl-7 pr-2 py-1.5 border border-slate-300 rounded-lg text-sm font-bold w-32 focus:border-blue-600 outline-none">
                         </div>
+                        <div class="bg-slate-100 p-1 rounded-lg flex border border-slate-300 shadow-inner">
+                            <button id="filter-smart-all" onclick="setSmartFilter('ALL')" class="px-2 py-1 rounded text-xs font-black bg-white text-slate-800 shadow-sm border border-slate-200">全部</button>
+                            <button id="filter-smart-field" onclick="setSmartFilter('FIELD')" class="px-2 py-1 rounded text-xs font-bold text-slate-500 hover:text-slate-800"><i class="fa-solid fa-helmet-safety"></i> 待辦</button>
+                            <button id="filter-smart-test" onclick="setSmartFilter('TEST')" class="px-2 py-1 rounded text-xs font-bold text-slate-500 hover:text-slate-800"><i class="fa-solid fa-flask"></i> 待壓</button>
+                        </div>
+                        <button onclick="scrollToTodo()" class="px-3 py-1.5 rounded-lg text-xs font-black bg-amber-100 text-amber-700 border border-amber-300 shadow-sm"><i class="fa-solid fa-location-crosshairs"></i> 定位</button>
                     </div>
                     
-                    <div class="flex flex-col lg:flex-row gap-3 items-start lg:items-center w-full xl:w-auto">
-                        <div class="relative shadow-sm w-full lg:w-auto">
-                            <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
-                            <input type="text" id="search-input" onkeyup="renderTable(window.currentFilter)" placeholder="搜尋樁號..." class="pl-9 pr-3 py-2 border-2 border-slate-300 rounded-xl text-sm font-bold outline-none focus:border-[#1E3A8A] w-full lg:w-48 bg-white transition text-slate-800">
+                    <div class="flex gap-2 items-center">
+                        <div class="bg-slate-200 p-1 rounded-lg flex gap-1 border border-slate-300 shadow-inner">
+                            <button onclick="toggleView('table')" id="btn-view-table" class="px-3 py-1.5 rounded text-xs font-black bg-slate-800 text-white shadow"><i class="fa-solid fa-list-check"></i> 稽核表</button>
+                            <button onclick="toggleView('calendar')" id="btn-view-cal" class="px-3 py-1.5 rounded text-xs font-black bg-transparent text-slate-700 hover:bg-slate-300"><i class="fa-solid fa-calendar-week"></i> 月曆</button>
                         </div>
-                        <div class="bg-slate-100 p-1 md:p-1.5 rounded-xl flex flex-wrap gap-1 border border-slate-300 shadow-inner w-full lg:w-auto justify-center">
-                            <button id="filter-smart-all" onclick="setSmartFilter('ALL')" class="flex-1 lg:flex-none px-3 py-1.5 md:py-2 rounded-lg text-[11px] md:text-sm font-black bg-white text-slate-800 shadow-sm border border-slate-200 transition whitespace-nowrap">全部</button>
-                            <button id="filter-smart-field" onclick="setSmartFilter('FIELD')" class="flex-1 lg:flex-none px-3 py-1.5 md:py-2 rounded-lg text-[11px] md:text-sm font-bold text-slate-500 hover:text-slate-800 transition whitespace-nowrap"><i class="fa-solid fa-helmet-safety"></i> 待辦</button>
-                            <button id="filter-smart-test" onclick="setSmartFilter('TEST')" class="flex-1 lg:flex-none px-3 py-1.5 md:py-2 rounded-lg text-[11px] md:text-sm font-bold text-slate-500 hover:text-slate-800 transition whitespace-nowrap"><i class="fa-solid fa-flask"></i> 待抗壓</button>
-                        </div>
-                        <div class="flex gap-2 w-full lg:w-auto justify-between">
-                            <button onclick="scrollToTodo()" class="flex-1 lg:flex-none px-3 md:px-4 py-2 md:py-2.5 rounded-xl text-xs md:text-sm font-black bg-amber-100 text-amber-700 shadow-sm border border-amber-300 hover:bg-amber-200 transition"><i class="fa-solid fa-location-crosshairs"></i> 定位</button>
-                            <div class="border-l-2 border-slate-200 pl-2 flex gap-1 md:gap-2">
-                                <button onclick="filterData('ALL')" id="btn-ALL" class="px-3 md:px-5 py-2 md:py-2.5 rounded-xl text-xs md:text-sm font-black bg-slate-800 text-white shadow-md border border-slate-900 transition">全區</button>
-                                <button onclick="filterData('A')" id="btn-A" class="px-3 md:px-5 py-2 md:py-2.5 rounded-xl text-xs md:text-sm font-black bg-white text-slate-700 border-2 border-slate-300 hover:bg-slate-100 shadow-sm transition">A車</button>
-                                <button onclick="filterData('B')" id="btn-B" class="px-3 md:px-5 py-2 md:py-2.5 rounded-xl text-xs md:text-sm font-black bg-white text-slate-700 border-2 border-slate-300 hover:bg-slate-100 shadow-sm transition">B車</button>
-                            </div>
+                        <div class="border-l border-slate-300 pl-2 flex gap-1">
+                            <button onclick="filterData('ALL')" id="btn-ALL" class="px-3 py-1.5 rounded-lg text-xs font-black bg-slate-800 text-white shadow border border-slate-900">全區</button>
+                            <button onclick="filterData('A')" id="btn-A" class="px-3 py-1.5 rounded-lg text-xs font-black bg-white text-slate-700 border border-slate-300 shadow-sm">A車</button>
+                            <button onclick="filterData('B')" id="btn-B" class="px-3 py-1.5 rounded-lg text-xs font-black bg-white text-slate-700 border border-slate-300 shadow-sm">B車</button>
                         </div>
                     </div>
                 </div>
 
-                <div class="border-t border-slate-200 pt-4 md:pt-6">
-                    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
-                        <button onclick="syncFromContractor()" id="btn-sync-api" class="flex items-center justify-center gap-1.5 md:gap-2 px-2 md:px-4 py-3 bg-blue-600 text-white rounded-xl text-xs md:text-[15px] font-black hover:bg-blue-700 transition shadow-md border border-blue-800 relative overflow-hidden">
-                            <span class="absolute inset-0 bg-white/20 animate-pulse"></span>
-                            <i class="fa-solid fa-rotate text-sm md:text-xl relative z-10"></i> <span class="relative z-10">API 自動同步進度</span>
-                        </button>
-                        <button onclick="openMatrixModal()" class="flex items-center justify-center gap-1.5 md:gap-2 px-2 md:px-4 py-3 bg-[#1E3A8A] text-white rounded-xl text-xs md:text-[15px] font-black hover:bg-[#172554] transition shadow-md border border-[#172554]">
-                            <i class="fa-solid fa-border-all text-sm md:text-xl opacity-80"></i> 防呆矩陣雷達
-                        </button>
-                        <button onclick="openReconModal()" class="flex items-center justify-center gap-1.5 md:gap-2 px-2 md:px-4 py-3 bg-[#B45309] text-white rounded-xl text-xs md:text-[15px] font-black hover:bg-[#78350F] transition shadow-md border border-[#78350F]">
-                            <i class="fa-solid fa-scale-unbalanced text-sm md:text-xl opacity-80"></i> 數量申報勾稽
-                        </button>
-                        <button onclick="exportCSV()" class="flex items-center justify-center gap-1.5 md:gap-2 px-2 md:px-4 py-3 bg-[#166534] text-white rounded-xl text-xs md:text-[15px] font-black shadow-md hover:bg-[#14532D] transition border border-[#14532D]">
-                            <i class="fa-solid fa-file-csv text-sm md:text-xl opacity-80"></i> 匯出品管 CSV
-                        </button>
+                <div class="border-t border-slate-200 pt-3">
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
+                        <button onclick="syncFromContractor()" id="btn-sync-api" class="flex items-center justify-center gap-1 px-2 py-2 bg-blue-600 text-white rounded text-xs font-black hover:bg-blue-700 shadow"><i class="fa-solid fa-rotate"></i> API 同步</button>
+                        <button onclick="openMatrixModal()" class="flex items-center justify-center gap-1 px-2 py-2 bg-[#1E3A8A] text-white rounded text-xs font-black hover:bg-[#172554] shadow"><i class="fa-solid fa-border-all"></i> 防呆矩陣</button>
+                        <button onclick="openReconModal()" class="flex items-center justify-center gap-1 px-2 py-2 bg-[#B45309] text-white rounded text-xs font-black hover:bg-[#78350F] shadow"><i class="fa-solid fa-scale-unbalanced"></i> 數量申報</button>
+                        <button onclick="exportCSV()" class="flex items-center justify-center gap-1 px-2 py-2 bg-[#166534] text-white rounded text-xs font-black shadow hover:bg-[#14532D]"><i class="fa-solid fa-file-csv"></i> 匯出 CSV</button>
                     </div>
                 </div>
             </div>
 
-            <div id="table-view" class="bg-white shadow-xl rounded-2xl border-2 border-slate-300 overflow-x-auto relative">
-                <table class="w-full text-left border-collapse table-fixed min-w-[1300px]">
+            <div id="table-view" class="bg-white shadow rounded-xl border border-slate-300 overflow-x-auto relative">
+                <table class="w-full border-collapse table-fixed min-w-[1100px]">
                     <thead class="table-header shadow-sm border-b-2 border-slate-300">
                         <tr>
-                            <th class="w-[60px] text-center">編號</th>
-                            <th class="w-[60px] text-center text-blue-800">數量</th>
-                            <th class="w-[20%]">對應樁號 <i class="fa-solid fa-pen-to-square ml-1 opacity-60 text-xs"></i></th>
-                            <th class="w-[8%] bg-blue-50/50 text-[#1E3A8A] text-center">取樣(T)</th>
-                            <th class="w-[8%] bg-slate-50 text-slate-700 text-center">拆模(T+1)</th>
-                            <th class="w-[8%] bg-orange-50/50 text-[#B45309] text-center">收件(二/五)</th>
-                            <th class="w-[8%] bg-green-50/50 text-[#166534] text-center">抗壓(T+28)</th>
-                            <th class="w-[20%] text-center bg-indigo-50 border-l border-indigo-200">試體抗壓值 (kgf/cm²) #1 #2 #3</th>
-                            <th class="w-[8%] text-center bg-indigo-50 font-black text-indigo-800">平均</th>
-                            <th class="w-[14%] text-slate-600">備註 / 狀態</th>
+                            <th style="width: 5%;">編號</th>
+                            <th style="width: 5%; color:#1E3A8A;">數量</th>
+                            <th style="width: 20%; text-align:left;">對應樁號 <i class="fa-solid fa-pen-to-square ml-1 opacity-60 text-[10px]"></i></th>
+                            <th style="width: 10%; background:#EFF6FF; color:#1E3A8A;">取樣(T)</th>
+                            <th style="width: 10%; background:#F8FAFC;">拆模(T+1)</th>
+                            <th style="width: 10%; background:#FFF7ED; color:#B45309;">收件(二/五)</th>
+                            <th style="width: 10%; background:#F0FDF4; color:#166534;">抗壓(T+28)</th>
+                            
+                            <th style="width: 12%; background:#EEF2FF; border-left:1px solid #E0E7FF;">試體強度 #1 #2 #3</th>
+                            <th style="width: 6%; background:#EEF2FF; color:#3730A3;">平均</th>
+                            
+                            <th style="width: 12%; text-align:left;">備註</th>
                         </tr>
                     </thead>
                     <tbody id="schedule-body" class="bg-white divide-y divide-slate-200"></tbody>
                 </table>
             </div>
             
-            <div id="calendar-view" class="bg-white shadow-xl rounded-2xl p-4 md:p-6 hidden border-2 border-slate-300 overflow-x-auto">
-                <div class="flex justify-between items-center mb-4 md:mb-6 sticky top-0 bg-white z-10 py-2 min-w-[800px]">
-                    <button onclick="changeMonth(-1)" class="w-10 h-10 md:w-12 md:h-12 flex items-center justify-center bg-white border-2 border-slate-300 rounded-xl text-slate-600 hover:bg-slate-100 font-black shadow-sm transition"><i class="fa-solid fa-chevron-left text-lg md:text-xl"></i></button>
-                    <h2 id="calendar-title" class="text-xl md:text-3xl font-black text-slate-800">載入中...</h2>
-                    <button onclick="changeMonth(1)" class="w-10 h-10 md:w-12 md:h-12 flex items-center justify-center bg-white border-2 border-slate-300 rounded-xl text-slate-600 hover:bg-slate-100 font-black shadow-sm transition"><i class="fa-solid fa-chevron-right text-lg md:text-xl"></i></button>
+            <div id="calendar-view" class="bg-white shadow rounded-xl p-4 hidden border border-slate-300 overflow-x-auto">
+                <div class="flex justify-between items-center mb-4 sticky top-0 bg-white z-10 py-1 min-w-[700px]">
+                    <button onclick="changeMonth(-1)" class="w-8 h-8 flex items-center justify-center bg-white border border-slate-300 rounded text-slate-600 hover:bg-slate-100 font-black shadow-sm"><i class="fa-solid fa-chevron-left text-sm"></i></button>
+                    <h2 id="calendar-title" class="text-lg font-black text-slate-800">載入中...</h2>
+                    <button onclick="changeMonth(1)" class="w-8 h-8 flex items-center justify-center bg-white border border-slate-300 rounded text-slate-600 hover:bg-slate-100 font-black shadow-sm"><i class="fa-solid fa-chevron-right text-sm"></i></button>
                 </div>
-                <div class="rounded-xl border-2 border-slate-300 overflow-hidden min-w-[800px] shadow-sm"><table class="w-full text-left border-collapse table-fixed" style="table-layout: fixed;"><thead class="bg-slate-100 border-b-2 border-slate-300"><tr><th class="p-2 md:p-4 text-center font-black text-red-600 text-xs md:text-sm" style="width: 14.28%;">週日</th><th class="p-2 md:p-4 text-center font-black text-slate-700 text-xs md:text-sm" style="width: 14.28%;">週一</th><th class="p-2 md:p-4 text-center font-black text-slate-700 text-xs md:text-sm" style="width: 14.28%;">週二</th><th class="p-2 md:p-4 text-center font-black text-slate-700 text-xs md:text-sm" style="width: 14.28%;">週三</th><th class="p-2 md:p-4 text-center font-black text-slate-700 text-xs md:text-sm" style="width: 14.28%;">週四</th><th class="p-2 md:p-4 text-center font-black text-slate-700 text-xs md:text-sm" style="width: 14.28%;">週五</th><th class="p-2 md:p-4 text-center font-black text-red-600 text-xs md:text-sm" style="width: 14.28%;">週六</th></tr></thead><tbody id="calendar-body" class="bg-white"></tbody></table></div>
+                <div class="rounded-lg border border-slate-300 overflow-hidden min-w-[700px] shadow-sm"><table class="w-full text-left border-collapse table-fixed" style="table-layout: fixed;"><thead class="bg-slate-100 border-b border-slate-300"><tr><th class="p-2 text-center font-black text-red-600 text-xs" style="width: 14.28%;">日</th><th class="p-2 text-center font-black text-slate-700 text-xs" style="width: 14.28%;">一</th><th class="p-2 text-center font-black text-slate-700 text-xs" style="width: 14.28%;">二</th><th class="p-2 text-center font-black text-slate-700 text-xs" style="width: 14.28%;">三</th><th class="p-2 text-center font-black text-slate-700 text-xs" style="width: 14.28%;">四</th><th class="p-2 text-center font-black text-slate-700 text-xs" style="width: 14.28%;">五</th><th class="p-2 text-center font-black text-red-600 text-xs" style="width: 14.28%;">六</th></tr></thead><tbody id="calendar-body" class="bg-white"></tbody></table></div>
             </div>
         </div>
 
-        <div id="view-analytics" class="space-y-6 hidden">
+        <div id="view-analytics" class="space-y-4 hidden">
             
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div class="sys-card p-5 border-t-4 border-t-blue-500 shadow-sm">
-                    <div class="text-sm text-slate-500 font-bold mb-1">完成壓測組數</div>
-                    <div class="text-3xl font-black font-mono text-slate-800" id="kpi-total">0 <span class="text-sm text-slate-500 font-bold">組</span></div>
+            <div class="sys-card p-4 bg-slate-800 text-white flex flex-col md:flex-row gap-4 justify-between items-center no-print">
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-filter text-blue-400"></i>
+                    <span class="font-black text-sm">數據分析過濾器</span>
                 </div>
-                <div class="sys-card p-5 border-t-4 border-t-emerald-500 shadow-sm">
-                    <div class="text-sm text-slate-500 font-bold mb-1">全區強度平均值</div>
-                    <div class="text-3xl font-black font-mono text-emerald-600" id="kpi-avg">0.0 <span class="text-sm text-slate-500 font-bold">kgf/cm²</span></div>
-                </div>
-                <div class="sys-card p-5 border-t-4 border-t-amber-500 shadow-sm">
-                    <div class="text-sm text-slate-500 font-bold mb-1">強度極小值 (風險值)</div>
-                    <div class="text-3xl font-black font-mono text-amber-600" id="kpi-min">0.0 <span class="text-sm text-slate-500 font-bold">kgf/cm²</span></div>
-                </div>
-                <div class="sys-card p-5 border-t-4 border-t-indigo-500 shadow-sm">
-                    <div class="text-sm text-slate-500 font-bold mb-1">整體品質合格率 (Pass Rate)</div>
-                    <div class="text-3xl font-black font-mono text-indigo-600" id="kpi-pass-rate">0.0%</div>
+                <div class="flex flex-wrap items-center gap-3">
+                    <select id="chart-machine-filter" onchange="window.updateCharts()" class="bg-slate-700 border border-slate-600 text-white text-sm font-black rounded px-3 py-1.5 focus:outline-none focus:border-blue-500">
+                        <option value="ALL">全區整合觀察 (A+B)</option>
+                        <option value="A">僅檢視 A 車</option>
+                        <option value="B">僅檢視 B 車</option>
+                    </select>
+                    
+                    <div class="flex items-center gap-2 bg-slate-700 px-3 py-1.5 rounded border border-slate-600">
+                        <span class="text-[10px] text-slate-300 font-bold uppercase">壓測區間</span>
+                        <input type="date" id="chart-date-start" onchange="window.updateCharts()" class="bg-slate-800 text-white text-xs font-mono border-none outline-none">
+                        <span class="text-slate-400 text-xs">至</span>
+                        <input type="date" id="chart-date-end" onchange="window.updateCharts()" class="bg-slate-800 text-white text-xs font-mono border-none outline-none">
+                        <button onclick="clearDateFilter()" class="ml-1 text-slate-400 hover:text-white" title="清除日期區間"><i class="fa-solid fa-rotate-left"></i></button>
+                    </div>
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div class="lg:col-span-2 sys-card p-5">
-                    <h3 class="text-lg font-black text-slate-800 mb-4 flex items-center gap-2"><i class="fa-solid fa-chart-area text-blue-500"></i> 品質管制動態折線圖 (Control Chart)</h3>
-                    <div class="relative h-[400px] w-full">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
+                <div class="sys-card p-4 border-l-4 border-l-blue-500 shadow-sm">
+                    <div class="text-[11px] text-slate-400 font-bold mb-1 uppercase tracking-wider">區間壓測組數</div>
+                    <div class="text-2xl font-black font-mono text-slate-800" id="kpi-total">0 <span class="text-xs text-slate-500 font-bold">組</span></div>
+                </div>
+                <div class="sys-card p-4 border-l-4 border-l-emerald-500 shadow-sm">
+                    <div class="text-[11px] text-slate-400 font-bold mb-1 uppercase tracking-wider">區間平均強度</div>
+                    <div class="text-2xl font-black font-mono text-emerald-600" id="kpi-avg">0.0 <span class="text-xs text-slate-500 font-bold">kgf/cm²</span></div>
+                </div>
+                <div class="sys-card p-4 border-l-4 border-l-purple-500 shadow-sm">
+                    <div class="text-[11px] text-slate-400 font-bold mb-1 uppercase tracking-wider">標準差 (均勻度)</div>
+                    <div class="text-2xl font-black font-mono text-purple-600" id="kpi-sd">0.0</div>
+                </div>
+                <div class="sys-card p-4 border-l-4 border-l-indigo-500 shadow-sm">
+                    <div class="text-[11px] text-slate-400 font-bold mb-1 uppercase tracking-wider">合格率 (Pass Rate)</div>
+                    <div class="text-2xl font-black font-mono text-indigo-600" id="kpi-pass-rate">0.0%</div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 xl:grid-cols-3 gap-4">
+                <div class="xl:col-span-2 sys-card p-4">
+                    <h3 class="text-sm font-black text-slate-800 mb-3 flex items-center gap-2"><i class="fa-solid fa-chart-area text-blue-500"></i> 品質管制動態折線圖 (Control Chart)</h3>
+                    <div class="relative h-[320px] w-full">
                         <canvas id="trendChart"></canvas>
                     </div>
                 </div>
-
-                <div class="lg:col-span-1 sys-card p-5 flex flex-col">
-                    <h3 class="text-lg font-black text-slate-800 mb-4 flex items-center gap-2"><i class="fa-solid fa-chart-pie text-emerald-500"></i> 合格分佈比例</h3>
-                    <div class="relative flex-1 w-full flex items-center justify-center min-h-[250px]">
+                <div class="xl:col-span-1 sys-card p-4 flex flex-col">
+                    <h3 class="text-sm font-black text-slate-800 mb-3 flex items-center gap-2"><i class="fa-solid fa-chart-pie text-emerald-500"></i> 強度合格分佈</h3>
+                    <div class="relative flex-1 w-full flex items-center justify-center min-h-[200px]">
                         <canvas id="pieChart"></canvas>
                     </div>
-                    <p class="text-xs text-slate-400 font-bold mt-4 text-center">依據左上角設定之設計強度進行判定</p>
                 </div>
             </div>
             
-            <div class="text-center no-print">
-                <button onclick="window.print()" class="bg-slate-800 hover:bg-black text-white px-8 py-3 rounded-lg font-black shadow-lg transition text-lg"><i class="fa-solid fa-print"></i> 列印 / 匯出 PDF 分析報告</button>
+            <div class="sys-card p-5 border border-amber-200 bg-amber-50/30">
+                <h3 class="text-sm font-black text-amber-800 mb-3 flex items-center gap-2"><i class="fa-solid fa-robot text-amber-600"></i> AI 智慧品質診斷報告 (AI Quality Diagnosis)</h3>
+                <div id="ai-report-content" class="text-sm text-slate-700 font-bold leading-relaxed bg-white p-4 rounded-lg border border-amber-100 shadow-sm">
+                    系統分析中...
+                </div>
+            </div>
+            
+            <div class="text-center no-print mt-4">
+                <button onclick="window.print()" class="bg-slate-800 hover:bg-black text-white px-6 py-2 rounded font-black shadow transition text-sm"><i class="fa-solid fa-print"></i> 列印 / 輸出 PDF 報告</button>
             </div>
         </div>
 
     </div>
 
-    <div id="custom-modal" class="fixed inset-0 z-[100] flex items-center justify-center hidden bg-slate-900/70 backdrop-blur-sm transition-opacity px-4"><div class="bg-white rounded-3xl shadow-2xl max-w-sm w-full overflow-hidden border-2 border-slate-300"><div class="p-5 md:p-6 border-b border-slate-200 flex items-center gap-3 text-base md:text-lg font-black text-slate-800" id="custom-modal-header"></div><div class="p-6 md:p-8 text-slate-700 text-sm md:text-base leading-relaxed font-bold" id="custom-modal-message"></div><div class="p-4 md:p-5 bg-slate-100 text-right border-t border-slate-200"><button onclick="closeModal()" class="px-6 md:px-8 py-2 md:py-2.5 bg-slate-800 hover:bg-black text-white rounded-xl font-black shadow-md transition border border-slate-900 text-sm md:text-base">我知道了</button></div></div></div>
+    <div id="custom-modal" class="fixed inset-0 z-[100] flex items-center justify-center hidden bg-slate-900/70 backdrop-blur-sm transition-opacity px-4"><div class="bg-white rounded-xl shadow-2xl max-w-sm w-full overflow-hidden border border-slate-300"><div class="p-4 border-b border-slate-200 flex items-center gap-2 text-base font-black text-slate-800" id="custom-modal-header"></div><div class="p-5 text-slate-700 text-sm leading-relaxed font-bold" id="custom-modal-message"></div><div class="p-3 bg-slate-100 text-right border-t border-slate-200"><button onclick="closeModal()" class="px-4 py-1.5 bg-slate-800 hover:bg-black text-white rounded font-black shadow transition text-sm">我知道了</button></div></div></div>
     
-    <div id="recon-modal" class="fixed inset-0 z-[100] flex items-center justify-center hidden bg-slate-900/70 backdrop-blur-sm transition-opacity px-4"><div class="bg-white rounded-3xl shadow-2xl max-w-6xl w-full overflow-hidden flex flex-col max-h-[90vh] border-2 border-slate-300"><div class="p-4 md:p-6 border-b border-slate-300 flex justify-between items-center bg-white sticky top-0 z-10"><h3 class="text-lg md:text-xl font-black text-slate-800 flex items-center gap-2"><i class="fa-solid fa-scale-balanced text-slate-500 mr-2 md:mr-3"></i> 數量申報勾稽表</h3><button onclick="closeReconModal()" class="w-8 h-8 md:w-10 md:h-10 flex items-center justify-center rounded-full bg-slate-100 border-2 border-slate-300 text-slate-600 hover:bg-slate-200 transition font-black"><i class="fa-solid fa-xmark text-lg md:text-xl"></i></button></div><div class="p-0 overflow-x-auto overflow-y-auto flex-1 bg-white"><table class="w-full text-left border-collapse min-w-[800px]"><thead class="bg-slate-50 sticky top-0 shadow-sm z-10 border-b-2 border-slate-300"><tr><th class="p-3 md:p-4 border-b border-slate-300 text-slate-700 font-black text-xs md:text-sm text-center max-w-[120px]">排程編號</th><th class="p-3 md:p-4 border-b border-slate-300 text-slate-700 font-black text-xs md:text-sm">施工日期</th><th class="p-3 md:p-4 border-b border-slate-300 text-[#1E3A8A] font-black text-xs md:text-sm text-center">A車(系統)</th><th class="p-3 md:p-4 border-b border-slate-300 text-[#1E3A8A] font-black text-xs md:text-sm text-center">B車(系統)</th><th class="p-3 md:p-4 border-b border-slate-300 text-slate-900 font-black text-base md:text-lg text-center bg-slate-100">總計</th><th class="p-3 md:p-4 border-b border-slate-300 text-[#B45309] font-black text-sm md:text-base text-center bg-[#FFFBEB]">日報數量</th><th class="p-3 md:p-4 border-b border-slate-300 text-center font-black text-slate-600 text-xs md:text-sm">狀態</th></tr></thead><tbody id="recon-body" class="text-sm md:text-base text-slate-800 divide-y divide-slate-200"></tbody></table></div><div class="p-4 md:p-5 border-t border-slate-300 bg-slate-100 flex justify-end items-center"><button onclick="closeReconModal()" class="px-6 py-2.5 bg-slate-800 text-white rounded-xl font-black shadow-md text-sm md:text-base">關閉</button></div></div></div>
+    <div id="recon-modal" class="fixed inset-0 z-[100] flex items-center justify-center hidden bg-slate-900/70 backdrop-blur-sm transition-opacity px-4"><div class="bg-white rounded-xl shadow-2xl max-w-6xl w-full overflow-hidden flex flex-col max-h-[90vh] border border-slate-300"><div class="p-4 border-b border-slate-300 flex justify-between items-center bg-white sticky top-0 z-10"><h3 class="text-lg font-black text-slate-800 flex items-center gap-2"><i class="fa-solid fa-scale-balanced text-slate-500 mr-2"></i> 數量申報勾稽表</h3><button onclick="closeReconModal()" class="w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 border border-slate-300 text-slate-600 hover:bg-slate-200 transition font-black"><i class="fa-solid fa-xmark"></i></button></div><div class="p-0 overflow-x-auto overflow-y-auto flex-1 bg-white"><table class="w-full text-left border-collapse min-w-[800px]"><thead class="bg-slate-50 sticky top-0 shadow-sm z-10 border-b border-slate-300"><tr><th class="p-3 border-b border-slate-300 text-slate-700 font-black text-xs text-center max-w-[120px]">排程編號</th><th class="p-3 border-b border-slate-300 text-slate-700 font-black text-xs">施工日期</th><th class="p-3 border-b border-slate-300 text-[#1E3A8A] font-black text-xs text-center">A車(系統)</th><th class="p-3 border-b border-slate-300 text-[#1E3A8A] font-black text-xs text-center">B車(系統)</th><th class="p-3 border-b border-slate-300 text-slate-900 font-black text-sm text-center bg-slate-100">總計</th><th class="p-3 border-b border-slate-300 text-[#B45309] font-black text-sm text-center bg-[#FFFBEB]">日報數量</th><th class="p-3 border-b border-slate-300 text-center font-black text-slate-600 text-xs">狀態</th></tr></thead><tbody id="recon-body" class="text-sm text-slate-800 divide-y divide-slate-200"></tbody></table></div><div class="p-3 border-t border-slate-300 bg-slate-100 flex justify-end"><button onclick="closeReconModal()" class="px-5 py-2 bg-slate-800 text-white rounded font-black shadow text-sm">關閉</button></div></div></div>
     
-    <div id="matrix-modal" class="fixed inset-0 z-[100] flex items-center justify-center hidden bg-slate-900/80 backdrop-blur-sm transition-opacity px-4"><div class="bg-white rounded-3xl shadow-2xl max-w-6xl w-full overflow-hidden flex flex-col max-h-[95vh] border-2 border-slate-300"><div class="p-4 md:p-6 border-b border-slate-300 flex justify-between items-center bg-white sticky top-0 z-10"><h3 class="text-lg md:text-xl font-black text-slate-800 flex items-center gap-2"><i class="fa-solid fa-border-all text-slate-500 mr-2 md:mr-3"></i> 613 支防呆矩陣</h3><button onclick="closeMatrixModal()" class="w-8 h-8 md:w-10 md:h-10 flex items-center justify-center rounded-full bg-slate-100 border-2 border-slate-300 text-slate-600 hover:bg-slate-200 transition font-black"><i class="fa-solid fa-xmark text-lg md:text-xl"></i></button></div><div class="p-4 md:p-5 bg-slate-50 border-b border-slate-300 flex flex-wrap gap-4 md:gap-6 items-center justify-between z-10 shadow-sm sticky top-0"><div class="flex gap-4 md:gap-6 text-xs md:text-sm font-black items-center flex-wrap"><div class="flex items-center gap-1.5 md:gap-2"><span class="w-4 h-4 md:w-5 md:h-5 block rounded bg-[#F1F5F9] border border-[#CBD5E1]"></span> 未登錄 (<span id="matrix-count-missing">0</span>)</div><div class="flex items-center gap-1.5 md:gap-2"><span class="w-4 h-4 md:w-5 md:h-5 block rounded bg-[#1E3A8A] border border-[#172554] shadow-sm"></span> 已登錄 (<span id="matrix-count-ok">0</span>)</div><div class="flex items-center gap-1.5 md:gap-2"><span class="w-4 h-4 md:w-5 md:h-5 block rounded bg-[#DC2626] border border-[#991B1B] shadow-sm"></span> 重複登錄 (<span id="matrix-count-error">0</span>)</div></div><button onclick="closeMatrixModal()" class="px-4 md:px-6 py-2 md:py-2.5 bg-slate-800 text-white rounded-xl text-xs md:text-sm font-black">關閉雷達</button></div><div class="p-4 md:p-8 overflow-y-auto flex-1 bg-slate-100"><div id="matrix-container" class="flex flex-wrap gap-1.5 md:gap-2.5 justify-center md:justify-start"></div></div></div></div>
+    <div id="matrix-modal" class="fixed inset-0 z-[100] flex items-center justify-center hidden bg-slate-900/80 backdrop-blur-sm transition-opacity px-4"><div class="bg-white rounded-xl shadow-2xl max-w-6xl w-full overflow-hidden flex flex-col max-h-[95vh] border border-slate-300"><div class="p-4 border-b border-slate-300 flex justify-between items-center bg-white sticky top-0 z-10"><h3 class="text-lg font-black text-slate-800 flex items-center gap-2"><i class="fa-solid fa-border-all text-slate-500 mr-2"></i> 613 支防呆矩陣</h3><button onclick="closeMatrixModal()" class="w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 border border-slate-300 text-slate-600 hover:bg-slate-200 transition font-black"><i class="fa-solid fa-xmark"></i></button></div><div class="p-3 bg-slate-50 border-b border-slate-300 flex flex-wrap gap-4 items-center justify-between z-10 shadow-sm sticky top-0"><div class="flex gap-4 text-xs font-black items-center flex-wrap"><div class="flex items-center gap-1.5"><span class="w-4 h-4 block rounded bg-[#F1F5F9] border border-[#CBD5E1]"></span> 未登錄 (<span id="matrix-count-missing">0</span>)</div><div class="flex items-center gap-1.5"><span class="w-4 h-4 block rounded bg-[#1E3A8A] border border-[#172554] shadow-sm"></span> 已登錄 (<span id="matrix-count-ok">0</span>)</div><div class="flex items-center gap-1.5"><span class="w-4 h-4 block rounded bg-[#DC2626] border border-[#991B1B] shadow-sm"></span> 重複 (<span id="matrix-count-error">0</span>)</div></div><button onclick="closeMatrixModal()" class="px-4 py-1.5 bg-slate-800 text-white rounded text-xs font-black">關閉</button></div><div class="p-4 overflow-y-auto flex-1 bg-slate-100"><div id="matrix-container" class="flex flex-wrap gap-1.5 justify-center md:justify-start"></div></div></div></div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
@@ -391,10 +385,10 @@
         window.currentSmartFilter = 'ALL'; 
         const TOTAL_PILES_LIMIT = 613; let isCloudEnabled = false; let db, auth;
         
-        // V16.0 圖表實例與強度資料庫
+        // V16.1 圖表實例與強度資料庫
         let trendChart = null;
         let pieChart = null;
-        window.strengthData = {}; // { 'A1': { s1: 150, s2: 155, s3: 160, avg: 155.0 } }
+        window.strengthData = {}; 
 
         const initFirebase = async () => {
             try {
@@ -408,8 +402,6 @@
                                 window.extraWorkA = data.extraWorkA || []; window.extraWorkB = data.extraWorkB || []; 
                                 window.pileNumbers = data.pileNumbers || {}; window.statusSample = data.statusSample || {}; window.statusLab = data.statusLab || {};
                                 window.statusTest = data.statusTest || data.completionStatus || {}; window.remarks = data.remarks || {}; window.contractorReports = data.contractorReports || {};
-                                
-                                // V16.0 讀取強度數據 (無損相容)
                                 window.strengthData = data.strengthData || {};
                                 
                                 if (data.specialPilesDataStr) window.specialPilesData = JSON.parse(data.specialPilesDataStr);
@@ -439,7 +431,7 @@
                     await setDoc(doc(db, 'scheduleData', 'mainState'), { 
                         exceptionDates: window.exceptionDates, exceptionA: window.exceptionA, exceptionB: window.exceptionB, extraWorkA: window.extraWorkA, extraWorkB: window.extraWorkB, pileNumbers: window.pileNumbers, statusSample: window.statusSample, statusLab: window.statusLab, statusTest: window.statusTest, remarks: window.remarks, contractorReports: window.contractorReports, 
                         specialPilesDataStr: JSON.stringify(window.specialPilesData),
-                        strengthData: window.strengthData // V16.0 儲存強度
+                        strengthData: window.strengthData 
                     }, { merge: true }); 
                 } catch (err) {} 
             } 
@@ -453,14 +445,9 @@
             window.generateSchedule(); 
             window.renderTable(window.currentFilter); 
             window.updateDashboard(); 
-            if (window.updateExtraUI) window.updateExtraUI();
             if (window.currentView === 'calendar' && window.renderCalendar) window.renderCalendar(); 
             if (window.renderMap) window.renderMap(); 
-            
-            // 如果在圖表頁，則更新圖表
-            if(!document.getElementById('view-analytics').classList.contains('hidden')) {
-                window.updateCharts();
-            }
+            if(!document.getElementById('view-analytics').classList.contains('hidden')) { window.updateCharts(); }
         };
 
         window.generateSchedule = () => {
@@ -473,28 +460,23 @@
             }
         };
 
-        // --- V16.0 頁籤切換邏輯 ---
         window.switchView = (viewId) => {
             document.getElementById('tab-schedule').classList.remove('active');
             document.getElementById('tab-analytics').classList.remove('active');
             document.getElementById('view-schedule').classList.add('hidden');
             document.getElementById('view-analytics').classList.add('hidden');
-
             document.getElementById(`tab-${viewId}`).classList.add('active');
             document.getElementById(`view-${viewId}`).classList.remove('hidden');
-
-            if(viewId === 'analytics') {
-                window.updateCharts(); 
-            }
+            if(viewId === 'analytics') { window.updateCharts(); }
         };
 
         window.setSmartFilter = (type) => {
             window.currentSmartFilter = type;
             const btnAll = document.getElementById('filter-smart-all'), btnField = document.getElementById('filter-smart-field'), btnTest = document.getElementById('filter-smart-test');
-            [btnAll, btnField, btnTest].forEach(b => b.className = "flex-1 lg:flex-none px-3 py-1.5 md:py-2 rounded-lg text-[11px] md:text-sm font-bold text-slate-500 hover:text-slate-800 transition whitespace-nowrap");
-            if(type === 'ALL') btnAll.className = "flex-1 lg:flex-none px-3 py-1.5 md:py-2 rounded-lg text-[11px] md:text-sm font-black bg-white text-slate-800 shadow-sm border border-slate-200 transition whitespace-nowrap";
-            if(type === 'FIELD') btnField.className = "flex-1 lg:flex-none px-3 py-1.5 md:py-2 rounded-lg text-[11px] md:text-sm font-black bg-[#1E3A8A] text-white shadow-sm transition whitespace-nowrap";
-            if(type === 'TEST') btnTest.className = "flex-1 lg:flex-none px-3 py-1.5 md:py-2 rounded-lg text-[11px] md:text-sm font-black bg-[#166534] text-white shadow-sm transition whitespace-nowrap";
+            [btnAll, btnField, btnTest].forEach(b => b.className = "px-2 py-1 rounded text-xs font-bold text-slate-500 hover:text-slate-800");
+            if(type === 'ALL') btnAll.className = "px-2 py-1 rounded text-xs font-black bg-white text-slate-800 shadow-sm border border-slate-200";
+            if(type === 'FIELD') btnField.className = "px-2 py-1 rounded text-xs font-black bg-[#1E3A8A] text-white shadow-sm";
+            if(type === 'TEST') btnTest.className = "px-2 py-1 rounded text-xs font-black bg-[#166534] text-white shadow-sm";
             window.renderTable(window.currentFilter);
         };
 
@@ -522,14 +504,13 @@
             const filteredData = window.scheduleData.filter(i => filter === 'ALL' || i.machine === filter);
             const todayDate = new Date(); todayDate.setHours(0,0,0,0);
             
-            // V16.0 取得設計強度判定標準
             const targetStrength = parseFloat(document.getElementById('target-strength').value) || 140;
             
             filteredData.forEach(item => {
                 const isS = window.statusSample[item.id], isL = window.statusLab[item.id], isT = window.statusTest[item.id];
                 const pNum = window.pileNumbers[item.id] || '';
                 const pileCount = (pNum.match(/\d+/g) || []).length;
-                const countBadge = pileCount > 0 ? `<div class="bg-blue-100 text-blue-800 font-black px-2 py-1 rounded text-center text-sm shadow-sm border border-blue-200">${pileCount}</div>` : `<div class="text-slate-300 font-black text-center">-</div>`;
+                const countBadge = pileCount > 0 ? `<div class="bg-blue-100 text-blue-800 font-black px-1.5 py-0.5 rounded text-center text-xs shadow-sm border border-blue-200">${pileCount}</div>` : `<div class="text-slate-300 font-black text-center">-</div>`;
 
                 if (window.currentSmartFilter === 'FIELD' && isL) return; 
                 if (window.currentSmartFilter === 'TEST' && (!isL || isT)) return; 
@@ -542,12 +523,11 @@
                 let testBadge = '';
                 if (!isT && isL) { 
                     const diffTime = item.testDate - todayDate; const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                    if (diffDays === 0) testBadge = `<span class="ml-1 bg-red-600 text-white px-1.5 py-0.5 rounded text-[10px] font-black animate-pulse shadow-sm border border-red-700 whitespace-nowrap">今日壓測!</span>`;
-                    else if (diffDays > 0 && diffDays <= 3) testBadge = `<span class="ml-1 bg-amber-500 text-white px-1.5 py-0.5 rounded text-[10px] font-black shadow-sm border border-amber-600 whitespace-nowrap">剩 ${diffDays} 天</span>`;
-                    else if (diffDays < 0) testBadge = `<span class="ml-1 bg-slate-600 text-white px-1.5 py-0.5 rounded text-[10px] font-black shadow-sm border border-slate-700 whitespace-nowrap">逾期 ${Math.abs(diffDays)} 天</span>`;
+                    if (diffDays === 0) testBadge = `<span class="ml-1 bg-red-600 text-white px-1 py-0.5 rounded text-[9px] font-black animate-pulse shadow-sm border border-red-700 whitespace-nowrap">今日壓測</span>`;
+                    else if (diffDays > 0 && diffDays <= 3) testBadge = `<span class="ml-1 bg-amber-500 text-white px-1 py-0.5 rounded text-[9px] font-black shadow-sm border border-amber-600 whitespace-nowrap">剩${diffDays}天</span>`;
+                    else if (diffDays < 0) testBadge = `<span class="ml-1 bg-slate-600 text-white px-1 py-0.5 rounded text-[9px] font-black shadow-sm border border-slate-700 whitespace-nowrap">逾期${Math.abs(diffDays)}天</span>`;
                 }
 
-                // V16.0 讀取強度數據
                 const strData = window.strengthData[item.id] || { s1: '', s2: '', s3: '', avg: '' };
                 const v1 = strData.s1 || ''; const v2 = strData.s2 || ''; const v3 = strData.s3 || '';
                 const vAvg = strData.avg || '';
@@ -560,75 +540,89 @@
                     else avgBadgeClass = 'avg-fail';
                 }
 
-                // 只有已壓測結案才顯示強度數據，否則如果是待測，則顯示輸入框 (只有勾選抗壓後才鎖定)
                 let strengthHtml = '';
                 if(isT) {
                     strengthHtml = `
-                        <td class="bg-indigo-50/30 border-l border-indigo-100 text-center font-mono font-bold text-slate-500 text-sm tracking-widest">${v1} ${v2} ${v3}</td>
-                        <td class="bg-indigo-50/30 text-center"><span class="avg-display ${avgBadgeClass}">${avgDisplay}</span></td>
+                        <td class="bg-indigo-50/30 border-l border-indigo-100 font-mono font-bold text-slate-500 text-xs tracking-widest">${v1} ${v2} ${v3}</td>
+                        <td class="bg-indigo-50/30"><span class="avg-display ${avgBadgeClass}">${avgDisplay}</span></td>
                     `;
                 } else {
                     strengthHtml = `
-                        <td class="bg-indigo-50/30 border-l border-indigo-100 flex gap-1 justify-center items-center">
+                        <td class="bg-indigo-50/30 border-l border-indigo-100 flex gap-0.5 justify-center items-center h-full min-h-[50px]">
                             <input type="number" class="strength-input" placeholder="#1" value="${v1}" onchange="updateStrength('${item.id}', 1, this.value)">
                             <input type="number" class="strength-input" placeholder="#2" value="${v2}" onchange="updateStrength('${item.id}', 2, this.value)">
                             <input type="number" class="strength-input" placeholder="#3" value="${v3}" onchange="updateStrength('${item.id}', 3, this.value)">
                         </td>
-                        <td class="bg-indigo-50/30 text-center"><span class="avg-display ${avgBadgeClass}">${avgDisplay}</span></td>
+                        <td class="bg-indigo-50/30"><span class="avg-display ${avgBadgeClass}">${avgDisplay}</span></td>
                     `;
                 }
                 
-                tr.innerHTML = `<td class="font-black text-slate-800 text-center">${item.id}</td><td>${countBadge}</td><td><textarea rows="1" title="${pNum}" class="pile-input text-sm overflow-hidden" style="min-height: 48px;" ${isT ? 'readonly' : ''} oninput="this.style.height='auto'; this.style.height=(this.scrollHeight)+'px';" onchange="updatePile('${item.id}', this.value)" placeholder="輸入樁號...">${pNum}</textarea></td><td class="bg-blue-50/70 text-center"><label class="flex justify-center items-center gap-1.5 cursor-pointer w-full h-full"><input type="checkbox" class="status-checkbox cb-sample" ${isS?'checked':''} onclick="toggleStatus('${item.id}', 'sample')"><span class="font-black whitespace-nowrap text-sm ${isS?'text-slate-400 line-through':'text-[#1E3A8A]'}">${window.formatMinguo(item.sampleDate).split('(')[0]}</span></label></td><td class="font-bold text-slate-600 whitespace-nowrap text-sm text-center">${window.formatMinguo(item.demoldDate).split('(')[0]}</td><td class="bg-orange-50/70 text-center"><label class="flex justify-center items-center gap-1.5 cursor-pointer w-full h-full"><input type="checkbox" class="status-checkbox cb-lab" ${isL?'checked':''} onclick="toggleStatus('${item.id}', 'lab')"><span class="font-black whitespace-nowrap text-sm ${isL?'text-slate-400 line-through':'text-[#B45309]'}">${window.formatMinguo(item.collectDate).split('(')[0]}</span></label></td><td class="bg-green-50/70 text-center"><label class="flex justify-center items-center gap-1.5 cursor-pointer w-full h-full"><input type="checkbox" class="status-checkbox cb-test" ${isT?'checked':''} onclick="toggleStatus('${item.id}', 'test')"><span class="font-black whitespace-nowrap flex flex-wrap justify-center items-center text-sm ${isT?'text-slate-400 line-through':'text-[#166534]'}">${window.formatMinguo(item.testDate).split('(')[0]}${testBadge}</span></label></td>${strengthHtml}<td><input type="text" class="remark-input" ${isT?'readonly':''} onchange="updateRemark('${item.id}', this.value)" placeholder="點擊填寫..." value="${window.remarks[item.id]||''}"></td>`;
+                tr.innerHTML = `<td class="font-black text-slate-800">${item.id}</td><td>${countBadge}</td><td><textarea rows="1" title="${pNum}" class="pile-input" style="min-height: 38px;" ${isT ? 'readonly' : ''} oninput="this.style.height='auto'; this.style.height=(this.scrollHeight)+'px';" onchange="updatePile('${item.id}', this.value)" placeholder="輸入樁號...">${pNum}</textarea></td><td class="bg-blue-50/70"><label class="flex justify-center items-center gap-1 cursor-pointer w-full h-full"><input type="checkbox" class="status-checkbox cb-sample" ${isS?'checked':''} onclick="toggleStatus('${item.id}', 'sample')"><span class="font-black whitespace-nowrap text-xs ${isS?'text-slate-400 line-through':'text-[#1E3A8A]'}">${window.formatMinguo(item.sampleDate).split('(')[0]}</span></label></td><td class="font-bold text-slate-600 whitespace-nowrap text-xs">${window.formatMinguo(item.demoldDate).split('(')[0]}</td><td class="bg-orange-50/70"><label class="flex justify-center items-center gap-1 cursor-pointer w-full h-full"><input type="checkbox" class="status-checkbox cb-lab" ${isL?'checked':''} onclick="toggleStatus('${item.id}', 'lab')"><span class="font-black whitespace-nowrap text-xs ${isL?'text-slate-400 line-through':'text-[#B45309]'}">${window.formatMinguo(item.collectDate).split('(')[0]}</span></label></td><td class="bg-green-50/70"><label class="flex justify-center items-center gap-1 cursor-pointer w-full h-full"><input type="checkbox" class="status-checkbox cb-test" ${isT?'checked':''} onclick="toggleStatus('${item.id}', 'test')"><span class="font-black whitespace-nowrap flex flex-col justify-center items-center text-xs ${isT?'text-slate-400 line-through':'text-[#166534]'}"><span>${window.formatMinguo(item.testDate).split('(')[0]}</span>${testBadge}</span></label></td>${strengthHtml}<td><input type="text" class="remark-input" ${isT?'readonly':''} onchange="updateRemark('${item.id}', this.value)" placeholder="點擊填寫..." value="${window.remarks[item.id]||''}"></td>`;
                 tbody.appendChild(tr);
             });
 
             setTimeout(() => { document.querySelectorAll('.pile-input').forEach(el => { el.style.height = 'auto'; el.style.height = (el.scrollHeight) + 'px'; }); }, 10);
         };
 
-        // --- V16.0 更新強度數值與計算平均 ---
         window.updateStrength = (id, index, val) => {
-            if(!window.strengthData[id]) {
-                window.strengthData[id] = { s1: '', s2: '', s3: '', avg: '' };
-            }
-            
+            if(!window.strengthData[id]) window.strengthData[id] = { s1: '', s2: '', s3: '', avg: '' };
             const numVal = val.trim() === '' ? '' : parseFloat(val);
             if(index === 1) window.strengthData[id].s1 = numVal;
             if(index === 2) window.strengthData[id].s2 = numVal;
             if(index === 3) window.strengthData[id].s3 = numVal;
             
-            // 計算平均
             let sum = 0, count = 0;
             if(window.strengthData[id].s1 !== '') { sum += parseFloat(window.strengthData[id].s1); count++; }
             if(window.strengthData[id].s2 !== '') { sum += parseFloat(window.strengthData[id].s2); count++; }
             if(window.strengthData[id].s3 !== '') { sum += parseFloat(window.strengthData[id].s3); count++; }
             
-            if(count > 0) {
-                window.strengthData[id].avg = (sum / count).toFixed(1);
-            } else {
-                window.strengthData[id].avg = '';
-            }
+            if(count > 0) window.strengthData[id].avg = (sum / count).toFixed(1);
+            else window.strengthData[id].avg = '';
             
             window.saveDataToCloud();
             window.renderTable(window.currentFilter);
         };
 
-        // --- V16.0 Chart.js 更新圖表邏輯 ---
+        // --- V16.1 清除日期篩選 ---
+        window.clearDateFilter = () => {
+            document.getElementById('chart-date-start').value = '';
+            document.getElementById('chart-date-end').value = '';
+            window.updateCharts();
+        }
+
+        // --- V16.1 Chart.js 更新圖表與 AI 智慧診斷 ---
         window.updateCharts = () => {
-            // 切換回重新渲染表格以更新顏色
-            if(document.getElementById('view-schedule').classList.contains('hidden') === false) {
+            if(!document.getElementById('view-schedule').classList.contains('hidden')) {
                 window.renderTable(window.currentFilter);
             }
 
             const targetStrength = parseFloat(document.getElementById('target-strength').value) || 140;
+            const machineFilter = document.getElementById('chart-machine-filter').value;
+            const dateStart = document.getElementById('chart-date-start').value;
+            const dateEnd = document.getElementById('chart-date-end').value;
             
-            // 抓出有強度數據，且已壓測結案的排程資料
-            const validRecords = window.scheduleData.filter(i => window.statusTest[i.id] && window.strengthData[i.id] && window.strengthData[i.id].avg !== '');
+            // 過濾：有強度且已壓測結案
+            let validRecords = window.scheduleData.filter(i => window.statusTest[i.id] && window.strengthData[i.id] && window.strengthData[i.id].avg !== '');
             
-            // 按壓測日期排序
+            // 過濾：車別
+            if (machineFilter !== 'ALL') {
+                validRecords = validRecords.filter(i => i.machine === machineFilter);
+            }
+            
+            // 過濾：時間區間 (採用壓測日)
+            if (dateStart) {
+                const startObj = new Date(dateStart); startObj.setHours(0,0,0,0);
+                validRecords = validRecords.filter(i => i.testDate >= startObj);
+            }
+            if (dateEnd) {
+                const endObj = new Date(dateEnd); endObj.setHours(23,59,59,999);
+                validRecords = validRecords.filter(i => i.testDate <= endObj);
+            }
+
             validRecords.sort((a, b) => a.testDate - b.testDate);
 
             const totalDone = validRecords.length;
-            document.getElementById('kpi-total').innerHTML = `${totalDone} <span class="text-sm text-slate-500 font-bold">組</span>`;
+            document.getElementById('kpi-total').innerHTML = `${totalDone} <span class="text-xs text-slate-500 font-bold">組</span>`;
             
             if(totalDone > 0) {
                 let sum = 0, min = Infinity, passCount = 0;
@@ -647,11 +641,23 @@
                     dataTarget.push(targetStrength);
                 });
 
-                document.getElementById('kpi-avg').innerHTML = `${(sum/totalDone).toFixed(1)} <span class="text-sm text-slate-500 font-bold">kgf/cm²</span>`;
-                document.getElementById('kpi-min').innerHTML = `${min} <span class="text-sm text-slate-500 font-bold">kgf/cm²</span>`;
-                document.getElementById('kpi-pass-rate').innerText = `${((passCount/totalDone)*100).toFixed(1)}%`;
+                const finalAvg = (sum/totalDone).toFixed(1);
+                const passRate = ((passCount/totalDone)*100).toFixed(1);
+                
+                // 計算標準差
+                let varianceSum = 0;
+                dataAvg.forEach(val => { varianceSum += Math.pow(val - finalAvg, 2); });
+                const sd = Math.sqrt(varianceSum / totalDone).toFixed(1);
 
-                // 繪製 Trendline
+                document.getElementById('kpi-avg').innerHTML = `${finalAvg} <span class="text-xs text-slate-500 font-bold">kgf/cm²</span>`;
+                document.getElementById('kpi-min').innerHTML = `${min} <span class="text-xs text-slate-500 font-bold">kgf/cm²</span>`;
+                document.getElementById('kpi-pass-rate').innerText = `${passRate}%`;
+                document.getElementById('kpi-sd').innerText = sd;
+
+                const lineLabel = machineFilter === 'ALL' ? '全區試體平均強度' : `${machineFilter}車試體平均強度`;
+                const lineColor = machineFilter === 'A' ? '#10B981' : (machineFilter === 'B' ? '#F59E0B' : '#2563EB');
+                const bgColor = machineFilter === 'A' ? 'rgba(16, 185, 129, 0.1)' : (machineFilter === 'B' ? 'rgba(245, 158, 11, 0.1)' : 'rgba(37, 99, 235, 0.1)');
+
                 const ctxTrend = document.getElementById('trendChart').getContext('2d');
                 if(trendChart) trendChart.destroy();
                 trendChart = new Chart(ctxTrend, {
@@ -660,67 +666,73 @@
                         labels: labels,
                         datasets: [
                             {
-                                label: '28天試體平均強度',
-                                data: dataAvg,
-                                borderColor: '#2563EB',
-                                backgroundColor: 'rgba(37, 99, 235, 0.1)',
-                                borderWidth: 2,
-                                pointBackgroundColor: '#1D4ED8',
-                                pointRadius: 4,
-                                fill: true,
-                                tension: 0.3
+                                label: lineLabel, data: dataAvg,
+                                borderColor: lineColor, backgroundColor: bgColor, borderWidth: 2,
+                                pointBackgroundColor: lineColor, pointRadius: 4, fill: true, tension: 0.3
                             },
                             {
-                                label: `設計強度要求 (${targetStrength})`,
-                                data: dataTarget,
-                                borderColor: '#EF4444',
-                                borderWidth: 2,
-                                borderDash: [5, 5],
-                                pointRadius: 0,
-                                fill: false
+                                label: `設計要求 (${targetStrength})`, data: dataTarget,
+                                borderColor: '#EF4444', borderWidth: 2, borderDash: [5, 5], pointRadius: 0, fill: false
                             }
                         ]
                     },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: { legend: { position: 'top' } },
-                        scales: { y: { suggestedMin: targetStrength - 30 } }
-                    }
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top' } }, scales: { y: { suggestedMin: targetStrength - 30 } } }
                 });
 
-                // 繪製 Pie Chart
                 const ctxPie = document.getElementById('pieChart').getContext('2d');
                 if(pieChart) pieChart.destroy();
                 pieChart = new Chart(ctxPie, {
                     type: 'doughnut',
                     data: {
                         labels: ['合格達標', '未達設計值'],
-                        datasets: [{
-                            data: [passCount, totalDone - passCount],
-                            backgroundColor: ['#10B981', '#EF4444'],
-                            borderWidth: 0,
-                            hoverOffset: 4
-                        }]
+                        datasets: [{ data: [passCount, totalDone - passCount], backgroundColor: ['#10B981', '#EF4444'], borderWidth: 0, hoverOffset: 4 }]
                     },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        cutout: '65%',
-                        plugins: { legend: { position: 'bottom' } }
-                    }
+                    options: { responsive: true, maintainAspectRatio: false, cutout: '65%', plugins: { legend: { position: 'bottom' } } }
                 });
 
+                // 🔥 生成 AI 智慧診斷報告
+                generateAiReport(machineFilter, totalDone, finalAvg, targetStrength, min, passRate, sd);
+
             } else {
-                // 無資料狀態
-                document.getElementById('kpi-avg').innerHTML = `0.0 <span class="text-sm text-slate-500 font-bold">kgf/cm²</span>`;
-                document.getElementById('kpi-min').innerHTML = `0.0 <span class="text-sm text-slate-500 font-bold">kgf/cm²</span>`;
+                document.getElementById('kpi-avg').innerHTML = `0.0 <span class="text-xs text-slate-500 font-bold">kgf/cm²</span>`;
+                document.getElementById('kpi-min').innerHTML = `0.0 <span class="text-xs text-slate-500 font-bold">kgf/cm²</span>`;
                 document.getElementById('kpi-pass-rate').innerText = `0.0%`;
-                
-                if(trendChart) trendChart.destroy();
-                if(pieChart) pieChart.destroy();
+                document.getElementById('kpi-sd').innerText = `0.0`;
+                if(trendChart) trendChart.destroy(); if(pieChart) pieChart.destroy();
+                document.getElementById('ai-report-content').innerHTML = "目前篩選區間內尚無已壓測的強度資料，無法進行分析。";
             }
         };
+
+        // --- V16.1 AI 智慧診斷演算引擎 ---
+        function generateAiReport(machine, total, avg, target, min, passRate, sd) {
+            let report = '';
+            const scopeText = machine === 'ALL' ? '全區 (A車+B車)' : `${machine}車單獨`;
+            
+            report += `<p class="mb-2">本次針對 <b>${scopeText}</b> 區間內的 <b>${total}</b> 組壓測數據進行演算法分析。設定之目標設計強度為 <b>${target}</b> kgf/cm²。</p>`;
+            
+            // 判斷均勻度 (標準差)
+            let sdStr = '';
+            if (sd < 10) sdStr = '<span class="text-emerald-600 font-black">極佳 (標準差<10)</span>，代表機具鑽掘與水泥砂漿灌注之壓力、轉速極度穩定';
+            else if (sd < 20) sdStr = '<span class="text-blue-600 font-black">正常 (標準差 10~20)</span>，符合一般大地工程之變異容許範圍';
+            else sdStr = '<span class="text-amber-600 font-black">偏高 (標準差>20)</span>，顯示近期地質變化劇烈或機具施工參數不一致';
+
+            report += `<p class="mb-2">1. <b>施工均勻度指標：</b> 本區間標準差為 <b>${sd}</b>，品質均勻度評估為 ${sdStr}。</p>`;
+
+            // 判斷強度與合格率
+            if (passRate == 100) {
+                report += `<p class="mb-2">2. <b>合格率檢核：</b> 區間內抗壓強度 <b>100% 達標</b>。平均強度達 <b>${avg}</b> kgf/cm²，大幅超越設計要求。</p>`;
+                if (sd < 15) {
+                    report += `<p class="mt-4 p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded">✅ <b>監造/主管匯報建議結論：</b><br>「本區間 ${scopeText} 施工品質優良，骨材與砂漿拌合均勻，強度不僅全數過關且波動極小。建議現場維持現行之鑽掘參數與斗仔配比工法，無需額外調整。」</p>`;
+                } else {
+                    report += `<p class="mt-4 p-3 bg-blue-50 border border-blue-200 text-blue-800 rounded">✅ <b>監造/主管匯報建議結論：</b><br>「本區間強度全數達標，結構安全無虞。惟近期數值波動稍微明顯，可能受地質卵礫石層或地下水位影響，建議現場主任可微調機具提管速度以維持最佳品質。」</p>`;
+                }
+            } else {
+                report += `<p class="mb-2">2. <b>合格率檢核：</b> 區間內合格率為 <b class="text-red-600">${passRate}%</b>，並出現低於設計標準之異常值 (<b class="text-red-600">${min}</b> kgf/cm²)。</p>`;
+                report += `<p class="mt-4 p-3 bg-red-50 border border-red-200 text-red-800 rounded animate-pulse">⚠️ <b>監造/主管匯報建議結論 (警戒)：</b><br>「注意：本區間 ${scopeText} 部分強度逼近或低於設計邊界。建議立即啟動二級品管機制，<b>加強現場斗仔體積防呆查核</b>，並檢視拌合廠水泥配比。必要時對該異常樁號區域進行鑽心取樣或聲納檢測以確認樁體完整性。」</p>`;
+            }
+
+            document.getElementById('ai-report-content').innerHTML = report;
+        }
 
         window.updateDashboard = () => {
             const usedA = new Set(); const usedB = new Set(); const workedDates = new Set(); const donePilesList = [];
@@ -758,8 +770,8 @@
                 let tagClass = "bg-green-100 text-green-800 border border-green-300"; let daysText = `剩 ${nextTestDays} 天`;
                 if (nextTestDays === 0) { tagClass = "bg-red-500 text-white animate-pulse border border-red-700"; daysText = "今日壓測!"; } else if (nextTestDays <= 3 && nextTestDays > 0) tagClass = "bg-amber-400 text-amber-900 border border-amber-500"; else if (nextTestDays < 0) { tagClass = "bg-slate-600 text-white border border-slate-800"; daysText = `逾期 ${Math.abs(nextTestDays)} 天`; }
                 nextTestEl.innerHTML = `近期: ${window.formatMinguo(nextTestDate).split('(')[0]} <span class="ml-1 font-black opacity-90">(${daysText})</span>`;
-                nextTestEl.className = `text-[10px] md:text-[11px] font-black px-2 py-0.5 rounded shadow-sm ${tagClass}`;
-            } else { nextTestEl.innerHTML = "無待壓測排程"; nextTestEl.className = "text-[10px] md:text-[11px] font-bold text-green-200 bg-green-800 px-2 py-0.5 rounded border border-green-900"; }
+                nextTestEl.className = `text-[9px] font-black px-1.5 py-0.5 rounded shadow-sm ${tagClass}`;
+            } else { nextTestEl.innerHTML = "無待壓測排程"; nextTestEl.className = "text-[9px] font-bold text-green-200 bg-green-800 px-1.5 py-0.5 rounded border border-green-900"; }
 
             if (pilesCount > 0 && workedDays > 0) {
                 const avgRate = pilesCount / workedDays; 
@@ -771,9 +783,9 @@
                     const isExGlobal = window.exceptionDates.includes(dStr); const isExA = isExGlobal || window.exceptionA.includes(dStr); const isExB = isExGlobal || window.exceptionB.includes(dStr); 
                     if (simDate.getDay() !== 0 && (!isExA || !isExB)) added++; 
                 }
-                document.getElementById('prediction-metrics').innerHTML = `<div class="bg-white border border-slate-200 px-4 md:px-5 py-2 md:py-2.5 rounded-lg md:rounded-xl flex flex-col justify-center items-center shadow-sm w-full md:w-auto"><span class="text-[9px] md:text-[11px] font-black text-slate-500 mb-0.5 md:mb-1 tracking-widest uppercase">近期動態產能</span><span class="text-xl md:text-2xl font-black text-slate-800">${avgRate.toFixed(1)} <span class="text-xs md:text-sm text-slate-500 font-bold">支/日</span></span></div><div class="bg-white border border-slate-200 px-4 md:px-5 py-2 md:py-2.5 rounded-lg md:rounded-xl flex flex-col justify-center items-center shadow-sm w-full md:w-auto"><span class="text-[9px] md:text-[11px] font-black text-slate-500 mb-0.5 md:mb-1 tracking-widest uppercase">預估剩餘</span><span class="text-xl md:text-2xl font-black text-[#B45309]">${estDays} <span class="text-xs md:text-sm text-slate-500 font-bold">工作天</span></span></div><div class="bg-orange-50 border border-orange-200 px-4 md:px-6 py-2 md:py-2.5 rounded-lg md:rounded-xl flex flex-col justify-center items-center shadow-sm w-full md:w-auto"><span class="text-[9px] md:text-[11px] font-black text-orange-600 mb-0.5 md:mb-1 tracking-widest uppercase"><i class="fa-regular fa-calendar-check"></i> 預估完工日</span><span class="text-xl md:text-2xl font-black text-[#B45309]">${window.formatMinguo(simDate).split('(')[0]}</span></div>`;
+                document.getElementById('prediction-metrics').innerHTML = `<div class="bg-white border border-slate-200 px-3 py-1 rounded flex flex-col items-center"><span class="text-[9px] font-black text-slate-500 uppercase">動態產能</span><span class="text-base font-black text-slate-800">${avgRate.toFixed(1)} <span class="text-[10px] text-slate-500 font-bold">支/日</span></span></div><div class="bg-white border border-slate-200 px-3 py-1 rounded flex flex-col items-center"><span class="text-[9px] font-black text-slate-500 uppercase">預估剩餘</span><span class="text-base font-black text-[#B45309]">${estDays} <span class="text-[10px] text-slate-500 font-bold">天</span></span></div><div class="bg-orange-50 border border-orange-200 px-3 py-1 rounded flex flex-col items-center"><span class="text-[9px] font-black text-orange-600 uppercase">預估完工日</span><span class="text-base font-black text-[#B45309]">${window.formatMinguo(simDate).split('(')[0]}</span></div>`;
             } else {
-                document.getElementById('prediction-metrics').innerHTML = `<div class="text-slate-500 font-bold px-4 py-3 bg-slate-50 rounded-xl border border-slate-200 w-full text-center text-sm md:text-base">尚無有效打設紀錄，系統將於收集到現場進度後啟動推估引擎。</div>`;
+                document.getElementById('prediction-metrics').innerHTML = `<span class="text-xs text-slate-500 font-bold">歷史數據掃描中...</span>`;
             }
 
             const radarContainer = document.getElementById('special-pile-radar'); let radarHtml = '';
@@ -787,16 +799,16 @@
                 if (donePilesList.includes(idNum)) {
                     sClass = 'bg-emerald-50 border-emerald-200 text-emerald-700 opacity-60'; sText = '已完成'; tagColor = 'bg-emerald-600 text-white';
                 } else if (donePilesList.includes(idNum - 1) || donePilesList.includes(idNum + 1) || donePilesList.includes(idNum - 2) || donePilesList.includes(idNum + 2)) {
-                    sClass = 'bg-red-50 border-red-400 text-red-700 ring-2 ring-red-400/50 animate-pulse'; sText = '🚨 鄰樁開鑽'; tagColor = 'bg-red-600 text-white shadow-md';
+                    sClass = 'bg-red-50 border-red-400 text-red-700 ring-1 ring-red-400/50 animate-pulse'; sText = '🚨 鄰樁開鑽'; tagColor = 'bg-red-600 text-white shadow-sm';
                 } else if (maxDonePile > 0 && maxDonePile >= idNum - 15 && maxDonePile < idNum) {
-                    sClass = 'bg-amber-50 border-amber-300 text-amber-800'; sText = '⚠️ 逼近中'; tagColor = 'bg-amber-500 text-white shadow-md';
+                    sClass = 'bg-amber-50 border-amber-300 text-amber-800'; sText = '⚠️ 逼近中'; tagColor = 'bg-amber-500 text-white shadow-sm';
                 }
 
                 radarHtml += `
-                    <div class="inline-flex items-center border rounded-full shadow-sm pl-1 pr-2 py-1 transition hover:-translate-y-0.5 ${sClass}">
-                        <span class="${tagColor} text-xs md:text-sm font-black px-2 md:px-3 py-1 rounded-full shadow-sm mr-2 flex items-center gap-1.5">${typeIcon} P${idNum}</span>
-                        <span class="text-xs md:text-sm font-bold whitespace-nowrap">${sText}</span>
-                        <button onclick="editSpecialPile('${pId}')" class="ml-2 w-5 h-5 md:w-6 md:h-6 flex items-center justify-center rounded-full bg-white/50 hover:bg-white text-slate-400 hover:text-blue-600 transition shadow-sm"><i class="fa-solid fa-pen text-[10px] md:text-xs"></i></button>
+                    <div class="inline-flex items-center border rounded-full shadow-sm pl-1 pr-1.5 py-0.5 transition hover:-translate-y-0.5 ${sClass}">
+                        <span class="${tagColor} text-[10px] font-black px-1.5 py-0.5 rounded-full mr-1 flex items-center gap-1">${typeIcon} P${idNum}</span>
+                        <span class="text-[10px] font-bold whitespace-nowrap">${sText}</span>
+                        <button onclick="editSpecialPile('${pId}')" class="ml-1 w-4 h-4 flex items-center justify-center rounded-full bg-white/50 hover:bg-white text-slate-400 hover:text-blue-600 transition"><i class="fa-solid fa-pen text-[8px]"></i></button>
                     </div>
                 `;
             });
@@ -831,16 +843,16 @@
             for (let i = 0; i < 6; i++) {
                 const row = document.createElement('tr');
                 for (let j = 0; j < 7; j++) {
-                    const cell = document.createElement('td'); cell.className = 'border-r border-b border-slate-300 p-2 align-top h-40 md:h-48 bg-white transition hover:bg-slate-100';
+                    const cell = document.createElement('td'); cell.className = 'border-r border-b border-slate-300 p-1 align-top h-32 bg-white transition hover:bg-slate-100';
                     if (j === 0 || j === 6) cell.classList.add('bg-slate-100/50');
                     if (i === 0 && j < firstDay || date > daysInMonth) { cell.innerHTML = ''; } else {
                         const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(date).padStart(2,'0')}`;
                         const isExGlobal = window.exceptionDates.includes(dateStr); const isExA = window.exceptionA.includes(dateStr); const isExB = window.exceptionB.includes(dateStr);
                         let exBadge = '';
-                        if(isExGlobal) exBadge = `<span class="text-[9px] md:text-[11px] bg-red-600 text-white px-1.5 md:px-2 py-0.5 rounded shadow-sm font-black border border-red-700 whitespace-nowrap">全區停機</span>`; else if (isExA && isExB) exBadge = `<span class="text-[9px] md:text-[11px] bg-red-600 text-white px-1.5 md:px-2 py-0.5 rounded shadow-sm font-black border border-red-700 whitespace-nowrap">A/B停</span>`; else if (isExA) exBadge = `<span class="text-[9px] md:text-[11px] bg-red-500 text-white px-1.5 md:px-2 py-0.5 rounded shadow-sm font-black border border-red-600 whitespace-nowrap">A停</span>`; else if (isExB) exBadge = `<span class="text-[9px] md:text-[11px] bg-red-500 text-white px-1.5 md:px-2 py-0.5 rounded shadow-sm font-black border border-red-600 whitespace-nowrap">B停</span>`;
+                        if(isExGlobal) exBadge = `<span class="text-[9px] bg-red-600 text-white px-1 py-0.5 rounded shadow-sm font-black border border-red-700 whitespace-nowrap">全區停</span>`; else if (isExA && isExB) exBadge = `<span class="text-[9px] bg-red-600 text-white px-1 py-0.5 rounded shadow-sm font-black border border-red-700 whitespace-nowrap">A/B停</span>`; else if (isExA) exBadge = `<span class="text-[9px] bg-red-500 text-white px-1 py-0.5 rounded shadow-sm font-black border border-red-600 whitespace-nowrap">A停</span>`; else if (isExB) exBadge = `<span class="text-[9px] bg-red-500 text-white px-1 py-0.5 rounded shadow-sm font-black border border-red-600 whitespace-nowrap">B停</span>`;
                         let isToday = new Date().getFullYear() === year && new Date().getMonth() === month && new Date().getDate() === date;
-                        let cellHtml = `<div class="font-black text-base md:text-xl mb-2 flex justify-between items-center"><span class="${isToday ? 'bg-slate-800 text-white rounded-lg px-2 py-0.5 md:px-2.5 md:py-1 shadow-md' : 'text-slate-600'}">${date}</span> ${exBadge}</div><div class="flex flex-col gap-1.5 overflow-y-auto max-h-28 md:max-h-36 calendar-scroll pr-1">`;
-                        if (eventsMap[date]) { eventsMap[date].forEach(e => { cellHtml += `<div class="cal-tag ${e.tagClass} break-all text-[11px] md:text-[13px] p-1 md:p-1.5"><b>${e.type}:</b> ${e.label}</div>`; }); }
+                        let cellHtml = `<div class="font-black text-sm mb-1 flex justify-between items-center"><span class="${isToday ? 'bg-slate-800 text-white rounded px-1.5 py-0.5 shadow-sm' : 'text-slate-600'}">${date}</span> ${exBadge}</div><div class="flex flex-col gap-1 overflow-y-auto max-h-24 calendar-scroll pr-1">`;
+                        if (eventsMap[date]) { eventsMap[date].forEach(e => { cellHtml += `<div class="cal-tag ${e.tagClass} break-all text-[10px] p-1"><b>${e.type}:</b> ${e.label}</div>`; }); }
                         cellHtml += `</div>`; 
                         if(isExGlobal || (isExA && isExB)) cell.classList.add('bg-red-50'); else if (isExA || isExB) cell.classList.add('bg-orange-50/50');
                         cell.innerHTML = cellHtml; date++;
@@ -857,10 +869,10 @@
         window.removeExtraDate = (m, val) => { if (m === 'A') window.extraWorkA = window.extraWorkA.filter(d => d !== val); if (m === 'B') window.extraWorkB = window.extraWorkB.filter(d => d !== val); window.saveDataToCloud(); window.refreshAll(); };
         window.updateExtraUI = () => {
             const expContainer = document.getElementById('exception-list'); expContainer.innerHTML = ""; 
-            const renderExTag = (m, val, label) => { const parts = val.split('-'); const tag = document.createElement('span'); tag.className = "bg-white text-red-700 px-2 py-1 rounded-md text-[11px] md:text-[13px] font-black border border-red-200 shadow-sm whitespace-nowrap"; tag.innerHTML = `${label}${parts[1]}/${parts[2]} <i class="fa-solid fa-xmark cursor-pointer ml-1 opacity-60 hover:opacity-100" onclick="removeExceptionDate('${m}', '${val}')"></i>`; expContainer.appendChild(tag); };
+            const renderExTag = (m, val, label) => { const parts = val.split('-'); const tag = document.createElement('span'); tag.className = "bg-white text-red-700 px-1.5 py-0.5 rounded text-[10px] font-black border border-red-200 shadow-sm whitespace-nowrap"; tag.innerHTML = `${label}${parts[1]}/${parts[2]} <i class="fa-solid fa-xmark cursor-pointer ml-1 opacity-60 hover:opacity-100" onclick="removeExceptionDate('${m}', '${val}')"></i>`; expContainer.appendChild(tag); };
             window.exceptionDates.forEach(val => renderExTag('ALL', val, '全區:')); window.exceptionA.forEach(val => renderExTag('A', val, 'A車:')); window.exceptionB.forEach(val => renderExTag('B', val, 'B車:'));
             const extraContainer = document.getElementById('extra-list'); extraContainer.innerHTML = "";
-            const renderExWTag = (m, val) => { const parts = val.split('-'); const tag = document.createElement('span'); tag.className = "bg-white text-blue-700 px-2 py-1 rounded-md text-[11px] md:text-[13px] font-black border border-blue-200 shadow-sm whitespace-nowrap"; tag.innerHTML = `${m}車:${parts[1]}/${parts[2]} <i class="fa-solid fa-xmark cursor-pointer ml-1 opacity-60 hover:opacity-100" onclick="removeExtraDate('${m}', '${val}')"></i>`; extraContainer.appendChild(tag); };
+            const renderExWTag = (m, val) => { const parts = val.split('-'); const tag = document.createElement('span'); tag.className = "bg-white text-blue-700 px-1.5 py-0.5 rounded text-[10px] font-black border border-blue-200 shadow-sm whitespace-nowrap"; tag.innerHTML = `${m}車:${parts[1]}/${parts[2]} <i class="fa-solid fa-xmark cursor-pointer ml-1 opacity-60 hover:opacity-100" onclick="removeExtraDate('${m}', '${val}')"></i>`; extraContainer.appendChild(tag); };
             window.extraWorkA.forEach(val => renderExWTag('A', val)); window.extraWorkB.forEach(val => renderExWTag('B', val));
         };
 
@@ -868,7 +880,7 @@
             const totalSandM3 = (parseFloat(document.getElementById('calc-sand-bucket').value)||0) * ((parseFloat(document.getElementById('calc-vol').value)||0)/1000) * (parseFloat(document.getElementById('calc-batches').value)||0);
             const totalCemTon = (parseFloat(document.getElementById('calc-cem-bucket').value)||0) * ((parseFloat(document.getElementById('calc-vol').value)||0)/1000) * (parseFloat(document.getElementById('calc-batches').value)||0) * 1.4;
             const resDiv = document.getElementById('calc-result');
-            resDiv.innerHTML = `<div class="flex justify-around items-center"><div class="text-center font-black text-xs md:text-sm text-slate-500">理論砂用量<br><span class="text-2xl md:text-3xl font-black text-slate-800">${totalSandM3.toFixed(2)} <span class="text-sm md:text-lg">m³</span></span></div><div class="text-center font-black text-xs md:text-sm text-slate-500">理論水泥用量<br><span class="text-2xl md:text-3xl font-black text-slate-800">${totalCemTon.toFixed(2)} <span class="text-sm md:text-lg">噸</span></span></div></div>`;
+            resDiv.innerHTML = `<div class="flex justify-around items-center"><div class="text-center font-black text-xs text-slate-500">理論砂用量<br><span class="text-xl font-black text-slate-800">${totalSandM3.toFixed(2)} <span class="text-xs">m³</span></span></div><div class="text-center font-black text-xs text-slate-500">理論水泥用量<br><span class="text-xl font-black text-slate-800">${totalCemTon.toFixed(2)} <span class="text-xs">噸</span></span></div></div>`;
             resDiv.classList.remove('hidden');
         };
 
@@ -953,9 +965,9 @@
             if (sType) {
                 const tName = sType === 'FULL' ? '安全監測樁 (全項)' : '安全監測樁 (部分)';
                 const tColor = sType === 'FULL' ? 'text-blue-400' : 'text-amber-400';
-                spAlert = `<div class="${tColor} text-[12px] mb-1 font-black"><i class="fa-solid fa-star"></i> ${tName}</div>`;
+                spAlert = `<div class="${tColor} text-[10px] mb-1 font-black"><i class="fa-solid fa-star"></i> ${tName}</div>`;
             }
-            tooltip.innerHTML = `${spAlert}<div class="font-black text-lg mb-1 border-b border-slate-500 pb-1 text-blue-100">樁號: P${pile}</div><div class="text-sm my-1 text-amber-300">狀態: ${status}</div><div class="text-[13px] text-slate-300 mt-2">取樣日: ${sDate}</div><div class="text-[13px] text-slate-300">收件日: ${lDate}</div><div class="text-[13px] text-slate-300">壓測日: ${tDate}</div>`;
+            tooltip.innerHTML = `${spAlert}<div class="font-black text-sm mb-1 border-b border-slate-500 pb-1 text-blue-100">樁號: P${pile}</div><div class="text-xs my-1 text-amber-300">狀態: ${status}</div><div class="text-[11px] text-slate-300 mt-1">取樣日: ${sDate}</div><div class="text-[11px] text-slate-300">收件日: ${lDate}</div><div class="text-[11px] text-slate-300">壓測日: ${tDate}</div>`;
         };
         window.hideTooltip = () => { document.getElementById('map-tooltip').style.display = 'none'; };
 
@@ -968,7 +980,7 @@
 
         window.syncFromContractor = async () => {
             const btn = document.getElementById('btn-sync-api'); const originalHtml = btn.innerHTML;
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-sm md:text-xl opacity-80"></i> 同步中...'; btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-xs opacity-80"></i> 同步中...'; btn.disabled = true;
             try {
                 const response = await fetch(GAS_API_URL); if (!response.ok) throw new Error("API 回應異常");
                 const dataMatrix = await response.json(); const groupedData = {};
@@ -1027,14 +1039,14 @@
             if(sortedDates.length === 0) { tbody.innerHTML = '<tr><td colspan="7" class="p-8 text-center text-slate-500 font-black">尚無打設登錄資料</td></tr>'; return; }
             sortedDates.forEach((dStr, index) => {
                 const stat = dailyStats[dStr]; const reportVal = window.contractorReports[dStr] !== undefined ? window.contractorReports[dStr] : '';
-                let statusHtml = '<span class="text-slate-400 text-sm font-black">- 待填報 -</span>'; 
+                let statusHtml = '<span class="text-slate-400 text-xs font-black">- 待填報 -</span>'; 
                 if (reportVal !== '') {
                     const rNum = parseInt(reportVal, 10);
-                    if (rNum === stat.total) statusHtml = '<span class="bg-[#F2F7F4] text-[#166534] px-3 py-1.5 rounded-lg font-black whitespace-nowrap"><i class="fa-solid fa-check"></i> 吻合</span>';
-                    else statusHtml = `<span class="bg-[#FEF2F2] text-[#DC2626] px-3 py-1.5 rounded-lg font-black animate-pulse whitespace-nowrap"><i class="fa-solid fa-xmark"></i> 誤差 ${Math.abs(rNum - stat.total)} 支</span>`;
+                    if (rNum === stat.total) statusHtml = '<span class="bg-[#F2F7F4] text-[#166534] px-2 py-1 rounded font-black whitespace-nowrap"><i class="fa-solid fa-check"></i> 吻合</span>';
+                    else statusHtml = `<span class="bg-[#FEF2F2] text-[#DC2626] px-2 py-1 rounded font-black animate-pulse whitespace-nowrap"><i class="fa-solid fa-xmark"></i> 誤差 ${Math.abs(rNum - stat.total)} 支</span>`;
                 }
-                const idBadges = stat.ids.map(id => `<span class="bg-slate-200 text-slate-700 px-1.5 py-0.5 rounded text-[10px] md:text-xs mx-0.5 whitespace-nowrap">${id}</span>`).join('');
-                tbody.innerHTML += `<tr class="border-b-2 border-slate-100 hover:bg-slate-50 transition"><td class="p-3 md:p-5 text-center font-black text-slate-600 max-w-[120px] whitespace-normal">${idBadges}</td><td class="p-3 md:p-5 font-black text-slate-700 whitespace-nowrap">${window.formatMinguo(stat.dateObj).split('(')[0]}</td><td class="p-3 md:p-5 text-center font-black text-[#1E3A8A] text-base md:text-lg">${stat.A||'-'}</td><td class="p-3 md:p-5 text-center font-black text-[#1E3A8A] text-base md:text-lg">${stat.B||'-'}</td><td class="p-3 md:p-5 font-black text-xl md:text-2xl text-slate-900 text-center bg-slate-50/50">${stat.total}</td><td class="p-3 md:p-5 text-center bg-[#FCF9F2]"><input type="number" class="border-2 border-[#B45309] rounded-lg px-2 md:px-4 py-1.5 md:py-2 w-20 md:w-28 text-center font-black text-[#B45309] text-base md:text-lg outline-none focus:ring-2 focus:ring-orange-400" value="${reportVal}" onchange="updateContractorReport('${dStr}', this.value)"></td><td class="p-3 md:p-5 text-center">${statusHtml}</td></tr>`;
+                const idBadges = stat.ids.map(id => `<span class="bg-slate-200 text-slate-700 px-1 py-0.5 rounded text-[10px] mx-0.5 whitespace-nowrap">${id}</span>`).join('');
+                tbody.innerHTML += `<tr class="border-b border-slate-100 hover:bg-slate-50 transition"><td class="p-2 text-center font-black text-slate-600 max-w-[120px] whitespace-normal">${idBadges}</td><td class="p-2 font-black text-slate-700 whitespace-nowrap">${window.formatMinguo(stat.dateObj).split('(')[0]}</td><td class="p-2 text-center font-black text-[#1E3A8A]">${stat.A||'-'}</td><td class="p-2 text-center font-black text-[#1E3A8A]">${stat.B||'-'}</td><td class="p-2 font-black text-lg text-slate-900 text-center bg-slate-50/50">${stat.total}</td><td class="p-2 text-center bg-[#FCF9F2]"><input type="number" class="border border-[#B45309] rounded px-2 py-1 w-16 text-center font-black text-[#B45309] outline-none focus:ring-1 focus:ring-orange-400" value="${reportVal}" onchange="updateContractorReport('${dStr}', this.value)"></td><td class="p-2 text-center">${statusHtml}</td></tr>`;
             });
         };
 
@@ -1047,13 +1059,12 @@
             });
             const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' }); 
             const link = document.createElement("a"); link.href = URL.createObjectURL(blob); 
-            link.download = `預壘樁進度與試體追蹤表_V16.csv`; link.click();
+            link.download = `預壘樁進度與試體追蹤表_V16.1.csv`; link.click();
         };
 
         window.showModal = (title, msg, type) => { document.getElementById('custom-modal-header').innerHTML = `<i class="fa-solid fa-${type === 'success' ? 'circle-check text-emerald-500' : 'triangle-exclamation text-red-500'}"></i> ${title}`; document.getElementById('custom-modal-message').innerHTML = msg; document.getElementById('custom-modal').classList.remove('hidden'); };
         window.closeModal = () => document.getElementById('custom-modal').classList.add('hidden');
 
-        // 強制初始化
         window.refreshAll();
         initFirebase();
     </script>
