@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>衛生福利部防疫中心興建工程 - 試體管制系統 V16.6 終極實戰版</title>
+    <title>衛生福利部防疫中心興建工程 - 試體管制系統 V16.7 終極穩定版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/svg-pan-zoom@3.6.1/dist/svg-pan-zoom.min.js"></script>
@@ -13,20 +13,21 @@
         :root { --bg-color: #F8FAFC; --text-main: #0F172A; --border-color: #CBD5E1; --color-blue-deep: #1E3A8A; --color-orange-deep: #B45309; --color-green-deep: #166534; }
         body { font-family: 'Noto Sans TC', sans-serif; background-color: var(--bg-color); color: var(--text-main); letter-spacing: 0.02em; scroll-behavior: smooth; }
         
-        /* 🔥 V16.6 彈性與極限單行表格設計 */
-        .table-header th { font-size: 14px; font-weight: 900; padding: 12px 4px; background-color: #FFFFFF; color: #1E293B; border-bottom: 2px solid #94A3B8; position: sticky; top: 0; z-index: 20; text-align: center; white-space: nowrap; }
+        /* 🔥 表格設計：強制不換行，適應單螢幕 */
+        .table-header th { font-size: 14px; font-weight: 900; padding: 10px 4px; background-color: #FFFFFF; color: #1E293B; border-bottom: 2px solid #94A3B8; position: sticky; top: 0; z-index: 20; text-align: center; white-space: nowrap; }
         .modern-row td { padding: 6px 4px; font-size: 14px; line-height: 1.4; vertical-align: middle; border-bottom: 1px solid var(--border-color); transition: all 0.2s ease; text-align: center; font-weight: 700; }
         .modern-row:hover:not(.completed-row) { background-color: #F1F5F9; box-shadow: inset 4px 0 0 0 var(--color-blue-deep); }
         
-        /* 🔥 V16.6 對應樁號與備註：強制單行、縮小字體、不換行 */
+        /* 🔥 樁號與備註：寬度縮小，字體 14px，強制單行不折行 */
         .pile-input, .remark-input { 
             border: 2px solid #94A3B8; border-radius: 6px; padding: 0 8px; width: 100%; 
-            transition: all 0.2s; background: #FFFFFF; height: 36px; text-align: left;
+            font-size: 14px; font-weight: 900; transition: all 0.2s; 
+            background: #FFFFFF; height: 34px; text-align: left;
             white-space: nowrap; overflow-x: auto; font-family: 'JetBrains Mono', monospace;
         }
-        .pile-input { color: var(--color-blue-deep); font-size: 12px; letter-spacing: -0.2px; font-weight: 900; }
-        .remark-input { color: #334155; font-size: 12px; border: 1px solid #94A3B8; background: #F8FAFC; font-weight: 700; }
-        .pile-input:focus, .remark-input:focus { border-color: var(--color-blue-deep); outline: none; box-shadow: 0 0 0 4px rgba(30, 58, 138, 0.15); background-color: #FFFFFF; }
+        .pile-input { color: var(--color-blue-deep); }
+        .remark-input { color: #334155; border: 1px solid #94A3B8; background: #F8FAFC; }
+        .pile-input:focus, .remark-input:focus { border-color: var(--color-blue-deep); outline: none; box-shadow: 0 0 0 3px rgba(30, 58, 138, 0.15); background-color: #FFFFFF; }
         
         .pile-input::-webkit-scrollbar, .remark-input::-webkit-scrollbar { height: 4px; }
         .pile-input::-webkit-scrollbar-thumb, .remark-input::-webkit-scrollbar-thumb { background-color: #CBD5E1; border-radius: 4px; }
@@ -36,20 +37,19 @@
         .completed-row { background-color: #F8FAFC !important; opacity: 0.85; transition: all 0.3s ease; }
         .completed-row input[type="text"] { cursor: not-allowed; opacity: 0.8; } 
         
-        /* 🔥 V16.6 強度膠囊：精確固定大小與字體，適應小數點 */
+        /* 🔥 強度膠囊：固定 45px，字體縮小適應小數點，改用 text 杜絕 Bug */
         .strength-input { 
-            border: 2px solid #CBD5E1; border-radius: 6px; 
+            border: 2px solid #CBD5E1; border-radius: 4px; 
             text-align: center; font-weight: 900; font-family: 'JetBrains Mono', monospace; 
-            width: 55px; height: 34px; font-size: 13px; color: #1E3A8A; transition: all 0.2s; 
-            background-color: #FFFFFF; box-shadow: inset 0 1px 2px rgba(0,0,0,0.05); padding: 0 2px;
+            width: 45px; height: 32px; font-size: 12px; color: #1E3A8A; transition: all 0.2s; 
+            background-color: #FFFFFF; box-shadow: inset 0 1px 2px rgba(0,0,0,0.05); padding: 0;
         }
         .strength-input:focus { border-color: #2563EB; outline: none; box-shadow: 0 0 0 3px rgba(37,99,235,0.2); }
-        .strength-input::-webkit-outer-spin-button, .strength-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
         
         .strength-capsule {
             display: inline-flex; align-items: center; justify-content: center;
-            width: 55px; height: 34px; background-color: #E0E7FF; border: 1px solid #A5B4FC;
-            border-radius: 6px; color: #3730A3; font-weight: 900; font-size: 13px;
+            width: 45px; height: 32px; background-color: #E0E7FF; border: 1px solid #A5B4FC;
+            border-radius: 4px; color: #3730A3; font-weight: 900; font-size: 12px;
             font-family: 'JetBrains Mono', monospace; box-shadow: 0 1px 2px rgba(0,0,0,0.05);
         }
 
@@ -58,15 +58,8 @@
         .avg-fail { background-color: #FEE2E2; color: #991B1B; border: 2px solid #F87171; }
         .avg-none { background-color: #F1F5F9; color: #94A3B8; border: 2px solid #CBD5E1; }
 
-        /* 跳色日期選擇器 */
-        .date-picker-highlight {
-            background-color: #FEF3C7; border: 2px solid #F59E0B; color: #B45309; font-weight: 900;
-            padding: 4px 8px; border-radius: 6px; outline: none; cursor: pointer; transition: all 0.2s;
-            font-size: 13px; font-family: 'JetBrains Mono', monospace; box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
-        }
-        .date-picker-highlight:hover, .date-picker-highlight:focus {
-            background-color: #FDE68A; border-color: #D97706; transform: translateY(-1px);
-        }
+        .date-picker-highlight { background-color: #FEF3C7; border: 2px solid #F59E0B; color: #B45309; font-weight: 900; padding: 4px 8px; border-radius: 6px; outline: none; cursor: pointer; transition: all 0.2s; font-size: 13px; font-family: 'JetBrains Mono', monospace; box-shadow: inset 0 1px 3px rgba(0,0,0,0.1); }
+        .date-picker-highlight:hover, .date-picker-highlight:focus { background-color: #FDE68A; border-color: #D97706; transform: translateY(-1px); }
 
         .cal-tag { font-size: 12px; font-weight: 900; padding: 4px 6px; border-radius: 4px; margin-bottom: 4px; border-left: 4px solid transparent; box-shadow: 0 1px 2px rgba(0,0,0,0.1); white-space: normal; word-wrap: break-word; line-height: 1.3; border: 1px solid #CBD5E1; }
         .tag-sample { background-color: #DBEAFE; border-left-color: var(--color-blue-deep); color: #1E3A8A; }
@@ -93,7 +86,7 @@
         .ai-banner-wrapper { background: linear-gradient(90deg, #FDE68A, #FDBA74, #FDE68A); background-size: 200% 200%; animation: gradient-shift 5s ease infinite; padding: 2px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); }
         @keyframes gradient-shift { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
 
-        /* 懸浮滾動按鈕 */
+        /* 🔥 懸浮滾動按鈕 */
         .fab-btn { width: 45px; height: 45px; background-color: #1E293B; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); transition: all 0.3s; border: 2px solid #334155; opacity: 0.8; z-index: 90; cursor: pointer; }
         .fab-btn:hover { background-color: #2563EB; border-color: #60A5FA; transform: translateY(-3px); opacity: 1; box-shadow: 0 6px 15px rgba(37,99,235,0.4); }
 
@@ -117,7 +110,7 @@
         <button onclick="window.scrollTo({top: document.body.scrollHeight, behavior: 'smooth'})" class="fab-btn" title="捲到底部"><i class="fa-solid fa-chevron-down"></i></button>
     </div>
 
-    <div class="max-w-[1700px] mx-auto space-y-5">
+    <div class="max-w-[1600px] mx-auto space-y-5">
         
         <div class="bg-white rounded-xl shadow p-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border border-slate-300">
             <div>
@@ -125,18 +118,18 @@
                     <div class="w-10 h-10 rounded-lg bg-slate-800 text-white flex items-center justify-center shadow"><i class="fa-solid fa-building-shield"></i></div>
                     防疫中心興建工程 QC 管制
                 </h1>
-                <p class="text-slate-600 mt-1 text-sm font-bold flex flex-wrap items-center gap-2">預壘樁試體管制排程系統 <span class="bg-blue-100 text-blue-800 px-2 py-0.5 rounded-md text-xs font-black border border-blue-300 shadow-sm"><i class="fa-solid fa-shield-halved"></i> V16.6 終極實戰防護版</span></p>
+                <p class="text-slate-600 mt-1 text-sm font-bold flex flex-wrap items-center gap-2">預壘樁試體管制排程系統 <span class="bg-blue-100 text-blue-800 px-2 py-0.5 rounded-md text-xs font-black border border-blue-300 shadow-sm"><i class="fa-solid fa-shield-halved"></i> V16.7 終極穩定版</span></p>
             </div>
             
             <div class="flex items-center gap-3">
-                <div class="flex items-center gap-2 px-3 py-2 bg-slate-50 rounded-lg border border-slate-200 shadow-inner">
-                    <span class="text-xs font-black text-slate-500 uppercase tracking-wider">設計強度(fc')</span>
+                <div class="flex items-center gap-2 px-4 py-2 bg-slate-50 rounded-lg border border-slate-200 shadow-inner">
+                    <span class="text-xs font-black text-slate-500 uppercase tracking-wider">設計強度(fc') 固定值</span>
                     <div class="flex items-center gap-1">
-                        <span class="w-16 bg-slate-200 border border-slate-300 rounded text-center font-black text-slate-700 text-sm py-1 shadow-sm">280</span>
+                        <span class="w-14 bg-slate-200 border border-slate-300 rounded text-center font-black text-slate-700 text-base py-0.5 shadow-sm">280</span>
                         <span class="text-[10px] font-bold text-slate-400">kgf/cm²</span>
                     </div>
                 </div>
-                <div id="sync-status" class="flex items-center gap-2 px-3 py-2 bg-[#EFF6FF] rounded-lg text-sm font-black text-blue-800 border border-blue-200 shadow-sm"><i class="fa-solid fa-cloud-check"></i> 系統啟動中...</div>
+                <div id="sync-status" class="flex items-center gap-2 px-3 py-2.5 bg-[#EFF6FF] rounded-lg text-sm font-black text-blue-800 border border-blue-200 shadow-sm"><i class="fa-solid fa-cloud-check"></i> 系統啟動中...</div>
             </div>
         </div>
 
@@ -281,21 +274,21 @@
             </div>
 
             <div id="table-view" class="bg-white shadow-lg rounded-xl border border-slate-300 overflow-x-auto relative">
-                <table class="w-full border-collapse table-fixed min-w-[1900px]">
+                <table class="w-full border-collapse table-fixed min-w-[1250px]">
                     <thead class="table-header shadow-sm border-b border-slate-300">
                         <tr>
                             <th style="width: 50px;">編號</th>
                             <th style="width: 50px; color:#1E3A8A;">數量</th>
-                            <th style="width: 450px; text-align:left; padding-left:12px;">對應樁號 (單行顯示) <i class="fa-solid fa-pen-to-square ml-1 opacity-60 text-[10px]"></i></th>
+                            <th style="width: 300px; text-align:left; padding-left:8px;">對應樁號 (單行) <i class="fa-solid fa-pen-to-square ml-1 opacity-60 text-[10px]"></i></th>
                             <th style="width: 100px; background:#EFF6FF; color:#1E3A8A;">取樣(T)</th>
                             <th style="width: 100px; background:#F8FAFC;">拆模(T+1)</th>
                             <th style="width: 100px; background:#FFF7ED; color:#B45309;">收件(二/五)</th>
                             <th style="width: 100px; background:#F0FDF4; color:#166534;">抗壓(T+28)</th>
                             
-                            <th style="width: 210px; background:#EEF2FF; border-left:1px solid #C7D2FE;">試體強度 #1 #2 #3</th>
-                            <th style="width: 70px; background:#EEF2FF; color:#3730A3;">平均值</th>
+                            <th style="width: 180px; background:#EEF2FF; border-left:1px solid #C7D2FE;">強度 #1 #2 #3 (45px)</th>
+                            <th style="width: 70px; background:#EEF2FF; color:#3730A3;">平均</th>
                             
-                            <th style="width: 250px; text-align:left; padding-left:12px;">備註 / 狀態 (單行顯示)</th>
+                            <th style="width: 200px; text-align:left; padding-left:8px;">備註/狀態 (單行)</th>
                         </tr>
                     </thead>
                     <tbody id="schedule-body" class="bg-white divide-y divide-slate-200"></tbody>
@@ -386,7 +379,7 @@
 
     <div id="custom-modal" class="fixed inset-0 z-[100] flex items-center justify-center hidden bg-slate-900/70 backdrop-blur-sm transition-opacity px-4"><div class="bg-white rounded-xl shadow-2xl max-w-sm w-full overflow-hidden border border-slate-300"><div class="p-4 border-b border-slate-200 flex items-center gap-2 text-base font-black text-slate-800" id="custom-modal-header"></div><div class="p-4 text-slate-700 text-sm leading-relaxed font-bold" id="custom-modal-message"></div><div class="p-3 bg-slate-100 text-right border-t border-slate-200"><button onclick="closeModal()" class="px-4 py-1.5 bg-slate-800 hover:bg-black text-white rounded font-black shadow transition text-sm">我知道了</button></div></div></div>
     
-    <div id="recon-modal" class="fixed inset-0 z-[100] flex items-center justify-center hidden bg-slate-900/70 backdrop-blur-sm transition-opacity px-4"><div class="bg-white rounded-xl shadow-2xl max-w-6xl w-full overflow-hidden flex flex-col max-h-[90vh] border border-slate-300"><div class="p-4 border-b border-slate-300 flex justify-between items-center bg-white sticky top-0 z-10"><h3 class="text-base font-black text-slate-800 flex items-center gap-2"><i class="fa-solid fa-scale-balanced text-slate-500 mr-1"></i> 數量申報勾稽表</h3><button onclick="closeReconModal()" class="w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 border border-slate-300 text-slate-600 hover:bg-slate-200 transition font-black"><i class="fa-solid fa-xmark"></i></button></div><div class="p-0 overflow-x-auto overflow-y-auto flex-1 bg-white"><table class="w-full text-left border-collapse min-w-[800px]"><thead class="bg-slate-50 sticky top-0 shadow-sm z-10 border-b border-slate-300"><tr><th class="p-3 border-b border-slate-300 text-slate-700 font-black text-xs text-center max-w-[120px]">排程編號</th><th class="p-3 border-b border-slate-300 text-slate-700 font-black text-xs">施工日期</th><th class="p-3 border-b border-slate-300 text-[#1E3A8A] font-black text-xs text-center">A車(系統)</th><th class="p-3 border-b border-slate-300 text-[#1E3A8A] font-black text-xs text-center">B車(系統)</th><th class="p-3 border-b border-slate-300 text-slate-900 font-black text-sm text-center bg-slate-100">總計</th><th class="p-3 border-b border-slate-300 text-[#B45309] font-black text-sm text-center bg-[#FFFBEB]">日報數量</th><th class="p-3 border-b border-slate-300 text-center font-black text-slate-600 text-xs">狀態</th></tr></thead><tbody id="recon-body" class="text-sm text-slate-800 divide-y divide-slate-200"></tbody></table></div><div class="p-3 border-t border-slate-300 bg-slate-100 flex justify-end"><button onclick="closeReconModal()" class="px-4 py-1.5 bg-slate-800 text-white rounded font-black shadow text-sm">關閉</button></div></div></div>
+    <div id="recon-modal" class="fixed inset-0 z-[100] flex items-center justify-center hidden bg-slate-900/70 backdrop-blur-sm transition-opacity px-4"><div class="bg-white rounded-xl shadow-2xl max-w-6xl w-full overflow-hidden flex flex-col max-h-[90vh] border border-slate-300"><div class="p-4 border-b border-slate-300 flex justify-between items-center bg-white sticky top-0 z-10"><h3 class="text-base font-black text-slate-800 flex items-center gap-2"><i class="fa-solid fa-scale-balanced text-slate-500 mr-1"></i> 數量申報勾稽表</h3><button onclick="closeReconModal()" class="w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 border border-slate-300 text-slate-600 hover:bg-slate-200 transition font-black"><i class="fa-solid fa-xmark"></i></button></div><div class="p-0 overflow-x-auto overflow-y-auto flex-1 bg-white"><table class="w-full text-left border-collapse min-w-[800px]"><thead class="bg-slate-50 sticky top-0 shadow-sm z-10 border-b border-slate-300"><tr><th class="p-3 border-b border-slate-300 text-slate-700 font-black text-xs text-center max-w-[120px]">排程編號</th><th class="p-3 border-b border-slate-300 text-slate-700 font-black text-xs">施工日期</th><th class="p-3 border-b border-slate-300 text-[#1E3A8A] font-black text-xs text-center">A車(系統)</th><th class="p-3 border-b border-slate-300 text-[#1E3A8A] font-black text-xs text-center">B車(系統)</th><th class="p-3 border-b border-slate-300 text-slate-900 font-black text-sm text-center bg-slate-100">總計</th><th class="p-3 border-b border-slate-300 text-[#B45309] font-black text-sm text-center bg-[#FFFBEB]">日報數量</th><th class="p-3 border-b border-slate-300 text-center font-black text-slate-600 text-xs">狀態</th></tr></thead><tbody id="recon-body" class="text-sm text-slate-800 divide-y divide-slate-200"></tbody></table></div><div class="p-3 border-t border-slate-300 bg-slate-100 flex justify-end"><button onclick="closeReconModal()" class="px-5 py-2 bg-slate-800 text-white rounded font-black shadow text-sm">關閉</button></div></div></div>
     
     <div id="matrix-modal" class="fixed inset-0 z-[100] flex items-center justify-center hidden bg-slate-900/80 backdrop-blur-sm transition-opacity px-4"><div class="bg-white rounded-xl shadow-2xl max-w-6xl w-full overflow-hidden flex flex-col max-h-[95vh] border border-slate-300"><div class="p-4 border-b border-slate-300 flex justify-between items-center bg-white sticky top-0 z-10"><h3 class="text-base font-black text-slate-800 flex items-center gap-2"><i class="fa-solid fa-border-all text-slate-500 mr-1"></i> 613 支防呆矩陣</h3><button onclick="closeMatrixModal()" class="w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 border border-slate-300 text-slate-600 hover:bg-slate-200 transition font-black"><i class="fa-solid fa-xmark"></i></button></div><div class="p-3 bg-slate-50 border-b border-slate-300 flex flex-wrap gap-3 items-center justify-between z-10 shadow-sm sticky top-0"><div class="flex gap-3 text-xs font-black items-center flex-wrap"><div class="flex items-center gap-1"><span class="w-3.5 h-3.5 block rounded bg-[#F1F5F9] border border-[#CBD5E1]"></span> 未登錄 (<span id="matrix-count-missing">0</span>)</div><div class="flex items-center gap-1"><span class="w-3.5 h-3.5 block rounded bg-[#1E3A8A] border border-[#172554] shadow-sm"></span> 已登錄 (<span id="matrix-count-ok">0</span>)</div><div class="flex items-center gap-1"><span class="w-3.5 h-3.5 block rounded bg-[#DC2626] border border-[#991B1B] shadow-sm"></span> 重複 (<span id="matrix-count-error">0</span>)</div></div><button onclick="closeMatrixModal()" class="px-3 py-1.5 bg-slate-800 text-white rounded text-xs font-black">關閉雷達</button></div><div class="p-4 overflow-y-auto flex-1 bg-slate-100"><div id="matrix-container" class="flex flex-wrap gap-1.5 justify-center md:justify-start"></div></div></div></div>
 
@@ -398,7 +391,7 @@
         const firebaseConfig = { apiKey: "AIzaSyAp1ZVuW95Api3kaQUPgttESZ0RGTEi8H8", authDomain: "cdc-qc-system.firebaseapp.com", projectId: "cdc-qc-system", storageBucket: "cdc-qc-system.firebasestorage.app", messagingSenderId: "745920606237", appId: "1:745920606237:web:7fb9c22a84de208e6e56f4" };
         const GAS_API_URL = "https://script.google.com/macros/s/AKfycbx1aCB8jyqFnPrekpu3QIAIWCaIpAeRIVjJOkDxTpzjOhw9oAk86NO4f1YhL6TkiZQedA/exec";
         
-        // 🔥 設計強度直接由常數控制，確保所有邏輯(包含圖表紅線)一致
+        // 🔥 設計強度直接由常數控制，確保所有邏輯(包含圖表紅線)一致，絕不允許修改
         const TARGET_STRENGTH = 280;
         
         // 確保 613 座標無損載入
@@ -477,7 +470,7 @@
         window.formatMinguo = (d) => { const y=d.getFullYear()-1911; const m=String(d.getMonth()+1).padStart(2,'0'); const dt=String(d.getDate()).padStart(2,'0'); const day=["日","一","二","三","四","五","六"][d.getDay()]; return `${y}/${m}/${dt}(${day})`; };
         const addDays = (d, days) => { let r=new Date(d); r.setDate(r.getDate()+days); return r; };
 
-        // 🔥 V16.6 防護網裝設：每個關鍵渲染區塊皆用 try/catch 保護，確保一個報錯不會拖垮全站
+        // 🔥 V16.6 防護網裝設：確保每個模組皆受保護，絕不全站當機
         window.refreshAll = () => { 
             try { window.generateSchedule(); } catch(e) { console.error('Schedule Error', e); }
             try { window.renderTable(window.currentFilter); } catch(e) { console.error('Table Error', e); }
@@ -564,27 +557,29 @@
                 }
 
                 const strData = window.strengthData[item.id] || { s1: '', s2: '', s3: '', avg: '' };
-                const v1 = strData.s1 || ''; const v2 = strData.s2 || ''; const v3 = strData.s3 || '';
-                const vAvg = strData.avg || '';
+                const v1 = strData.s1 !== '' ? strData.s1 : '';
+                const v2 = strData.s2 !== '' ? strData.s2 : '';
+                const v3 = strData.s3 !== '' ? strData.s3 : '';
+                const vAvg = strData.avg !== '' ? strData.avg : '';
                 
                 let avgBadgeClass = 'avg-none';
                 let avgDisplay = '-';
-                // 🔥 V16.6 防呆：確保 avg 真的有數字
+                // 🔥 V16.6 嚴密防護：確保 avg 是真正大於 0 的數字才渲染過關顏色
                 if(vAvg !== '' && !isNaN(parseFloat(vAvg))) {
                     avgDisplay = parseFloat(vAvg).toFixed(1);
                     if (parseFloat(vAvg) >= TARGET_STRENGTH) avgBadgeClass = 'avg-pass';
                     else avgBadgeClass = 'avg-fail';
                 }
 
-                // 🔥 V16.6 絕對固定尺寸的膠囊
+                // 🔥 V16.6 改用 type="text" 徹底避免瀏覽器清空數字框的Bug
                 let strengthHtml = '';
                 if(isT) {
                     strengthHtml = `
                         <td class="bg-indigo-50/30 border-l border-indigo-100">
                             <div class="flex gap-2 justify-center items-center">
-                                <span class="strength-capsule">${v1 || '-'}</span>
-                                <span class="strength-capsule">${v2 || '-'}</span>
-                                <span class="strength-capsule">${v3 || '-'}</span>
+                                <span class="strength-capsule">${v1 !== '' ? v1 : '-'}</span>
+                                <span class="strength-capsule">${v2 !== '' ? v2 : '-'}</span>
+                                <span class="strength-capsule">${v3 !== '' ? v3 : '-'}</span>
                             </div>
                         </td>
                         <td class="bg-indigo-50/30"><span class="avg-display ${avgBadgeClass}">${avgDisplay}</span></td>
@@ -593,16 +588,16 @@
                     strengthHtml = `
                         <td class="bg-indigo-50/30 border-l border-indigo-100">
                             <div class="flex gap-2 justify-center items-center h-full">
-                                <input type="number" class="strength-input" placeholder="#1" value="${v1}" onchange="updateStrength('${item.id}', 1, this.value)">
-                                <input type="number" class="strength-input" placeholder="#2" value="${v2}" onchange="updateStrength('${item.id}', 2, this.value)">
-                                <input type="number" class="strength-input" placeholder="#3" value="${v3}" onchange="updateStrength('${item.id}', 3, this.value)">
+                                <input type="text" class="strength-input" placeholder="#1" value="${v1}" onchange="updateStrength('${item.id}', 1, this.value)">
+                                <input type="text" class="strength-input" placeholder="#2" value="${v2}" onchange="updateStrength('${item.id}', 2, this.value)">
+                                <input type="text" class="strength-input" placeholder="#3" value="${v3}" onchange="updateStrength('${item.id}', 3, this.value)">
                             </div>
                         </td>
                         <td class="bg-indigo-50/30"><span class="avg-display ${avgBadgeClass}">${avgDisplay}</span></td>
                     `;
                 }
                 
-                // 🔥 V16.6 恢復原生 input text，杜絕折行
+                // 🔥 V16.6 恢復原生單行 text 標籤
                 tr.innerHTML = `<td class="font-black text-slate-800">${item.id}</td><td>${countBadge}</td><td class="pl-3 pr-3"><input type="text" class="pile-input" title="${pNum}" ${isT ? 'readonly' : ''} onchange="updatePile('${item.id}', this.value)" placeholder="輸入對應樁號..." value="${pNum}"></td><td class="bg-blue-50/70"><label class="flex justify-center items-center gap-1.5 cursor-pointer w-full h-full"><input type="checkbox" class="status-checkbox cb-sample" ${isS?'checked':''} onclick="toggleStatus('${item.id}', 'sample')"><span class="font-black whitespace-nowrap text-[15px] ${isS?'text-slate-400 line-through':'text-[#1E3A8A]'}">${window.formatMinguo(item.sampleDate).split('(')[0]}</span></label></td><td class="font-bold text-slate-600 whitespace-nowrap text-[15px]">${window.formatMinguo(item.demoldDate).split('(')[0]}</td><td class="bg-orange-50/70"><label class="flex justify-center items-center gap-1.5 cursor-pointer w-full h-full"><input type="checkbox" class="status-checkbox cb-lab" ${isL?'checked':''} onclick="toggleStatus('${item.id}', 'lab')"><span class="font-black whitespace-nowrap text-[15px] ${isL?'text-slate-400 line-through':'text-[#B45309]'}">${window.formatMinguo(item.collectDate).split('(')[0]}</span></label></td><td class="bg-green-50/70"><label class="flex justify-center items-center gap-1.5 cursor-pointer w-full h-full"><input type="checkbox" class="status-checkbox cb-test" ${isT?'checked':''} onclick="toggleStatus('${item.id}', 'test')"><span class="font-black whitespace-nowrap flex flex-col justify-center items-center text-[15px] ${isT?'text-slate-400 line-through':'text-[#166534]'}"><span>${window.formatMinguo(item.testDate).split('(')[0]}</span>${testBadge}</span></label></td>${strengthHtml}<td class="pl-3 pr-3"><input type="text" class="remark-input" ${isT?'readonly':''} onchange="updateRemark('${item.id}', this.value)" placeholder="輸入備註或狀態..." value="${window.remarks[item.id]||''}"></td>`;
                 tbody.appendChild(tr);
             });
@@ -611,7 +606,7 @@
         window.updateStrength = (id, index, val) => {
             if(!window.strengthData[id]) window.strengthData[id] = { s1: '', s2: '', s3: '', avg: '' };
             
-            // 🔥 V16.6 防呆：過濾空白與非數字，確保絕不產生 NaN
+            // 🔥 V16.6 防護：去除前後空白，若不是數字就當作空字串
             let numVal = val.trim();
             if(numVal === '' || isNaN(parseFloat(numVal))) {
                 numVal = '';
@@ -645,7 +640,7 @@
             window.updateCharts();
         }
 
-        // 🔥 V16.6 圖表引擎重構：嚴密過濾，保證不壞圖
+        // 🔥 V16.6 嚴格過濾引擎：絕不容許 NaN 出現在圖表內
         window.updateCharts = () => {
             if(!document.getElementById('view-schedule').classList.contains('hidden')) {
                 window.renderTable(window.currentFilter);
@@ -655,13 +650,13 @@
             const dateStart = document.getElementById('chart-date-start').value;
             const dateEnd = document.getElementById('chart-date-end').value;
             
-            // 🔥 過濾條件：一定要打勾「抗壓結案」且「平均值為合法數字」才納入圖表
+            // 🔥 防護：必須是「已勾選抗壓結案」且「平均強度大於0的有效數字」
             let validRecords = window.scheduleData.filter(i => {
-                if(!window.statusTest[i.id]) return false; // 必須勾選結案
+                if(!window.statusTest[i.id]) return false;
                 const str = window.strengthData && window.strengthData[i.id];
                 if (!str) return false;
                 const avgVal = parseFloat(str.avg);
-                return !isNaN(avgVal) && avgVal > 0; // 必須是合法大於0的數字
+                return !isNaN(avgVal) && avgVal > 0;
             });
             
             if (machineFilter !== 'ALL') {
@@ -758,7 +753,7 @@
                 document.getElementById('kpi-pass-rate').innerText = `0.0%`;
                 document.getElementById('kpi-sd').innerText = `0.0`;
                 if(trendChart) trendChart.destroy(); if(pieChart) pieChart.destroy();
-                document.getElementById('ai-report-content').innerHTML = `目前篩選區間內，尚無「已勾選抗壓結案」且「擁有平均強度數據」的試體排程。請在稽核表中確認輸入！`;
+                document.getElementById('ai-report-content').innerHTML = `目前篩選區間內，尚無「已勾選抗壓結案」且「擁有真實平均強度數據」的排程資料。系統僅呈現實際紀錄。`;
             }
         };
 
@@ -766,7 +761,7 @@
             let report = '';
             const scopeText = machine === 'ALL' ? '全區 (A車+B車)' : `${machine}車單一機具`;
             
-            report += `<p class="mb-3">本次針對 <b>${scopeText}</b> 篩選區間內的 <b>${total}</b> 組壓測數據進行演算法分析。設計強度目標值為 <b>${target}</b> kgf/cm²。</p>`;
+            report += `<p class="mb-3">本次針對 <b>${scopeText}</b> 篩選區間內的 <b>${total}</b> 組壓測數據進行演算法分析。設計強度目標值固定為 <b>${target}</b> kgf/cm²。</p>`;
             
             let sdStr = '';
             if (sd < 10) sdStr = '<span class="text-emerald-600 font-black">極佳 (標準差 < 10)</span>，代表機具鑽掘與水泥砂漿灌注之壓力、轉速極度穩定，品質重現性高';
@@ -778,25 +773,25 @@
             if (passRate == 100) {
                 report += `<p class="mb-3">2. <b>合格率檢核：</b> 區間內抗壓強度 <b>100% 達標</b>。平均強度達 <b>${avg}</b> kgf/cm²，超越設計要求。</p>`;
                 if (sd < 15) {
-                    report += `<p class="mt-5 p-5 bg-emerald-50 border-2 border-emerald-200 text-emerald-800 rounded-xl text-lg shadow-sm">✅ <b>監造與主管匯報建議講稿：</b><br>「本區間 ${scopeText} 施工品質優良，骨材與砂漿拌合均勻，強度不僅全數過關且波動極小。建議現場維持現行之鑽掘參數與斗仔配比工法，無需額外調整。」</p>`;
+                    report += `<p class="mt-5 p-4 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-lg text-[15px] shadow-sm">✅ <b>監造與主管匯報建議講稿：</b><br>「本區間 ${scopeText} 施工品質優良，骨材與砂漿拌合均勻，強度不僅全數過關且波動極小。建議現場維持現行之鑽掘參數與斗仔配比工法，無需額外調整。」</p>`;
                 } else {
-                    report += `<p class="mt-5 p-5 bg-blue-50 border-2 border-blue-200 text-blue-800 rounded-xl text-lg shadow-sm">✅ <b>監造與主管匯報建議講稿：</b><br>「本區間強度全數達標，結構安全無虞。惟近期數值波動稍微明顯，可能受地質卵礫石層或地下水位影響，建議現場主任可微調機具提管速度以維持最佳均勻度。」</p>`;
+                    report += `<p class="mt-5 p-4 bg-blue-50 border border-blue-200 text-blue-800 rounded-lg text-[15px] shadow-sm">✅ <b>監造與主管匯報建議講稿：</b><br>「本區間強度全數達標，結構安全無虞。惟近期數值波動稍微明顯，可能受地質卵礫石層或地下水位影響，建議現場主任可微調機具提管速度以維持最佳均勻度。」</p>`;
                 }
             } else {
                 report += `<p class="mb-3">2. <b>合格率檢核：</b> 區間內合格率為 <b class="text-red-600">${passRate}%</b>，並出現低於設計標準之異常值 (<b class="text-red-600">${min}</b> kgf/cm²)。</p>`;
-                report += `<p class="mt-5 p-5 bg-red-50 border-2 border-red-300 text-red-800 rounded-xl text-lg shadow-md animate-pulse">⚠️ <b>監造與主管匯報建議講稿 (警戒)：</b><br>「注意：本區間 ${scopeText} 部分強度逼近或低於設計邊界。建議立即啟動二級品管機制，<b>加強現場斗仔體積防呆查核</b>，並檢視拌合廠水泥配比。必要時對該異常樁號區域進行鑽心取樣或聲納檢測以確認樁體完整性。」</p>`;
+                report += `<p class="mt-5 p-4 bg-red-50 border border-red-300 text-red-800 rounded-lg text-[15px] shadow-sm animate-pulse">⚠️ <b>監造與主管匯報建議講稿 (警戒)：</b><br>「注意：本區間 ${scopeText} 部分強度逼近或低於設計邊界。建議立即啟動二級品管機制，<b>加強現場斗仔體積防呆查核</b>，並檢視拌合廠水泥配比。必要時對該異常樁號區域進行鑽心取樣或聲納檢測以確認樁體完整性。」</p>`;
             }
 
             document.getElementById('ai-report-content').innerHTML = report;
         }
 
         // ==========================================
-        // 原有之其他排程計算、圖表與雲端函數皆完整保留
+        // 舊有防呆與地圖繪製模組 (加入全域防護網)
         // ==========================================
         window.updateDashboard = () => {
             const usedA = new Set(); const usedB = new Set(); const workedDates = new Set(); const donePilesList = [];
             Object.entries(window.pileNumbers).forEach(([id, val]) => { 
-                const nums = (val.match(/\d+/g) || []).map(n => parseInt(n, 10)); 
+                const nums = (String(val).match(/\d+/g) || []).map(n => parseInt(n, 10)); 
                 if (nums.length > 0) { 
                     nums.forEach(n => { donePilesList.push(n); if (id.startsWith('A')) usedA.add(n); else if (id.startsWith('B')) usedB.add(n); }); 
                     const item = window.scheduleData.find(s => s.id === id); if (item) workedDates.add(window.toDateString(item.sampleDate)); 
@@ -874,7 +869,6 @@
             radarContainer.innerHTML = radarHtml;
         };
 
-        // 🔥 V16.6 安全繪製地圖機制
         window.renderMap = () => {
             const container = document.getElementById('map-container');
             if (!window.baseCoordinates || window.baseCoordinates.length === 0) return; 
@@ -883,7 +877,7 @@
             window.scheduleData.forEach(item => {
                 const pNumStr = window.pileNumbers[item.id] || '';
                 if (!pNumStr) return;
-                const nums = (pNumStr.match(/\d+/g) || []);
+                const nums = (String(pNumStr).match(/\d+/g) || []);
                 const isS = window.statusSample[item.id], isL = window.statusLab[item.id], isT = window.statusTest[item.id];
                 
                 let targetColor = '#FFFFFF', targetStroke = '#1E3A8A', zIndex = 1, textStatus = '已排程(未取樣)'; 
@@ -891,7 +885,6 @@
                 else if (isL) { targetColor = '#B45309'; targetStroke = '#78350F'; zIndex = 3; textStatus = '🚚 實驗室已收件'; }
                 else if (isS) { targetColor = '#1E3A8A'; targetStroke = '#172554'; zIndex = 2; textStatus = '🧱 已取樣'; }
 
-                // 安全解析日期
                 const sD = item.sampleDate ? window.formatMinguo(item.sampleDate).split('(')[0] : '-'; 
                 const lD = item.collectDate ? window.formatMinguo(item.collectDate).split('(')[0] : '-'; 
                 const tD = item.testDate ? window.formatMinguo(item.testDate).split('(')[0] : '-';
@@ -952,18 +945,17 @@
             }
         };
 
-        window.showTooltip = (evt, pile, sDate, lDate, tDate, status) => {
-            const tooltip = document.getElementById('map-tooltip');
-            tooltip.style.display = 'block'; tooltip.style.left = (evt.pageX + 15) + 'px'; tooltip.style.top = (evt.pageY + 15) + 'px';
-            let sType = window.specialPilesData[String(pile)]; let spAlert = '';
-            if (sType) {
-                const tName = sType === 'FULL' ? '安全監測樁 (全項)' : '安全監測樁 (部分)';
-                const tColor = sType === 'FULL' ? 'text-blue-400' : 'text-amber-400';
-                spAlert = `<div class="${tColor} text-[12px] mb-1 font-black"><i class="fa-solid fa-star"></i> ${tName}</div>`;
+        window.renderMatrixGrid = () => {
+            const counts = new Array(TOTAL_PILES_LIMIT + 1).fill(0);
+            Object.values(window.pileNumbers).forEach(val => { const nums = (String(val).match(/\d+/g) || []).map(n => parseInt(n, 10)); nums.forEach(n => { if (n >= 1 && n <= TOTAL_PILES_LIMIT) counts[n]++; }); });
+            const container = document.getElementById('matrix-container'); container.innerHTML = ''; let statMissing = 0, statOk = 0, statError = 0;
+            for (let i = 1; i <= TOTAL_PILES_LIMIT; i++) {
+                const box = document.createElement('div'); let statusClass = '';
+                if (counts[i] === 0) { statusClass = 'box-missing'; statMissing++; } else if (counts[i] === 1) { statusClass = 'box-ok'; statOk++; } else { statusClass = 'box-error'; statError++; box.title = `重複 ${counts[i]} 次！`; }
+                box.className = `matrix-box ${statusClass}`; box.innerText = i; container.appendChild(box);
             }
-            tooltip.innerHTML = `${spAlert}<div class="font-black text-base mb-1 border-b border-slate-500 pb-1 text-blue-100">樁號: P${pile}</div><div class="text-sm my-1 text-amber-300">狀態: ${status}</div><div class="text-[13px] text-slate-300 mt-2">取樣日: ${sDate}</div><div class="text-[13px] text-slate-300">收件日: ${lDate}</div><div class="text-[13px] text-slate-300">壓測日: ${tDate}</div>`;
+            document.getElementById('matrix-count-missing').innerText = statMissing; document.getElementById('matrix-count-ok').innerText = statOk; document.getElementById('matrix-count-error').innerText = statError;
         };
-        window.hideTooltip = () => { document.getElementById('map-tooltip').style.display = 'none'; };
 
         window.renderCalendar = () => { 
             const year = window.currentCalDate.getFullYear(), month = window.currentCalDate.getMonth();
@@ -999,27 +991,9 @@
             }
         };
 
-        window.openMatrixModal = () => { window.renderMatrixGrid(); document.getElementById('matrix-modal').classList.remove('hidden'); };
-        window.closeMatrixModal = () => { document.getElementById('matrix-modal').classList.add('hidden'); };
-        window.renderMatrixGrid = () => {
-            const counts = new Array(TOTAL_PILES_LIMIT + 1).fill(0);
-            Object.values(window.pileNumbers).forEach(val => { const nums = (val.match(/\d+/g) || []).map(n => parseInt(n, 10)); nums.forEach(n => { if (n >= 1 && n <= TOTAL_PILES_LIMIT) counts[n]++; }); });
-            const container = document.getElementById('matrix-container'); container.innerHTML = ''; let statMissing = 0, statOk = 0, statError = 0;
-            for (let i = 1; i <= TOTAL_PILES_LIMIT; i++) {
-                const box = document.createElement('div'); let statusClass = '';
-                if (counts[i] === 0) { statusClass = 'box-missing'; statMissing++; } else if (counts[i] === 1) { statusClass = 'box-ok'; statOk++; } else { statusClass = 'box-error'; statError++; box.title = `重複 ${counts[i]} 次！`; }
-                box.className = `matrix-box ${statusClass}`; box.innerText = i; container.appendChild(box);
-            }
-            document.getElementById('matrix-count-missing').innerText = statMissing; document.getElementById('matrix-count-ok').innerText = statOk; document.getElementById('matrix-count-error').innerText = statError;
-        };
-
-        window.openReconModal = () => { window.renderReconTable(); document.getElementById('recon-modal').classList.remove('hidden'); };
-        window.closeReconModal = () => { document.getElementById('recon-modal').classList.add('hidden'); };
-        window.updateContractorReport = (dateStr, val) => { const num = parseInt(val, 10); if (isNaN(num)) delete window.contractorReports[dateStr]; else window.contractorReports[dateStr] = num; window.saveDataToCloud(); window.renderReconTable(); };
-        
         window.renderReconTable = () => {
             const dailyStats = {};
-            window.scheduleData.forEach(item => { const count = (window.pileNumbers[item.id] || "").match(/\d+/g)?.length || 0; if (count > 0) { const dateStr = window.toDateString(item.sampleDate); if (!dailyStats[dateStr]) dailyStats[dateStr] = { A: 0, B: 0, total: 0, dateObj: item.sampleDate, ids: [] }; dailyStats[dateStr][item.machine] += count; dailyStats[dateStr].total += count; dailyStats[dateStr].ids.push(item.id); } });
+            window.scheduleData.forEach(item => { const count = (String(window.pileNumbers[item.id] || "")).match(/\d+/g)?.length || 0; if (count > 0) { const dateStr = window.toDateString(item.sampleDate); if (!dailyStats[dateStr]) dailyStats[dateStr] = { A: 0, B: 0, total: 0, dateObj: item.sampleDate, ids: [] }; dailyStats[dateStr][item.machine] += count; dailyStats[dateStr].total += count; dailyStats[dateStr].ids.push(item.id); } });
             const sortedDates = Object.keys(dailyStats).sort((a, b) => new Date(b) - new Date(a));
             const tbody = document.getElementById('recon-body'); tbody.innerHTML = '';
             if(sortedDates.length === 0) { tbody.innerHTML = '<tr><td colspan="7" class="p-8 text-center text-slate-500 font-black">尚無打設登錄資料</td></tr>'; return; }
@@ -1036,6 +1010,20 @@
             });
         };
 
+        window.showTooltip = (evt, pile, sDate, lDate, tDate, status) => {
+            const tooltip = document.getElementById('map-tooltip'); tooltip.style.display = 'block'; tooltip.style.left = (evt.pageX + 15) + 'px'; tooltip.style.top = (evt.pageY + 15) + 'px';
+            let sType = window.specialPilesData[String(pile)]; let spAlert = '';
+            if (sType) { const tName = sType === 'FULL' ? '安全監測樁 (全項)' : '安全監測樁 (部分)'; const tColor = sType === 'FULL' ? 'text-blue-400' : 'text-amber-400'; spAlert = `<div class="${tColor} text-xs mb-1 font-black"><i class="fa-solid fa-star"></i> ${tName}</div>`; }
+            tooltip.innerHTML = `${spAlert}<div class="font-black text-base mb-1 border-b border-slate-500 pb-1 text-blue-100">樁號: P${pile}</div><div class="text-sm my-1 text-amber-300">狀態: ${status}</div><div class="text-xs text-slate-300 mt-1">取樣日: ${sDate}</div><div class="text-xs text-slate-300">收件日: ${lDate}</div><div class="text-xs text-slate-300">壓測日: ${tDate}</div>`;
+        };
+        window.hideTooltip = () => { document.getElementById('map-tooltip').style.display = 'none'; };
+
+        window.openMatrixModal = () => { window.renderMatrixGrid(); document.getElementById('matrix-modal').classList.remove('hidden'); };
+        window.closeMatrixModal = () => { document.getElementById('matrix-modal').classList.add('hidden'); };
+        window.openReconModal = () => { window.renderReconTable(); document.getElementById('recon-modal').classList.remove('hidden'); };
+        window.closeReconModal = () => { document.getElementById('recon-modal').classList.add('hidden'); };
+        window.updateContractorReport = (dateStr, val) => { const num = parseInt(val, 10); if (isNaN(num)) delete window.contractorReports[dateStr]; else window.contractorReports[dateStr] = num; window.saveDataToCloud(); window.renderReconTable(); };
+
         window.exportCSV = () => {
             let csv = "\uFEFF取樣編號,打設樁號,取樣日期,取樣狀態,實驗室收件,收件狀態,抗壓會驗,結案狀態,試體1(kgf/cm2),試體2(kgf/cm2),試體3(kgf/cm2),平均強度,系統備註\n";
             window.scheduleData.forEach(i => { 
@@ -1048,17 +1036,33 @@
             link.download = `預壘樁進度與試體追蹤表_V16.6.csv`; link.click();
         };
 
-        window.searchMapPile = () => {
-            const val = document.getElementById('map-search-input').value.trim(); if (!val) return;
-            const num = val.replace(/\D/g, ''); const circle = document.getElementById('map-pile-' + num);
-            if (circle) { document.querySelectorAll('.pile-circle').forEach(c => c.classList.remove('highlight-pile')); circle.classList.add('highlight-pile'); } 
-            else { window.showModal("搜尋失敗", `找不到樁號 P${num} 的座標紀錄。`, "error"); }
+        window.syncFromContractor = async () => {
+            const btn = document.getElementById('btn-sync-api'); const originalHtml = btn.innerHTML;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-sm opacity-80"></i> 同步中...'; btn.disabled = true;
+            try {
+                const response = await fetch(GAS_API_URL); if (!response.ok) throw new Error("API 回應異常");
+                const dataMatrix = await response.json(); const groupedData = {};
+                for (let i = 1; i < dataMatrix.length; i++) {
+                    const cols = dataMatrix[i]; if (cols.length < 6) continue;
+                    const rawPile = String(cols[0] || '').trim(); const dateStr = String(cols[1] || '').trim().replace(/\//g, '-'); const machine = String(cols[2] || '').trim();
+                    const pileNum = rawPile.replace(/\D/g, ''); const machLetter = machine.includes('A') ? 'A' : (machine.includes('B') ? 'B' : '');
+                    if (pileNum && dateStr && machLetter) { const key = `${dateStr}_${machLetter}`; if (!groupedData[key]) groupedData[key] = []; groupedData[key].push(pileNum); }
+                }
+                let updatedCount = 0;
+                window.scheduleData.forEach(item => {
+                    const itemDateStr = window.toDateString(item.sampleDate); const key = `${itemDateStr}_${item.machine}`;
+                    if (groupedData[key]) { const newPileStr = groupedData[key].join('、'); if (!window.statusTest[item.id] && window.pileNumbers[item.id] !== newPileStr) { window.pileNumbers[item.id] = newPileStr; updatedCount++; } }
+                });
+                window.saveDataToCloud(); window.refreshAll(); 
+                if (updatedCount > 0) window.showModal("同步成功！", `透過 API 自動更新了 <b class="text-blue-600 text-lg">${updatedCount}</b> 筆排程！`, "success"); 
+                else window.showModal("進度載入完成", "地圖與資料已更新，目前進度已是最新狀態。", "success"); 
+            } catch (error) { window.showModal("API 同步失敗", error.message, "error"); } finally { btn.innerHTML = originalHtml; btn.disabled = false; }
         };
 
         window.showModal = (title, msg, type) => { document.getElementById('custom-modal-header').innerHTML = `<i class="fa-solid fa-${type === 'success' ? 'circle-check text-emerald-500' : 'triangle-exclamation text-red-500'}"></i> ${title}`; document.getElementById('custom-modal-message').innerHTML = msg; document.getElementById('custom-modal').classList.remove('hidden'); };
         window.closeModal = () => document.getElementById('custom-modal').classList.add('hidden');
 
-        // 初始化
+        // 強制啟動
         window.refreshAll();
         initFirebase();
     </script>
