@@ -3,198 +3,206 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>衛生福利部防疫中心興建工程 - 試體管制系統 (穩定還原版)</title>
+    <title>衛生福利部防疫中心興建工程 - 試體管制系統 V16.9 完全修復版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/svg-pan-zoom@3.6.1/dist/svg-pan-zoom.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
         :root { --bg-color: #F8FAFC; --text-main: #0F172A; --border-color: #CBD5E1; --color-blue-deep: #1E3A8A; --color-orange-deep: #B45309; --color-green-deep: #166534; }
-        body { font-family: 'Noto Sans TC', sans-serif; background-color: var(--bg-color); color: var(--text-main); letter-spacing: 0.01em; scroll-behavior: smooth; }
+        body { font-family: 'Noto Sans TC', sans-serif; background-color: var(--bg-color); color: var(--text-main); letter-spacing: 0.02em; scroll-behavior: smooth; }
         
-        /* 表格設計：強制不換行，確保畫面整齊 */
-        .table-header th { font-size: 15px; font-weight: 900; padding: 14px 10px; background-color: #FFFFFF; color: #1E293B; border-bottom: 2px solid #94A3B8; position: sticky; top: 0; z-index: 20; text-align: center; white-space: nowrap; }
-        .modern-row td { padding: 12px 10px; font-size: 15px; line-height: 1.5; vertical-align: middle; border-bottom: 1px solid var(--border-color); transition: all 0.2s ease; text-align: center; font-weight: 700; }
+        /* 表格設計：強制單行不換行 */
+        .table-header th { font-size: 14px; font-weight: 900; padding: 12px 6px; background-color: #FFFFFF; color: #1E293B; border-bottom: 2px solid #94A3B8; position: sticky; top: 0; z-index: 20; text-align: center; white-space: nowrap; }
+        .modern-row td { padding: 8px 6px; font-size: 14px; line-height: 1.5; vertical-align: middle; border-bottom: 1px solid var(--border-color); transition: all 0.2s ease; text-align: center; font-weight: 700; }
         .modern-row:hover:not(.completed-row) { background-color: #F1F5F9; box-shadow: inset 4px 0 0 0 var(--color-blue-deep); }
         
         /* 樁號與備註：強制單行不換行，橫向捲動 */
         .pile-input, .remark-input { 
-            border: 2px solid #94A3B8; border-radius: 8px; padding: 0 10px; width: 100%; 
-            font-size: 15px; font-weight: 900; transition: all 0.2s; 
-            background: #FFFFFF; height: 42px; text-align: left;
+            border: 2px solid #94A3B8; border-radius: 6px; padding: 0 10px; width: 100%; 
+            font-size: 14px; font-weight: 900; transition: all 0.2s; 
+            background: #FFFFFF; height: 38px; text-align: left;
             white-space: nowrap; overflow-x: auto; font-family: 'JetBrains Mono', monospace;
         }
-        .pile-input { color: var(--color-blue-deep); }
-        .remark-input { color: #334155; font-size: 14px; border: 1px solid #94A3B8; background: #F8FAFC; font-weight: 700; }
+        .pile-input { color: var(--color-blue-deep); font-size: 13px; }
+        .remark-input { color: #334155; font-size: 13px; border: 1px solid #94A3B8; background: #F8FAFC; font-weight: 700; }
         .pile-input:focus, .remark-input:focus { border-color: var(--color-blue-deep); outline: none; box-shadow: 0 0 0 4px rgba(30, 58, 138, 0.15); background-color: #FFFFFF; }
         
         .pile-input::-webkit-scrollbar, .remark-input::-webkit-scrollbar { height: 4px; }
         .pile-input::-webkit-scrollbar-thumb, .remark-input::-webkit-scrollbar-thumb { background-color: #CBD5E1; border-radius: 4px; }
 
-        .status-checkbox { width: 1.4rem; height: 1.4rem; cursor: pointer; border-radius: 4px; }
+        .status-checkbox { width: 1.3rem; height: 1.3rem; cursor: pointer; border-radius: 4px; }
         .cb-sample { accent-color: var(--color-blue-deep); } .cb-lab { accent-color: var(--color-orange-deep); } .cb-test { accent-color: var(--color-green-deep); }
-        .completed-row { background-color: #F8FAFC !important; opacity: 0.8; transition: all 0.3s ease; }
+        .completed-row { background-color: #F8FAFC !important; opacity: 0.85; transition: all 0.3s ease; }
         .completed-row input[type="text"] { cursor: not-allowed; opacity: 0.8; } 
         
-        .cal-tag { font-size: 13px; font-weight: 900; padding: 4px 8px; border-radius: 4px; margin-bottom: 4px; border-left: 4px solid transparent; box-shadow: 0 1px 2px rgba(0,0,0,0.1); white-space: normal; word-wrap: break-word; line-height: 1.4; border: 1px solid #CBD5E1; }
+        .cal-tag { font-size: 12px; font-weight: 900; padding: 4px 6px; border-radius: 4px; margin-bottom: 4px; border-left: 4px solid transparent; box-shadow: 0 1px 2px rgba(0,0,0,0.1); white-space: normal; word-wrap: break-word; line-height: 1.3; border: 1px solid #CBD5E1; }
         .tag-sample { background-color: #DBEAFE; border-left-color: var(--color-blue-deep); color: #1E3A8A; }
         .tag-demold { background-color: #E2E8F0; border-left-color: #64748B; color: #334155; }
         .tag-lab { background-color: #FEF3C7; border-left-color: var(--color-orange-deep); color: #92400E; }
         .tag-test { background-color: #D1FAE5; border-left-color: var(--color-green-deep); color: #065F46; }
         .calendar-scroll::-webkit-scrollbar { width: 6px; } .calendar-scroll::-webkit-scrollbar-thumb { background-color: #94A3B8; border-radius: 10px; }
 
-        .matrix-box { width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; font-size: 0.95rem; font-weight: 900; border-radius: 8px; transition: all 0.2s; cursor: default; }
+        .matrix-box { width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; font-size: 0.9rem; font-weight: 900; border-radius: 6px; transition: all 0.2s; cursor: default; }
         .box-missing { background-color: #F1F5F9; color: #64748B; border: 1px solid #CBD5E1; } 
         .box-ok { background-color: var(--color-blue-deep); color: #FFFFFF; border: 1px solid #172554; box-shadow: 0 2px 4px rgba(30, 58, 138, 0.3); } 
         .box-error { background-color: #DC2626; color: #FFFFFF; border: 1px solid #991B1B; box-shadow: 0 0 8px rgba(220, 38, 38, 0.6); animation: pulse-border 2s infinite; } 
 
-        #map-container { width: 100%; height: 550px; background-color: #F8FAFC; border-radius: 12px; overflow: hidden; position: relative; border: 2px solid #CBD5E1; box-shadow: inset 0 2px 10px rgba(0,0,0,0.05); cursor: grab; max-width: 100%; }
+        #map-container { width: 100%; height: 500px; background-color: #F8FAFC; border-radius: 12px; overflow: hidden; position: relative; border: 2px solid #CBD5E1; box-shadow: inset 0 2px 10px rgba(0,0,0,0.05); cursor: grab; max-width: 100%; }
         .pile-circle { transition: all 0.2s ease; cursor: pointer; }
         .pile-circle:hover:not(.highlight-pile) { stroke: #111827 !important; stroke-width: 40 !important; }
         .highlight-pile { stroke: #EF4444 !important; fill: #FCA5A5 !important; stroke-width: 80 !important; animation: map-pulse 1s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
         @keyframes map-pulse { 0%, 100% { opacity: 1; } 50% { opacity: .6; } }
-        #map-tooltip { position: absolute; pointer-events: none; background: rgba(15, 23, 42, 0.95); color: white; padding: 14px 18px; border-radius: 12px; font-size: 14px; font-weight: 700; z-index: 9999; display: none; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3); border: 1px solid #334155; line-height: 1.6; }
+        #map-tooltip { position: absolute; pointer-events: none; background: rgba(15, 23, 42, 0.95); color: white; padding: 12px 16px; border-radius: 8px; font-size: 13px; font-weight: 700; z-index: 9999; display: none; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3); border: 1px solid #334155; line-height: 1.5; }
         
-        .ai-banner-wrapper { background: linear-gradient(90deg, #FDE68A, #FDBA74, #FDE68A); background-size: 200% 200%; animation: gradient-shift 5s ease infinite; padding: 2px; border-radius: 1rem; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); }
+        .ai-banner-wrapper { background: linear-gradient(90deg, #FDE68A, #FDBA74, #FDE68A); background-size: 200% 200%; animation: gradient-shift 5s ease infinite; padding: 2px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); }
         @keyframes gradient-shift { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
 
         /* 懸浮滾動按鈕 */
-        .fab-btn { width: 48px; height: 48px; background-color: #1E293B; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); transition: all 0.3s; border: 2px solid #334155; opacity: 0.8; z-index: 90; cursor: pointer; }
+        .fab-btn { width: 45px; height: 45px; background-color: #1E293B; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); transition: all 0.3s; border: 2px solid #334155; opacity: 0.8; z-index: 90; cursor: pointer; }
         .fab-btn:hover { background-color: #2563EB; border-color: #60A5FA; transform: translateY(-3px); opacity: 1; box-shadow: 0 6px 15px rgba(37,99,235,0.4); }
 
         details > summary { list-style: none; }
         details > summary::-webkit-details-marker { display: none; }
         details[open] > summary .chevron { transform: rotate(180deg); }
+
+        @media print {
+            .no-print { display: none !important; }
+            body { background: white; }
+            .sys-card { box-shadow: none; border: 1px solid #000; break-inside: avoid; }
+            .bg-blue-600 { background-color: #fff !important; color: #000 !important; }
+        }
     </style>
 </head>
 <body class="p-3 md:p-6 relative">
 
     <div id="map-tooltip"></div>
 
-    <div class="fixed bottom-6 right-6 flex flex-col gap-3 z-[90]">
+    <div class="fixed bottom-6 right-6 flex flex-col gap-3 no-print z-[90]">
         <button onclick="window.scrollTo({top: 0, behavior: 'smooth'})" class="fab-btn" title="回到頂部"><i class="fa-solid fa-chevron-up"></i></button>
         <button onclick="window.scrollTo({top: document.body.scrollHeight, behavior: 'smooth'})" class="fab-btn" title="捲到底部"><i class="fa-solid fa-chevron-down"></i></button>
     </div>
 
-    <div class="max-w-[1600px] mx-auto space-y-6">
+    <div class="max-w-[1600px] mx-auto space-y-5">
         
-        <div class="bg-white rounded-2xl shadow-sm p-5 md:p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border border-slate-300">
+        <div class="bg-white rounded-xl shadow-sm p-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border border-slate-300">
             <div>
-                <h1 class="text-xl md:text-3xl font-black text-slate-800 flex items-center gap-4 tracking-tight">
-                    <div class="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-slate-800 text-white flex items-center justify-center shadow-md"><i class="fa-solid fa-building-shield"></i></div>
+                <h1 class="text-xl md:text-2xl font-black text-slate-800 flex items-center gap-3 tracking-tight">
+                    <div class="w-10 h-10 rounded-lg bg-slate-800 text-white flex items-center justify-center shadow-md"><i class="fa-solid fa-building-shield"></i></div>
                     防疫中心興建工程 QC 管制
                 </h1>
-                <p class="text-slate-600 mt-2 text-sm md:text-base font-bold flex flex-wrap items-center gap-2 md:gap-3">預壘樁試體管制排程系統 <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded-md text-xs md:text-sm font-black border border-blue-300 shadow-sm"><i class="fa-solid fa-shield-check"></i> 穩定安全還原版</span></p>
+                <p class="text-slate-600 mt-1 text-sm font-bold flex flex-wrap items-center gap-2">預壘樁試體管制排程系統 <span class="bg-blue-100 text-blue-800 px-2 py-0.5 rounded-md text-xs font-black border border-blue-300 shadow-sm"><i class="fa-solid fa-shield-check"></i> V16.9 終極完全修復版</span></p>
             </div>
-            <div id="sync-status" class="flex items-center gap-2 px-4 py-2 bg-[#EFF6FF] rounded-xl text-xs md:text-sm font-black text-blue-800 border border-blue-200 shadow-sm"><i class="fa-solid fa-cloud-check"></i> 系統啟動中...</div>
+            <div id="sync-status" class="flex items-center gap-2 px-4 py-2 bg-[#EFF6FF] rounded-lg text-sm font-black text-blue-800 border border-blue-200 shadow-sm"><i class="fa-solid fa-cloud-check"></i> 系統啟動中...</div>
         </div>
 
-        <div class="bg-white p-5 md:p-6 rounded-2xl shadow-sm border border-slate-300 relative">
-            <div class="flex flex-col xl:flex-row justify-between items-start xl:items-center mb-5 gap-4">
-                <h3 class="font-black text-slate-800 text-base md:text-lg flex items-center gap-2"><i class="fa-solid fa-map-location-dot text-[#1E3A8A]"></i> 全區進度戰情地圖 <span class="text-[10px] md:text-xs bg-slate-200 text-slate-600 px-2 py-1 rounded-md ml-2 border border-slate-300">支援縮放/拖曳</span></h3>
-                <div class="flex flex-wrap gap-4 items-center w-full xl:w-auto">
+        <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-300 relative">
+            <div class="flex flex-col xl:flex-row justify-between items-start xl:items-center mb-4 gap-4">
+                <h3 class="font-black text-slate-800 text-base flex items-center gap-2"><i class="fa-solid fa-map-location-dot text-[#1E3A8A]"></i> 全區進度戰情地圖 <span class="text-xs bg-slate-200 text-slate-600 px-2 py-0.5 rounded-md ml-2 border border-slate-300">支援縮放/拖曳</span></h3>
+                <div class="flex flex-wrap gap-3 items-center w-full xl:w-auto">
                     <div class="flex gap-2 w-full md:w-auto">
-                        <input type="text" id="map-search-input" placeholder="搜尋樁號定位 (如: 613)" class="border-2 border-slate-300 rounded-lg px-3 py-1.5 shadow-sm outline-none text-sm font-bold w-full md:w-48 focus:border-[#1E3A8A]">
-                        <button onclick="searchMapPile()" class="bg-blue-600 text-white px-4 py-1.5 rounded-lg text-sm font-black shadow-md hover:bg-blue-700 transition">閃爍定位</button>
+                        <input type="text" id="map-search-input" placeholder="搜尋樁號定位 (如: 613)" class="border-2 border-slate-300 rounded-md px-3 py-1 shadow-sm outline-none text-sm font-bold w-full md:w-40 focus:border-[#1E3A8A]">
+                        <button onclick="searchMapPile()" class="bg-blue-600 text-white px-3 py-1 rounded-md text-sm font-black shadow-md hover:bg-blue-700 transition">閃爍定位</button>
                     </div>
-                    <div class="flex gap-3 text-[11px] font-black text-slate-600 bg-slate-50 px-3 py-2 rounded-lg border border-slate-200 shadow-inner flex-wrap items-center">
-                        <div class="flex items-center gap-1.5"><span class="w-3.5 h-3.5 rounded-full bg-[#F1F5F9] border-[3px] border-[#CBD5E1]"></span> 未排程</div>
-                        <div class="flex items-center gap-1.5"><span class="w-3.5 h-3.5 rounded-full bg-[#FFFFFF] border-[3px] border-[#1E3A8A]"></span> 已排程</div>
-                        <div class="flex items-center gap-1.5"><span class="w-3.5 h-3.5 rounded-full bg-[#1E3A8A] border-[3px] border-[#172554]"></span> 已取樣</div>
-                        <div class="flex items-center gap-1.5"><span class="w-3.5 h-3.5 rounded-full bg-[#B45309] border-[3px] border-[#78350F]"></span> 已收件</div>
-                        <div class="flex items-center gap-1.5"><span class="w-3.5 h-3.5 rounded-full bg-[#166534] border-[3px] border-[#14532D]"></span> 壓測結案</div>
+                    <div class="flex gap-2 text-xs font-black text-slate-600 bg-slate-50 px-2 py-1.5 rounded-md border border-slate-200 shadow-inner flex-wrap items-center">
+                        <div class="flex items-center gap-1"><span class="w-3 h-3 rounded-full bg-[#F1F5F9] border-2 border-[#CBD5E1]"></span> 未排程</div>
+                        <div class="flex items-center gap-1"><span class="w-3 h-3 rounded-full bg-[#FFFFFF] border-2 border-[#1E3A8A]"></span> 已排程</div>
+                        <div class="flex items-center gap-1"><span class="w-3 h-3 rounded-full bg-[#1E3A8A] border-2 border-[#172554]"></span> 已取樣</div>
+                        <div class="flex items-center gap-1"><span class="w-3 h-3 rounded-full bg-[#B45309] border-2 border-[#78350F]"></span> 已收件</div>
+                        <div class="flex items-center gap-1"><span class="w-3 h-3 rounded-full bg-[#166534] border-2 border-[#14532D]"></span> 壓測結案</div>
                     </div>
                 </div>
             </div>
-            <div id="map-container"><div class="text-center p-10 text-slate-400 font-bold flex flex-col items-center gap-3"><i class="fa-solid fa-spinner fa-spin text-4xl text-blue-400"></i><span>地圖繪製中...</span></div></div>
+            <div id="map-container"><div class="text-center p-10 text-slate-400 font-bold flex flex-col items-center gap-3"><i class="fa-solid fa-spinner fa-spin text-4xl text-blue-400"></i><span>繪製中...</span></div></div>
         </div>
 
-        <details class="bg-white rounded-2xl shadow-sm border border-slate-300 group" open>
-            <summary class="font-black text-slate-800 text-sm md:text-base p-4 cursor-pointer flex items-center gap-2 outline-none select-none hover:bg-slate-50 transition border-b border-slate-100">
+        <details class="bg-white rounded-xl shadow-sm border border-slate-300 group" open>
+            <summary class="font-black text-slate-800 text-sm p-4 cursor-pointer flex items-center gap-2 outline-none select-none hover:bg-slate-50 transition border-b border-slate-100">
                 <i class="fa-solid fa-satellite-dish text-blue-600 animate-pulse"></i> 展開 / 收摺：安全監測樁 T-2 智慧預警陣列
                 <i class="fa-solid fa-chevron-down ml-auto chevron transition-transform duration-300 text-slate-400"></i>
             </summary>
-            <div class="p-4 bg-slate-50 rounded-b-2xl">
-                <div id="special-pile-radar" class="flex flex-wrap gap-2.5 items-center">
+            <div class="p-4 bg-slate-50 rounded-b-xl">
+                <div id="special-pile-radar" class="flex flex-wrap gap-2 items-center">
                     <div class="text-slate-400 text-sm font-bold">系統掃描中...</div>
                 </div>
             </div>
         </details>
 
-        <div class="bg-white p-5 md:p-6 rounded-2xl shadow-sm border border-slate-300">
-            <h3 class="font-black text-slate-800 text-lg flex items-center gap-2 mb-4 md:mb-6"><i class="fa-solid fa-chart-line text-slate-500"></i> 全區 QC 進度戰情室</h3>
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-5">
-                <div class="border border-slate-800 rounded-xl p-4 md:p-5 bg-slate-700 shadow flex flex-col justify-between">
-                    <div class="flex justify-between items-center mb-3"><span class="text-slate-200 font-bold text-xs md:text-sm tracking-wide">1. 打設總進度</span><span id="prog-piles-ab" class="text-[10px] md:text-xs font-black text-white bg-slate-900 px-2 py-1 rounded border border-slate-700">A: 0 | B: 0</span></div>
-                    <div class="flex items-end gap-2 mb-3"><span id="prog-piles-text" class="text-3xl md:text-4xl font-black text-white">0</span><span class="text-slate-300 font-bold text-xs md:text-sm mb-1"> / 613 支 <span id="prog-piles-pct" class="ml-1 bg-blue-500/40 text-white px-1.5 md:px-2 py-0.5 rounded text-[10px] md:text-xs border border-blue-400/50 font-black">0.0%</span></span></div>
-                    <div class="w-full bg-slate-900 rounded-full h-2 md:h-3"><div id="prog-piles-bar" class="bg-blue-400 h-2 md:h-3 rounded-full transition-all duration-1000" style="width:0%"></div></div>
+        <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-300">
+            <h3 class="font-black text-slate-800 text-lg flex items-center gap-2 mb-4"><i class="fa-solid fa-chart-line text-slate-500"></i> 全區 QC 進度戰情室</h3>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="border border-slate-800 rounded-xl p-4 bg-slate-700 shadow flex flex-col justify-between">
+                    <div class="flex justify-between items-center mb-2"><span class="text-slate-200 font-bold text-xs tracking-wide">1. 打設總進度</span><span id="prog-piles-ab" class="text-[10px] font-black text-white bg-slate-900 px-2 py-0.5 rounded border border-slate-700">A: 0 | B: 0</span></div>
+                    <div class="flex items-end gap-1 mb-2"><span id="prog-piles-text" class="text-3xl font-black text-white">0</span><span class="text-slate-300 font-bold text-xs mb-1"> / 613 支 <span id="prog-piles-pct" class="ml-1 bg-blue-500/40 text-white px-1.5 py-0.5 rounded text-[10px] border border-blue-400/50 font-black">0.0%</span></span></div>
+                    <div class="w-full bg-slate-900 rounded-full h-2.5"><div id="prog-piles-bar" class="bg-blue-400 h-2.5 rounded-full transition-all duration-1000" style="width:0%"></div></div>
                 </div>
-                <div class="border border-[#1E3A8A] rounded-xl p-4 md:p-5 bg-[#1E3A8A] shadow flex flex-col justify-between">
-                    <div class="text-blue-100 font-bold text-xs md:text-sm tracking-wide mb-3">2. 試體取樣率</div>
-                    <div class="flex items-end gap-2 mb-3"><span id="prog-sample-text" class="text-3xl md:text-4xl font-black text-white">0</span><span id="prog-sample-total" class="text-blue-200 font-bold text-xs md:text-sm mb-1">/ 0 組</span></div>
-                    <div class="w-full bg-[#0F172A]/50 rounded-full h-2 md:h-3"><div id="prog-sample-bar" class="bg-blue-400 h-2 md:h-3 rounded-full transition-all duration-1000" style="width:0%"></div></div>
+                <div class="border border-[#1E3A8A] rounded-xl p-4 bg-[#1E3A8A] shadow flex flex-col justify-between">
+                    <div class="text-blue-100 font-bold text-xs tracking-wide mb-2">2. 試體取樣率</div>
+                    <div class="flex items-end gap-1 mb-2"><span id="prog-sample-text" class="text-3xl font-black text-white">0</span><span id="prog-sample-total" class="text-blue-200 font-bold text-xs mb-1">/ 0 組</span></div>
+                    <div class="w-full bg-[#0F172A]/50 rounded-full h-2.5"><div id="prog-sample-bar" class="bg-blue-400 h-2.5 rounded-full transition-all duration-1000" style="width:0%"></div></div>
                 </div>
-                <div class="border border-[#B45309] rounded-xl p-4 md:p-5 bg-[#B45309] shadow flex flex-col justify-between">
-                    <div class="text-orange-100 font-bold text-xs md:text-sm tracking-wide mb-3">3. 實驗室收件進度</div>
-                    <div class="flex items-end gap-2 mb-3"><span id="prog-lab-text" class="text-3xl md:text-4xl font-black text-white">0</span><span id="prog-lab-total" class="text-orange-200 font-bold text-xs md:text-sm mb-1">/ 0 組</span></div>
-                    <div class="w-full bg-[#78350F]/50 rounded-full h-2 md:h-3"><div id="prog-lab-bar" class="bg-orange-300 h-2 md:h-3 rounded-full transition-all duration-1000" style="width:0%"></div></div>
+                <div class="border border-[#B45309] rounded-xl p-4 bg-[#B45309] shadow flex flex-col justify-between">
+                    <div class="text-orange-100 font-bold text-xs tracking-wide mb-2">3. 實驗室收件進度</div>
+                    <div class="flex items-end gap-1 mb-2"><span id="prog-lab-text" class="text-3xl font-black text-white">0</span><span id="prog-lab-total" class="text-orange-200 font-bold text-xs mb-1">/ 0 組</span></div>
+                    <div class="w-full bg-[#78350F]/50 rounded-full h-2.5"><div id="prog-lab-bar" class="bg-orange-300 h-2.5 rounded-full transition-all duration-1000" style="width:0%"></div></div>
                 </div>
-                <div class="border border-[#166534] rounded-xl p-4 md:p-5 bg-[#166534] shadow flex flex-col justify-between relative overflow-hidden">
-                    <div class="flex justify-between items-start mb-2 relative z-10"><div class="text-green-100 font-bold text-xs md:text-sm tracking-wide mt-1">4. 抗壓會驗結案率</div><div id="next-test-info" class="text-[10px] md:text-[11px] font-black text-green-200 bg-green-800 px-2 py-0.5 rounded shadow-sm">無待壓測排程</div></div>
-                    <div class="flex items-end gap-2 mb-3 relative z-10"><span id="prog-test-text" class="text-3xl md:text-4xl font-black text-white">0</span><span id="prog-test-total" class="text-green-200 font-bold text-xs md:text-sm mb-1">/ 0 組</span></div>
-                    <div class="w-full bg-[#064E3B]/60 rounded-full h-2 md:h-3 relative z-10"><div id="prog-test-bar" class="bg-green-400 h-2 md:h-3 rounded-full transition-all duration-1000" style="width:0%"></div></div>
+                <div class="border border-[#166534] rounded-xl p-4 bg-[#166534] shadow flex flex-col justify-between relative overflow-hidden">
+                    <div class="flex justify-between items-start mb-1 relative z-10"><div class="text-green-100 font-bold text-xs tracking-wide mt-1">4. 抗壓會驗結案率</div><div id="next-test-info" class="text-[10px] font-black text-green-200 bg-green-800 px-2 py-0.5 rounded shadow-sm">無待壓測排程</div></div>
+                    <div class="flex items-end gap-1 mb-2 relative z-10"><span id="prog-test-text" class="text-3xl font-black text-white">0</span><span id="prog-test-total" class="text-green-200 font-bold text-xs mb-1">/ 0 組</span></div>
+                    <div class="w-full bg-[#064E3B]/60 rounded-full h-2.5 relative z-10"><div id="prog-test-bar" class="bg-green-400 h-2.5 rounded-full transition-all duration-1000" style="width:0%"></div></div>
                 </div>
             </div>
 
-            <div class="mt-4 md:mt-6 ai-banner-wrapper">
-                <div class="bg-white/95 backdrop-blur-md rounded-xl p-4 md:p-5 flex flex-col lg:flex-row items-center justify-between gap-4 h-full">
-                    <div class="flex items-center gap-3 md:gap-4">
-                        <div class="relative bg-gradient-to-br from-amber-400 to-orange-600 w-10 h-10 md:w-12 md:h-12 rounded-lg flex items-center justify-center text-white shadow border border-orange-300"><i class="fa-solid fa-wand-magic-sparkles text-lg md:text-xl"></i></div>
+            <div class="mt-4 ai-banner-wrapper">
+                <div class="bg-white/95 backdrop-blur-md rounded-xl p-4 flex flex-col lg:flex-row items-center justify-between gap-3 h-full">
+                    <div class="flex items-center gap-3">
+                        <div class="relative bg-gradient-to-br from-amber-400 to-orange-600 w-10 h-10 rounded-lg flex items-center justify-center text-white shadow-md border border-orange-300"><i class="fa-solid fa-wand-magic-sparkles text-lg"></i></div>
                         <div>
-                            <h4 class="font-black text-slate-800 text-sm md:text-lg flex items-center gap-2">AI 智慧產能與風險推估 <span class="bg-amber-100 text-amber-700 px-2 py-0.5 rounded text-[8px] md:text-[10px] border border-amber-200">Beta</span></h4>
+                            <h4 class="font-black text-slate-800 text-sm flex items-center gap-2">AI 智慧產能與風險推估 <span class="bg-amber-100 text-amber-700 px-2 py-0.5 rounded text-[9px] border border-amber-200">Beta</span></h4>
                         </div>
                     </div>
-                    <div class="flex flex-wrap gap-2 md:gap-3 w-full lg:w-auto" id="prediction-metrics">
-                        <div class="text-slate-500 font-bold px-4 py-2 bg-slate-50 rounded-lg w-full text-center text-sm">歷史數據掃描中...</div>
+                    <div class="flex flex-wrap gap-2 w-full lg:w-auto" id="prediction-metrics">
+                        <div class="text-slate-500 font-bold px-4 py-2 bg-slate-50 rounded-lg border border-slate-200 w-full text-center text-sm">歷史數據掃描中...</div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <details class="bg-white p-4 md:p-5 rounded-2xl border border-slate-300 shadow-sm group">
-            <summary class="font-black text-slate-800 text-sm md:text-base cursor-pointer flex items-center gap-2 outline-none border-b border-slate-100 pb-2">
-                <i class="fa-solid fa-power-off text-slate-600"></i> 展開 / 收摺：例外設定與防呆計算機
-                <i class="fa-solid fa-chevron-down ml-auto chevron transition-transform duration-300"></i>
+        <details class="bg-white p-5 rounded-xl border border-slate-300 shadow-sm group">
+            <summary class="font-black text-slate-800 text-sm cursor-pointer flex items-center gap-2 outline-none border-b border-slate-100 pb-2">
+                <i class="fa-solid fa-calculator text-slate-600"></i> 展開 / 收摺：現場斗仔體積防呆計算機 & 停機設定
+                <span class="bg-slate-200 text-slate-700 px-2 py-0.5 rounded text-[10px] ml-auto font-black border border-slate-300">申報輔助</span>
+                <i class="fa-solid fa-chevron-down ml-2 chevron transition-transform duration-300"></i>
             </summary>
             
-            <div class="grid grid-cols-2 md:grid-cols-5 gap-3 md:gap-4 items-end text-xs md:text-sm mt-4 border-b border-slate-100 pb-4 mb-4">
-                <div><label class="block text-slate-700 font-black mb-1">砂 (每拌合/斗仔)</label><input type="number" id="calc-sand-bucket" class="w-full border-2 border-slate-300 rounded-lg px-2 md:px-3 py-1.5 md:py-2 font-bold" value="4"></div>
-                <div><label class="block text-slate-700 font-black mb-1">水泥 (每拌合/斗仔)</label><input type="number" id="calc-cem-bucket" class="w-full border-2 border-slate-300 rounded-lg px-2 md:px-3 py-1.5 md:py-2 font-bold" value="2"></div>
-                <div><label class="block text-slate-700 font-black mb-1">斗仔單個容積 (公升)</label><input type="number" id="calc-vol" class="w-full border-2 border-slate-300 rounded-lg px-2 md:px-3 py-1.5 md:py-2 font-bold" value="20"></div>
-                <div><label class="block text-slate-700 font-black mb-1">本日總拌合盤數</label><input type="number" id="calc-batches" class="w-full border-2 border-slate-300 rounded-lg px-2 md:px-3 py-1.5 md:py-2 font-bold" value="100"></div>
-                <div><button onclick="calculateMaterials()" class="w-full bg-slate-800 hover:bg-black text-white font-black py-1.5 md:py-2.5 rounded-lg shadow-md h-[38px] md:h-[46px]">換算</button></div>
+            <div class="grid grid-cols-2 md:grid-cols-5 gap-3 items-end text-xs md:text-sm mt-4 border-b border-slate-100 pb-4 mb-4">
+                <div><label class="block text-slate-700 font-black mb-1">砂 (每拌合/斗仔)</label><input type="number" id="calc-sand-bucket" class="w-full border-2 border-slate-300 rounded-lg px-2 py-1.5 font-bold" value="4"></div>
+                <div><label class="block text-slate-700 font-black mb-1">水泥 (每拌合/斗仔)</label><input type="number" id="calc-cem-bucket" class="w-full border-2 border-slate-300 rounded-lg px-2 py-1.5 font-bold" value="2"></div>
+                <div><label class="block text-slate-700 font-black mb-1">斗仔容積 (L)</label><input type="number" id="calc-vol" class="w-full border-2 border-slate-300 rounded-lg px-2 py-1.5 font-bold" value="20"></div>
+                <div><label class="block text-slate-700 font-black mb-1">總拌合盤數</label><input type="number" id="calc-batches" class="w-full border-2 border-slate-300 rounded-lg px-2 py-1.5 font-bold" value="100"></div>
+                <div><button onclick="calculateMaterials()" class="w-full bg-slate-800 hover:bg-black text-white font-black py-1.5 rounded-lg shadow-md h-[36px]">換算</button></div>
             </div>
             <div id="calc-result" class="mb-4 p-3 bg-slate-50 border border-slate-200 rounded-lg hidden shadow-inner text-sm font-bold"></div>
 
             <div class="flex flex-col lg:flex-row gap-4 mt-2">
-                <div class="flex-1 p-3 md:p-4 bg-slate-50 rounded-xl border border-slate-200 flex flex-wrap gap-2 md:gap-3 items-center">
-                    <span class="font-black text-slate-700 text-xs md:text-sm"><i class="fa-solid fa-stop-circle text-red-600"></i> 停機：</span>
-                    <select id="exception-machine" class="border-2 border-slate-300 rounded-lg px-2 py-1 md:py-1.5 font-black bg-white"><option value="ALL">全區停機</option><option value="A">A 車停機</option><option value="B">B 車停機</option></select>
-                    <input type="date" id="exception-date-input" class="border-2 border-slate-300 rounded-lg px-2 py-1 md:py-1.5 font-bold bg-white w-32 md:w-auto">
-                    <button onclick="addExceptionDate()" class="bg-red-50 text-red-700 border border-red-300 px-3 md:px-4 py-1 md:py-1.5 rounded-lg font-black shadow-sm">新增</button>
+                <div class="flex-1 p-3 bg-slate-50 rounded-xl border border-slate-200 flex flex-wrap gap-2 items-center shadow-sm">
+                    <span class="font-black text-slate-700 text-xs"><i class="fa-solid fa-stop-circle text-red-600"></i> 停機：</span>
+                    <select id="exception-machine" class="border-2 border-slate-300 rounded-lg px-2 py-1 text-xs font-black bg-white"><option value="ALL">全區停機</option><option value="A">A 車停機</option><option value="B">B 車停機</option></select>
+                    <input type="date" id="exception-date-input" class="border-2 border-slate-300 rounded-lg px-2 py-1 text-xs font-bold bg-white">
+                    <button onclick="addExceptionDate()" class="bg-red-50 text-red-700 border border-red-300 hover:bg-red-100 px-3 py-1 rounded-lg text-xs font-black transition shadow-sm">新增</button>
                     <div id="exception-list" class="flex flex-wrap gap-2 w-full mt-2 empty:hidden"></div>
                 </div>
-                <div class="flex-1 p-3 md:p-4 bg-slate-50 rounded-xl border border-slate-200 flex flex-wrap gap-2 md:gap-3 items-center">
-                    <span class="font-black text-slate-700 text-xs md:text-sm"><i class="fa-solid fa-play-circle text-blue-600"></i> 加班：</span>
-                    <select id="extra-machine" class="border-2 border-slate-300 rounded-lg px-2 py-1 md:py-1.5 font-black bg-white"><option value="A">A 車</option><option value="B">B 車</option></select>
-                    <input type="date" id="extra-date-input" class="border-2 border-slate-300 rounded-lg px-2 py-1 md:py-1.5 font-bold bg-white w-32 md:w-auto">
-                    <button onclick="addExtraDate()" class="bg-blue-50 text-blue-700 border border-blue-300 px-3 md:px-4 py-1 md:py-1.5 rounded-lg font-black shadow-sm">新增</button>
+                <div class="flex-1 p-3 bg-slate-50 rounded-xl border border-slate-200 flex flex-wrap gap-2 items-center shadow-sm">
+                    <span class="font-black text-slate-700 text-xs"><i class="fa-solid fa-play-circle text-blue-600"></i> 加班：</span>
+                    <select id="extra-machine" class="border-2 border-slate-300 rounded-lg px-2 py-1 text-xs font-black bg-white"><option value="A">A 車</option><option value="B">B 車</option></select>
+                    <input type="date" id="extra-date-input" class="border-2 border-slate-300 rounded-lg px-2 py-1 text-xs font-bold bg-white">
+                    <button onclick="addExtraDate()" class="bg-blue-50 text-blue-700 border border-blue-300 hover:bg-blue-100 px-3 py-1 rounded-lg text-xs font-black transition shadow-sm">新增</button>
                     <div id="extra-list" class="flex flex-wrap gap-2 w-full mt-2 empty:hidden"></div>
                 </div>
             </div>
         </details>
 
-        <div class="bg-white p-5 md:p-6 rounded-2xl shadow-sm border border-slate-300 space-y-4 md:space-y-6">
+        <div class="bg-white p-4 md:p-5 rounded-2xl shadow-sm border border-slate-300 space-y-4">
             <div class="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4">
                 <div class="flex gap-2 items-center w-full xl:w-auto">
                     <button onclick="toggleView('table')" id="btn-view-table" class="px-4 py-2 rounded-lg text-sm font-black bg-slate-800 text-white shadow-md transition w-1/2 md:w-auto"><i class="fa-solid fa-list-check mr-2"></i> 稽核表</button>
@@ -204,46 +212,46 @@
                 <div class="flex flex-col lg:flex-row gap-3 items-start lg:items-center w-full xl:w-auto">
                     <div class="relative shadow-sm w-full lg:w-auto">
                         <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
-                        <input type="text" id="search-input" onkeyup="renderTable(window.currentFilter)" placeholder="搜尋樁號..." class="pl-9 pr-3 py-2 border-2 border-slate-300 rounded-xl text-sm font-bold w-full lg:w-48 outline-none focus:border-[#1E3A8A]">
+                        <input type="text" id="search-input" onkeyup="renderTable(window.currentFilter)" placeholder="搜尋樁號..." class="pl-9 pr-3 py-1.5 border-2 border-slate-300 rounded-xl text-sm font-bold w-full lg:w-40 outline-none focus:border-[#1E3A8A]">
                     </div>
-                    <div class="bg-slate-100 p-1 md:p-1.5 rounded-xl flex gap-1 border border-slate-300 shadow-inner w-full lg:w-auto justify-center">
-                        <button id="filter-smart-all" onclick="setSmartFilter('ALL')" class="flex-1 lg:flex-none px-3 py-1.5 md:py-2 rounded-lg text-[11px] md:text-sm font-black bg-white text-slate-800 shadow-sm border border-slate-200">全部</button>
-                        <button id="filter-smart-field" onclick="setSmartFilter('FIELD')" class="flex-1 lg:flex-none px-3 py-1.5 md:py-2 rounded-lg text-[11px] md:text-sm font-bold text-slate-500 hover:text-slate-800"><i class="fa-solid fa-helmet-safety"></i> 待辦</button>
-                        <button id="filter-smart-test" onclick="setSmartFilter('TEST')" class="flex-1 lg:flex-none px-3 py-1.5 md:py-2 rounded-lg text-[11px] md:text-sm font-bold text-slate-500 hover:text-slate-800"><i class="fa-solid fa-flask"></i> 待壓</button>
+                    <div class="bg-slate-100 p-1 rounded-xl flex gap-1 border border-slate-300 shadow-inner w-full lg:w-auto justify-center">
+                        <button id="filter-smart-all" onclick="setSmartFilter('ALL')" class="flex-1 lg:flex-none px-3 py-1.5 rounded-lg text-xs font-black bg-white text-slate-800 shadow-sm border border-slate-200">全部</button>
+                        <button id="filter-smart-field" onclick="setSmartFilter('FIELD')" class="flex-1 lg:flex-none px-3 py-1.5 rounded-lg text-xs font-bold text-slate-500 hover:text-slate-800"><i class="fa-solid fa-helmet-safety"></i> 待辦</button>
+                        <button id="filter-smart-test" onclick="setSmartFilter('TEST')" class="flex-1 lg:flex-none px-3 py-1.5 rounded-lg text-xs font-bold text-slate-500 hover:text-slate-800"><i class="fa-solid fa-flask"></i> 待壓</button>
                     </div>
                     <div class="flex gap-2 w-full lg:w-auto justify-between">
-                        <button onclick="scrollToTodo()" class="flex-1 lg:flex-none px-3 md:px-4 py-2 md:py-2.5 rounded-xl text-xs md:text-sm font-black bg-amber-100 text-amber-700 border border-amber-300 hover:bg-amber-200 shadow-sm"><i class="fa-solid fa-location-crosshairs"></i> 定位</button>
-                        <div class="border-l-2 border-slate-200 pl-2 flex gap-1 md:gap-2">
-                            <button onclick="filterData('ALL')" id="btn-ALL" class="px-3 md:px-5 py-2 md:py-2.5 rounded-xl text-xs md:text-sm font-black bg-slate-800 text-white shadow border border-slate-900">全區</button>
-                            <button onclick="filterData('A')" id="btn-A" class="px-3 md:px-5 py-2 md:py-2.5 rounded-xl text-xs md:text-sm font-black bg-white text-slate-700 border-2 border-slate-300 hover:bg-slate-100">A車</button>
-                            <button onclick="filterData('B')" id="btn-B" class="px-3 md:px-5 py-2 md:py-2.5 rounded-xl text-xs md:text-sm font-black bg-white text-slate-700 border-2 border-slate-300 hover:bg-slate-100">B車</button>
+                        <button onclick="scrollToTodo()" class="flex-1 lg:flex-none px-3 py-1.5 rounded-xl text-xs font-black bg-amber-100 text-amber-700 border border-amber-300 hover:bg-amber-200 shadow-sm"><i class="fa-solid fa-location-crosshairs"></i> 定位</button>
+                        <div class="border-l-2 border-slate-200 pl-2 flex gap-1">
+                            <button onclick="filterData('ALL')" id="btn-ALL" class="px-4 py-1.5 rounded-xl text-xs font-black bg-slate-800 text-white shadow border border-slate-900">全區</button>
+                            <button onclick="filterData('A')" id="btn-A" class="px-4 py-1.5 rounded-xl text-xs font-black bg-white text-slate-700 border-2 border-slate-300 hover:bg-slate-100">A車</button>
+                            <button onclick="filterData('B')" id="btn-B" class="px-4 py-1.5 rounded-xl text-xs font-black bg-white text-slate-700 border-2 border-slate-300 hover:bg-slate-100">B車</button>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div class="border-t border-slate-200 pt-4 md:pt-6">
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
-                    <button onclick="syncFromContractor()" id="btn-sync-api" class="flex items-center justify-center gap-1.5 md:gap-2 px-2 md:px-4 py-3 bg-blue-600 text-white rounded-xl text-xs md:text-[15px] font-black hover:bg-blue-700 shadow-md border border-blue-800"><i class="fa-solid fa-rotate"></i> API 自動同步</button>
-                    <button onclick="openMatrixModal()" class="flex items-center justify-center gap-1.5 md:gap-2 px-2 md:px-4 py-3 bg-[#1E3A8A] text-white rounded-xl text-xs md:text-[15px] font-black hover:bg-[#172554] shadow-md border border-[#172554]"><i class="fa-solid fa-border-all"></i> 防呆矩陣雷達</button>
-                    <button onclick="openReconModal()" class="flex items-center justify-center gap-1.5 md:gap-2 px-2 md:px-4 py-3 bg-[#B45309] text-white rounded-xl text-xs md:text-[15px] font-black hover:bg-[#78350F] shadow-md border border-[#78350F]"><i class="fa-solid fa-scale-unbalanced"></i> 數量申報勾稽</button>
-                    <button onclick="exportCSV()" class="flex items-center justify-center gap-1.5 md:gap-2 px-2 md:px-4 py-3 bg-[#166534] text-white rounded-xl text-xs md:text-[15px] font-black shadow-md hover:bg-[#14532D] border border-[#14532D]"><i class="fa-solid fa-file-csv"></i> 匯出 CSV</button>
+            <div class="border-t border-slate-200 pt-4">
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    <button onclick="syncFromContractor()" id="btn-sync-api" class="flex items-center justify-center gap-2 px-3 py-2 bg-blue-600 text-white rounded-xl text-xs font-black hover:bg-blue-700 shadow-md border border-blue-800"><i class="fa-solid fa-rotate"></i> API 自動同步進度</button>
+                    <button onclick="openMatrixModal()" class="flex items-center justify-center gap-2 px-3 py-2 bg-[#1E3A8A] text-white rounded-xl text-xs font-black hover:bg-[#172554] shadow-md border border-[#172554]"><i class="fa-solid fa-border-all"></i> 防呆矩陣雷達</button>
+                    <button onclick="openReconModal()" class="flex items-center justify-center gap-2 px-3 py-2 bg-[#B45309] text-white rounded-xl text-xs font-black hover:bg-[#78350F] shadow-md border border-[#78350F]"><i class="fa-solid fa-scale-unbalanced"></i> 數量申報勾稽</button>
+                    <button onclick="exportCSV()" class="flex items-center justify-center gap-2 px-3 py-2 bg-[#166534] text-white rounded-xl text-xs font-black shadow-md hover:bg-[#14532D] border border-[#14532D]"><i class="fa-solid fa-file-csv"></i> 匯出品管 CSV</button>
                 </div>
             </div>
         </div>
 
         <div id="table-view" class="bg-white shadow-xl rounded-2xl border-2 border-slate-300 overflow-x-auto relative">
-            <table class="w-full text-left border-collapse table-fixed min-w-[1300px]">
+            <table class="w-full text-left border-collapse table-fixed min-w-[1260px]">
                 <thead class="table-header shadow-sm border-b-2 border-slate-300">
                     <tr>
-                        <th style="width: 70px;">編號</th>
-                        <th style="width: 70px; color:#1E3A8A;">數量</th>
-                        <th style="width: 380px; text-align:left; padding-left:12px;">對應樁號 <i class="fa-solid fa-pen-to-square ml-1 opacity-60 text-xs"></i></th>
+                        <th style="width: 60px;">編號</th>
+                        <th style="width: 60px; color:#1E3A8A;">數量</th>
+                        <th style="width: 320px; text-align:left; padding-left:12px;">對應樁號 <i class="fa-solid fa-pen-to-square ml-1 opacity-60 text-xs"></i></th>
                         <th style="width: 120px; background:#EFF6FF; color:#1E3A8A;">取樣(T)</th>
                         <th style="width: 120px; background:#F8FAFC;">拆模(T+1)</th>
                         <th style="width: 120px; background:#FFF7ED; color:#B45309;">收件(二/五)</th>
                         <th style="width: 120px; background:#F0FDF4; color:#166534;">抗壓(T+28)</th>
-                        <th style="width: 300px; text-align:left; padding-left:12px;">備註 / 狀態</th>
+                        <th style="width: 340px; text-align:left; padding-left:12px;">備註 / 狀態</th>
                     </tr>
                 </thead>
                 <tbody id="schedule-body" class="bg-white divide-y divide-slate-200"></tbody>
@@ -252,9 +260,9 @@
         
         <div id="calendar-view" class="bg-white shadow-xl rounded-2xl p-4 md:p-6 hidden border-2 border-slate-300 overflow-x-auto">
             <div class="flex justify-between items-center mb-4 md:mb-6 sticky top-0 bg-white z-10 py-2 min-w-[800px]">
-                <button onclick="changeMonth(-1)" class="w-10 h-10 md:w-12 md:h-12 flex items-center justify-center bg-white border-2 border-slate-300 rounded-xl text-slate-600 hover:bg-slate-100 font-black shadow-sm transition"><i class="fa-solid fa-chevron-left text-lg md:text-xl"></i></button>
+                <button onclick="changeMonth(-1)" class="w-10 h-10 flex items-center justify-center bg-white border-2 border-slate-300 rounded-xl text-slate-600 hover:bg-slate-100 font-black shadow-sm transition"><i class="fa-solid fa-chevron-left text-lg"></i></button>
                 <h2 id="calendar-title" class="text-xl md:text-3xl font-black text-slate-800">載入中...</h2>
-                <button onclick="changeMonth(1)" class="w-10 h-10 md:w-12 md:h-12 flex items-center justify-center bg-white border-2 border-slate-300 rounded-xl text-slate-600 hover:bg-slate-100 font-black shadow-sm transition"><i class="fa-solid fa-chevron-right text-lg md:text-xl"></i></button>
+                <button onclick="changeMonth(1)" class="w-10 h-10 flex items-center justify-center bg-white border-2 border-slate-300 rounded-xl text-slate-600 hover:bg-slate-100 font-black shadow-sm transition"><i class="fa-solid fa-chevron-right text-lg"></i></button>
             </div>
             <div class="rounded-xl border-2 border-slate-300 overflow-hidden min-w-[800px] shadow-sm"><table class="w-full text-left border-collapse table-fixed" style="table-layout: fixed;"><thead class="bg-slate-100 border-b-2 border-slate-300"><tr><th class="p-2 md:p-4 text-center font-black text-red-600 text-xs md:text-sm" style="width: 14.28%;">週日</th><th class="p-2 md:p-4 text-center font-black text-slate-700 text-xs md:text-sm" style="width: 14.28%;">週一</th><th class="p-2 md:p-4 text-center font-black text-slate-700 text-xs md:text-sm" style="width: 14.28%;">週二</th><th class="p-2 md:p-4 text-center font-black text-slate-700 text-xs md:text-sm" style="width: 14.28%;">週三</th><th class="p-2 md:p-4 text-center font-black text-slate-700 text-xs md:text-sm" style="width: 14.28%;">週四</th><th class="p-2 md:p-4 text-center font-black text-slate-700 text-xs md:text-sm" style="width: 14.28%;">週五</th><th class="p-2 md:p-4 text-center font-black text-red-600 text-xs md:text-sm" style="width: 14.28%;">週六</th></tr></thead><tbody id="calendar-body" class="bg-white"></tbody></table></div>
         </div>
@@ -343,12 +351,14 @@
         window.formatMinguo = (d) => { const y=d.getFullYear()-1911; const m=String(d.getMonth()+1).padStart(2,'0'); const dt=String(d.getDate()).padStart(2,'0'); const day=["日","一","二","三","四","五","六"][d.getDay()]; return `${y}/${m}/${dt}(${day})`; };
         const addDays = (d, days) => { let r=new Date(d); r.setDate(r.getDate()+days); return r; };
 
+        // 🔥 全域防護網
         window.refreshAll = () => { 
             try { window.generateSchedule(); } catch(e) { console.error('Schedule Error', e); }
             try { window.renderTable(window.currentFilter); } catch(e) { console.error('Table Error', e); }
             try { window.updateDashboard(); } catch(e) { console.error('Dashboard Error', e); }
             try { window.renderMap(); } catch(e) { console.error('Map Error', e); document.getElementById('map-container').innerHTML='地圖繪製發生錯誤，請重新整理'; }
             try { if (window.currentView === 'calendar') window.renderCalendar(); } catch(e) {}
+            try { if (window.updateExtraUI) window.updateExtraUI(); } catch(e) {}
         };
 
         window.generateSchedule = () => {
@@ -497,6 +507,9 @@
                     const isExGlobal = window.exceptionDates.includes(dStr); const isExA = isExGlobal || window.exceptionA.includes(dStr); const isExB = isExGlobal || window.exceptionB.includes(dStr); 
                     if (simDate.getDay() !== 0 && (!isExA || !isExB)) added++; 
                 }
+                document.getElementById('prediction-metrics').innerHTML = `<div class="bg-white border border-slate-200 px-4 py-2 rounded-lg flex flex-col items-center"><span class="text-[10px] font-black text-slate-500 uppercase">動態產能</span><span class="text-xl font-black text-slate-800">${avgRate.toFixed(1)} <span class="text-xs text-slate-500 font-bold">支/日</span></span></div><div class="bg-white border border-slate-200 px-4 py-2 rounded-lg flex flex-col items-center"><span class="text-[10px] font-black text-slate-500 uppercase">預估剩餘</span><span class="text-xl font-black text-[#B45309]">${estDays} <span class="text-xs text-slate-500 font-bold">天</span></span></div><div class="bg-orange-50 border border-orange-300 px-4 py-2 rounded-lg flex flex-col items-center"><span class="text-[10px] font-black text-orange-600 uppercase">預估完工日</span><span class="text-xl font-black text-[#B45309]">${window.formatMinguo(simDate).split('(')[0]}</span></div>`;
+            } else {
+                document.getElementById('prediction-metrics').innerHTML = `<span class="text-base text-slate-500 font-bold">歷史數據掃描中...</span>`;
             }
 
             const radarContainer = document.getElementById('special-pile-radar'); let radarHtml = '';
@@ -524,6 +537,20 @@
                 `;
             });
             radarContainer.innerHTML = radarHtml;
+        };
+
+        window.editSpecialPile = (oldId) => {
+            const currentType = window.specialPilesData[oldId];
+            const newId = prompt(`目前安全監測樁為 P${oldId}。\n請輸入您想平移到的新樁號 (輸入純數字)。\n若欲刪除此紀錄請留白：`, oldId);
+            if (newId === null) return; 
+            const cleanNewId = newId.trim().replace(/\D/g, '');
+            if (cleanNewId === '') {
+                if (confirm(`確定要刪除安全監測樁 P${oldId} 嗎？`)) { delete window.specialPilesData[oldId]; window.saveDataToCloud(); window.refreshAll(); }
+            } else if (cleanNewId !== oldId) {
+                if(cleanNewId === '0' || isNaN(cleanNewId)) return alert("無效的樁號！");
+                delete window.specialPilesData[oldId]; window.specialPilesData[cleanNewId] = currentType; window.saveDataToCloud(); window.refreshAll();
+                window.showModal("換樁成功", `✅ 成功將安全監測樁由 P${oldId} 平移至 P${cleanNewId}！`, "success");
+            }
         };
 
         window.renderMap = () => {
@@ -649,6 +676,35 @@
             }
         };
 
+        // 🔥 補回所有被誤刪的按鈕功能
+        window.addExceptionDate = () => { const m = document.getElementById('exception-machine').value; const val = document.getElementById('exception-date-input').value; if (val) { if (m === 'ALL' && !window.exceptionDates.includes(val)) window.exceptionDates.push(val); if (m === 'A' && !window.exceptionA.includes(val)) window.exceptionA.push(val); if (m === 'B' && !window.exceptionB.includes(val)) window.exceptionB.push(val); window.saveDataToCloud(); document.getElementById('exception-date-input').value = ""; window.refreshAll(); } };
+        window.removeExceptionDate = (m, val) => { if(m === 'ALL') window.exceptionDates = window.exceptionDates.filter(d => d !== val); if(m === 'A') window.exceptionA = window.exceptionA.filter(d => d !== val); if(m === 'B') window.exceptionB = window.exceptionB.filter(d => d !== val); window.saveDataToCloud(); window.refreshAll(); };
+        window.addExtraDate = () => { const m = document.getElementById('extra-machine').value; const val = document.getElementById('extra-date-input').value; if (val) { if (m === 'A' && !window.extraWorkA.includes(val)) window.extraWorkA.push(val); if (m === 'B' && !window.extraWorkB.includes(val)) window.extraWorkB.push(val); window.saveDataToCloud(); document.getElementById('extra-date-input').value = ""; window.refreshAll(); } };
+        window.removeExtraDate = (m, val) => { if (m === 'A') window.extraWorkA = window.extraWorkA.filter(d => d !== val); if (m === 'B') window.extraWorkB = window.extraWorkB.filter(d => d !== val); window.saveDataToCloud(); window.refreshAll(); };
+        window.updateExtraUI = () => {
+            const expContainer = document.getElementById('exception-list'); expContainer.innerHTML = ""; 
+            const renderExTag = (m, val, label) => { const parts = val.split('-'); const tag = document.createElement('span'); tag.className = "bg-white text-red-700 px-2 py-1 rounded text-xs font-black border border-red-200 shadow-sm whitespace-nowrap"; tag.innerHTML = `${label}${parts[1]}/${parts[2]} <i class="fa-solid fa-xmark cursor-pointer ml-1 opacity-60 hover:opacity-100" onclick="removeExceptionDate('${m}', '${val}')"></i>`; expContainer.appendChild(tag); };
+            window.exceptionDates.forEach(val => renderExTag('ALL', val, '全區:')); window.exceptionA.forEach(val => renderExTag('A', val, 'A車:')); window.exceptionB.forEach(val => renderExTag('B', val, 'B車:'));
+            const extraContainer = document.getElementById('extra-list'); extraContainer.innerHTML = "";
+            const renderExWTag = (m, val) => { const parts = val.split('-'); const tag = document.createElement('span'); tag.className = "bg-white text-blue-700 px-2 py-1 rounded text-xs font-black border border-blue-200 shadow-sm whitespace-nowrap"; tag.innerHTML = `${m}車:${parts[1]}/${parts[2]} <i class="fa-solid fa-xmark cursor-pointer ml-1 opacity-60 hover:opacity-100" onclick="removeExtraDate('${m}', '${val}')"></i>`; extraContainer.appendChild(tag); };
+            window.extraWorkA.forEach(val => renderExWTag('A', val)); window.extraWorkB.forEach(val => renderExWTag('B', val));
+        };
+        
+        window.calculateMaterials = () => {
+            const totalSandM3 = (parseFloat(document.getElementById('calc-sand-bucket').value)||0) * ((parseFloat(document.getElementById('calc-vol').value)||0)/1000) * (parseFloat(document.getElementById('calc-batches').value)||0);
+            const totalCemTon = (parseFloat(document.getElementById('calc-cem-bucket').value)||0) * ((parseFloat(document.getElementById('calc-vol').value)||0)/1000) * (parseFloat(document.getElementById('calc-batches').value)||0) * 1.4;
+            const resDiv = document.getElementById('calc-result');
+            resDiv.innerHTML = `<div class="flex justify-around items-center"><div class="text-center font-black text-sm text-slate-500">理論砂用量<br><span class="text-2xl font-black text-slate-800">${totalSandM3.toFixed(2)} <span class="text-sm">m³</span></span></div><div class="text-center font-black text-sm text-slate-500">理論水泥用量<br><span class="text-2xl font-black text-slate-800">${totalCemTon.toFixed(2)} <span class="text-sm">噸</span></span></div></div>`;
+            resDiv.classList.remove('hidden');
+        };
+
+        window.searchMapPile = () => {
+            const val = document.getElementById('map-search-input').value.trim(); if (!val) return;
+            const num = val.replace(/\D/g, ''); const circle = document.getElementById('map-pile-' + num);
+            if (circle) { document.querySelectorAll('.pile-circle').forEach(c => c.classList.remove('highlight-pile')); circle.classList.add('highlight-pile'); } 
+            else { window.showModal("搜尋失敗", `找不到樁號 P${num} 的座標紀錄。`, "error"); }
+        };
+
         window.openMatrixModal = () => { window.renderMatrixGrid(); document.getElementById('matrix-modal').classList.remove('hidden'); };
         window.closeMatrixModal = () => { document.getElementById('matrix-modal').classList.add('hidden'); };
         window.renderMatrixGrid = () => {
@@ -694,17 +750,36 @@
             });
             const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' }); 
             const link = document.createElement("a"); link.href = URL.createObjectURL(blob); 
-            link.download = `預壘樁進度與試體追蹤表_V16.8.csv`; link.click();
+            link.download = `預壘樁進度與試體追蹤表_V16.9穩定版.csv`; link.click();
         };
 
-        window.toggleView = (v) => { window.currentView = v; document.getElementById('table-view').classList.toggle('hidden', v !== 'table'); document.getElementById('calendar-view').classList.toggle('hidden', v !== 'calendar'); if (v === 'calendar') window.renderCalendar(); };
-        window.changeMonth = (o) => { window.currentCalDate.setMonth(window.currentCalDate.getMonth() + o); window.renderCalendar(); };
-        window.calculateMaterials = () => { const totalSandM3 = (parseFloat(document.getElementById('calc-sand-bucket').value)||0) * ((parseFloat(document.getElementById('calc-vol').value)||0)/1000) * (parseFloat(document.getElementById('calc-batches').value)||0); const totalCemTon = (parseFloat(document.getElementById('calc-cem-bucket').value)||0) * ((parseFloat(document.getElementById('calc-vol').value)||0)/1000) * (parseFloat(document.getElementById('calc-batches').value)||0) * 1.4; const resDiv = document.getElementById('calc-result'); resDiv.innerHTML = `<div class="flex justify-around items-center"><div class="text-center font-black text-sm text-slate-500">理論砂用量<br><span class="text-2xl font-black text-slate-800">${totalSandM3.toFixed(2)} <span class="text-sm">m³</span></span></div><div class="text-center font-black text-sm text-slate-500">理論水泥用量<br><span class="text-2xl font-black text-slate-800">${totalCemTon.toFixed(2)} <span class="text-sm">噸</span></span></div></div>`; resDiv.classList.remove('hidden'); };
-        window.searchMapPile = () => { const val = document.getElementById('map-search-input').value.trim(); if (!val) return; const num = val.replace(/\D/g, ''); const circle = document.getElementById('map-pile-' + num); if (circle) { document.querySelectorAll('.pile-circle').forEach(c => c.classList.remove('highlight-pile')); circle.classList.add('highlight-pile'); } else { window.showModal("搜尋失敗", `找不到樁號 P${num} 的座標紀錄。`, "error"); } };
         window.showModal = (title, msg, type) => { document.getElementById('custom-modal-header').innerHTML = `<i class="fa-solid fa-${type === 'success' ? 'circle-check text-emerald-500' : 'triangle-exclamation text-red-500'}"></i> ${title}`; document.getElementById('custom-modal-message').innerHTML = msg; document.getElementById('custom-modal').classList.remove('hidden'); };
         window.closeModal = () => document.getElementById('custom-modal').classList.add('hidden');
 
-        // 強制初始化
+        window.syncFromContractor = async () => {
+            const btn = document.getElementById('btn-sync-api'); const originalHtml = btn.innerHTML;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-sm opacity-80"></i> 同步中...'; btn.disabled = true;
+            try {
+                const response = await fetch(GAS_API_URL); if (!response.ok) throw new Error("API 回應異常");
+                const dataMatrix = await response.json(); const groupedData = {};
+                for (let i = 1; i < dataMatrix.length; i++) {
+                    const cols = dataMatrix[i]; if (cols.length < 6) continue;
+                    const rawPile = String(cols[0] || '').trim(); const dateStr = String(cols[1] || '').trim().replace(/\//g, '-'); const machine = String(cols[2] || '').trim();
+                    const pileNum = rawPile.replace(/\D/g, ''); const machLetter = machine.includes('A') ? 'A' : (machine.includes('B') ? 'B' : '');
+                    if (pileNum && dateStr && machLetter) { const key = `${dateStr}_${machLetter}`; if (!groupedData[key]) groupedData[key] = []; groupedData[key].push(pileNum); }
+                }
+                let updatedCount = 0;
+                window.scheduleData.forEach(item => {
+                    const itemDateStr = window.toDateString(item.sampleDate); const key = `${itemDateStr}_${item.machine}`;
+                    if (groupedData[key]) { const newPileStr = groupedData[key].join('、'); if (!window.statusTest[item.id] && window.pileNumbers[item.id] !== newPileStr) { window.pileNumbers[item.id] = newPileStr; updatedCount++; } }
+                });
+                window.saveDataToCloud(); window.refreshAll(); 
+                if (updatedCount > 0) window.showModal("同步成功！", `透過 API 自動更新了 <b class="text-blue-600 text-lg">${updatedCount}</b> 筆排程！`, "success"); 
+                else window.showModal("進度載入完成", "地圖與資料已更新，目前進度已是最新狀態。", "success"); 
+            } catch (error) { window.showModal("API 同步失敗", error.message, "error"); } finally { btn.innerHTML = originalHtml; btn.disabled = false; }
+        };
+
+        // 強制啟動防護網
         window.refreshAll();
         initFirebase();
     </script>
