@@ -385,18 +385,19 @@
             const btnB = document.getElementById('btn-B');
             
             [btnAll, btnA, btnB].forEach(b => { 
-                if(b) b.className = "px-4 py-2 rounded-xl text-sm font-black bg-white text-slate-700 border-2 border-slate-300 hover:bg-slate-100 transition shadow-sm"; 
+                if(b) b.className = "px-4 py-1.5 rounded-xl text-sm font-black bg-white text-slate-700 border-2 border-slate-300 hover:bg-slate-100 transition shadow-sm"; 
             });
             
-            if(f === 'ALL' && btnAll) btnAll.className = "px-4 py-2 rounded-xl text-sm font-black bg-slate-800 text-white shadow-md border border-slate-900 transition";
-            if(f === 'A' && btnA) btnA.className = "px-4 py-2 rounded-xl text-sm font-black bg-slate-800 text-white shadow-md border border-slate-900 transition";
-            if(f === 'B' && btnB) btnB.className = "px-4 py-2 rounded-xl text-sm font-black bg-slate-800 text-white shadow-md border border-slate-900 transition";
+            if(f === 'ALL' && btnAll) btnAll.className = "px-4 py-1.5 rounded-xl text-sm font-black bg-slate-800 text-white shadow-md border border-slate-900 transition";
+            if(f === 'A' && btnA) btnA.className = "px-4 py-1.5 rounded-xl text-sm font-black bg-slate-800 text-white shadow-md border border-slate-900 transition";
+            if(f === 'B' && btnB) btnB.className = "px-4 py-1.5 rounded-xl text-sm font-black bg-slate-800 text-white shadow-md border border-slate-900 transition";
             
             // 重新渲染畫面
             if(window.currentView === 'calendar') {
                 window.renderCalendar();
             } else {
-                window.renderTable(window.currentSmartFilter || 'ALL'); 
+                // ⚠️修復核心：這裡必須正確傳入 f (即 'A' 或 'B')，讓表格正確篩選
+                window.renderTable(f); 
             }
         };
 
