@@ -174,7 +174,11 @@
                         <select id="exception-machine" class="border-2 border-slate-300 rounded-lg px-2 py-1.5 text-sm font-black bg-white"><option value="ALL">全區</option><option value="A">A車</option><option value="B">B車</option></select>
                         <input type="date" id="exception-date-input" class="border-2 border-slate-300 rounded-lg px-2 py-1.5 text-sm font-bold bg-white w-36">
                         <button onclick="addExceptionDate()" class="bg-red-50 text-red-700 border border-red-300 px-4 py-1.5 rounded-lg text-sm font-black hover:bg-red-100 transition shadow-sm">新增</button>
-                        <div id="exception-list" class="flex flex-wrap gap-2 w-full mt-2 empty:hidden"></div>
+                        <div class="w-full mt-2 grid grid-cols-1 md:grid-cols-3 gap-2">
+                            <div id="exception-list-all" class="flex flex-wrap gap-1.5 empty:hidden bg-red-50 p-2 rounded border border-red-100 min-h-[30px]"><span class="text-[10px] text-red-400 font-bold">全區停機：</span></div>
+                            <div id="exception-list-a" class="flex flex-wrap gap-1.5 empty:hidden bg-orange-50 p-2 rounded border border-orange-100 min-h-[30px]"><span class="text-[10px] text-orange-400 font-bold">A車停機：</span></div>
+                            <div id="exception-list-b" class="flex flex-wrap gap-1.5 empty:hidden bg-amber-50 p-2 rounded border border-amber-100 min-h-[30px]"><span class="text-[10px] text-amber-400 font-bold">B車停機：</span></div>
+                        </div>
                     </div>
                     <div class="flex-1 p-4 bg-slate-50 rounded-xl border border-slate-200 flex flex-wrap gap-3 items-center shadow-sm">
                         <span class="font-black text-slate-700 text-sm"><i class="fa-solid fa-play-circle text-blue-600"></i> 加班：</span>
@@ -346,13 +350,34 @@
             try { if (window.updateExtraUI) window.updateExtraUI(); } catch(e) {}
         };
 
-        window.generateSchedule = () => {
+window.generateSchedule = () => {
             window.scheduleData.length = 0; const startDateA = new Date(2026, 4, 5); const startDateB = new Date(2026, 4, 9); const endDate = new Date(2026, 6, 30); let cA = 1, cB = 1;
             for (let d = new Date(startDateA); d <= endDate; d.setDate(d.getDate() + 1)) {
-                const dStr = window.toDateString(d); const isSun = d.getDay() === 0; const isExGlobal = window.exceptionDates.includes(dStr); const isExA = isExGlobal || window.exceptionA.includes(dStr); const isExB = isExGlobal || window.exceptionB.includes(dStr);
-                const makeR = (m, c, t) => { let dem = addDays(t, 1); if (dem.getDay() === 0) dem = addDays(dem, 1); let col = new Date(dem); while (col.getDay() !== 2 && col.getDay() !== 5) col = addDays(col, 1); let tes = addDays(t, 28); if (tes.getDay() === 6) tes = addDays(tes, 2); else if (tes.getDay() === 0) tes = addDays(tes, 1); return { id: `${m}${c}`, machine: m, sampleDate: new Date(t), demoldDate: dem, collectDate: col, testDate: tes }; };
-                if (d >= startDateA) { if ((!isSun && !isExA) || window.extraWorkA.includes(dStr)) window.scheduleData.push(makeR('A', cA++, new Date(d))); }
-                if (d >= startDateB) { if ((!isSun && !isExB) || window.extraWorkB.includes(dStr)) window.scheduleData.push(makeR('B', cB++, new Date(d))); }
+                const dStr = window.toDateString(d); const isSun = d.getDay() === 0; 
+                const isExGlobal = window.exceptionDates.includes(dStr); 
+                const isExA = isExGlobal || window.exceptionA.includes(dStr); 
+                const isExB = isExGlobal || window.exceptionB.includes(dStr);
+                
+                const makeR = (m, c, t) => { 
+                    let dem = addDays(t, 1); if (dem.getDay() === 0) dem = addDays(dem, 1); 
+                    let col = new Date(dem); while (col.getDay() !== 2 && col.getDay() !== 5) col = addDays(col, 1); 
+                    let tes = addDays(t, 28); if (tes.getDay() === 6) tes = addDays(tes, 2); else if (tes.getDay() === 0) tes = addDays(tes, 1); 
+                    return { id: `${m}${c}`, machine: m, sampleDate: new Date(t), demoldDate: dem, collectDate: col, testDate: tes }; 
+                };
+                
+                // 🔥 修正點：確保即使遇到停工，也不會產生 NaN，只有在工作日時才推進計數器
+                if (d >= startDateA) { 
+                    if ((!isSun && !isExA) || window.extraWorkA.includes(dStr)) {
+                        window.scheduleData.push(makeR('A', cA, new Date(d)));
+                        cA++;
+                    } 
+                }
+                if (d >= startDateB) { 
+                    if ((!isSun && !isExB) || window.extraWorkB.includes(dStr)) {
+                        window.scheduleData.push(makeR('B', cB, new Date(d)));
+                        cB++;
+                    } 
+                }
             }
         };
 
@@ -745,13 +770,26 @@
         window.addExtraDate = () => { const m = document.getElementById('extra-machine').value; const val = document.getElementById('extra-date-input').value; if (val) { if (m === 'A' && !window.extraWorkA.includes(val)) window.extraWorkA.push(val); if (m === 'B' && !window.extraWorkB.includes(val)) window.extraWorkB.push(val); window.saveDataToCloud(); document.getElementById('extra-date-input').value = ""; window.refreshAll(); } };
         window.removeExtraDate = (m, val) => { if (m === 'A') window.extraWorkA = window.extraWorkA.filter(d => d !== val); if (m === 'B') window.extraWorkB = window.extraWorkB.filter(d => d !== val); window.saveDataToCloud(); window.refreshAll(); };
         
-        window.updateExtraUI = () => {
-            const expContainer = document.getElementById('exception-list'); expContainer.innerHTML = ""; 
-            const renderExTag = (m, val, label) => { const parts = val.split('-'); const tag = document.createElement('span'); tag.className = "bg-white text-red-700 px-2 py-1 rounded text-xs font-black border border-red-200 shadow-sm whitespace-nowrap"; tag.innerHTML = `${label}${parts[1]}/${parts[2]} <i class="fa-solid fa-xmark cursor-pointer ml-1 opacity-60 hover:opacity-100" onclick="removeExceptionDate('${m}', '${val}')"></i>`; expContainer.appendChild(tag); };
-            window.exceptionDates.forEach(val => renderExTag('ALL', val, '全區:')); window.exceptionA.forEach(val => renderExTag('A', val, 'A車:')); window.exceptionB.forEach(val => renderExTag('B', val, 'B車:'));
-            const extraContainer = document.getElementById('extra-list'); extraContainer.innerHTML = "";
-            const renderExWTag = (m, val) => { const parts = val.split('-'); const tag = document.createElement('span'); tag.className = "bg-white text-blue-700 px-2 py-1 rounded text-xs font-black border border-blue-200 shadow-sm whitespace-nowrap"; tag.innerHTML = `${m}車:${parts[1]}/${parts[2]} <i class="fa-solid fa-xmark cursor-pointer ml-1 opacity-60 hover:opacity-100" onclick="removeExtraDate('${m}', '${val}')"></i>`; extraContainer.appendChild(tag); };
-            window.extraWorkA.forEach(val => renderExWTag('A', val)); window.extraWorkB.forEach(val => renderExWTag('B', val));
+window.updateExtraUI = () => {
+            const expAll = document.getElementById('exception-list-all'); if(expAll) expAll.innerHTML = '<span class="text-[10px] text-red-400 font-bold w-full">全區停機：</span>'; 
+            const expA = document.getElementById('exception-list-a'); if(expA) expA.innerHTML = '<span class="text-[10px] text-orange-400 font-bold w-full">A車停機：</span>';
+            const expB = document.getElementById('exception-list-b'); if(expB) expB.innerHTML = '<span class="text-[10px] text-amber-400 font-bold w-full">B車停機：</span>';
+            
+            const renderExTag = (container, m, val, label) => { 
+                if(!container) return;
+                const parts = val.split('-'); const tag = document.createElement('span'); tag.className = "bg-white text-red-700 px-2 py-0.5 rounded text-[11px] font-black border border-red-200 shadow-sm whitespace-nowrap"; tag.innerHTML = `${parts[1]}/${parts[2]} <i class="fa-solid fa-xmark cursor-pointer ml-1 opacity-60 hover:opacity-100" onclick="removeExceptionDate('${m}', '${val}')"></i>`; container.appendChild(tag); 
+            };
+
+            window.exceptionDates.forEach(val => renderExTag(expAll, 'ALL', val, '全區')); 
+            window.exceptionA.forEach(val => renderExTag(expA, 'A', val, 'A車')); 
+            window.exceptionB.forEach(val => renderExTag(expB, 'B', val, 'B車'));
+
+            const extraContainer = document.getElementById('extra-list'); 
+            if(extraContainer) {
+                extraContainer.innerHTML = "";
+                const renderExWTag = (m, val) => { const parts = val.split('-'); const tag = document.createElement('span'); tag.className = "bg-white text-blue-700 px-2 py-0.5 rounded text-[11px] font-black border border-blue-200 shadow-sm whitespace-nowrap"; tag.innerHTML = `${m}車:${parts[1]}/${parts[2]} <i class="fa-solid fa-xmark cursor-pointer ml-1 opacity-60 hover:opacity-100" onclick="removeExtraDate('${m}', '${val}')"></i>`; extraContainer.appendChild(tag); };
+                window.extraWorkA.forEach(val => renderExWTag('A', val)); window.extraWorkB.forEach(val => renderExWTag('B', val));
+            }
         };
 
         window.searchMapPile = () => { const val = document.getElementById('map-search-input').value.trim(); if (!val) return; const num = val.replace(/\D/g, ''); const circle = document.getElementById('map-pile-' + num); if (circle) { document.querySelectorAll('.pile-circle').forEach(c => c.classList.remove('highlight-pile')); circle.classList.add('highlight-pile'); } else { window.showModal("搜尋失敗", `找不到樁號 P${num} 的座標紀錄。`, "error"); } };
