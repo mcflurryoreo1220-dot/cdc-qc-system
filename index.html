@@ -3,10 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>衛生福利部防疫中心 - QC 戰情室 (V17 模組化重構版)</title>
+    <title>衛生福利部防疫中心 - QC 戰情室 (V17.1 AI 智慧分析版)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/svg-pan-zoom@3.6.1/dist/svg-pan-zoom.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
         :root { --bg-color: #F8FAFC; --text-main: #0F172A; --border-color: #CBD5E1; --color-blue-deep: #1E3A8A; --color-orange-deep: #B45309; --color-green-deep: #166534; }
@@ -25,7 +26,6 @@
         .pile-input { color: var(--color-blue-deep); }
         .remark-input { color: #334155; font-size: 14px; border: 1px solid #94A3B8; background: #F8FAFC; font-weight: 700; }
         .pile-input:focus, .remark-input:focus { border-color: var(--color-blue-deep); outline: none; box-shadow: 0 0 0 4px rgba(30, 58, 138, 0.15); background-color: #FFFFFF; }
-        
         .pile-input::-webkit-scrollbar, .remark-input::-webkit-scrollbar { height: 4px; }
         .pile-input::-webkit-scrollbar-thumb, .remark-input::-webkit-scrollbar-thumb { background-color: #CBD5E1; border-radius: 4px; }
 
@@ -55,6 +55,9 @@
         .fab-btn { width: 48px; height: 48px; background-color: #1E293B; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); transition: all 0.3s; border: 2px solid #334155; opacity: 0.8; z-index: 90; cursor: pointer; }
         .fab-btn:hover { background-color: #2563EB; border-color: #60A5FA; transform: translateY(-3px); opacity: 1; box-shadow: 0 6px 15px rgba(37,99,235,0.4); }
 
+        .nav-tab { padding: 12px 20px; font-weight: 900; cursor: pointer; transition: all 0.2s; border-bottom: 4px solid transparent; color: #64748B; display: flex; align-items: center; gap: 8px; font-size: 15px; }
+        .nav-tab.active { border-bottom-color: #2563EB; color: #2563EB; background: #EFF6FF; border-radius: 12px 12px 0 0; }
+
         details > summary { list-style: none; }
         details > summary::-webkit-details-marker { display: none; }
         details[open] > summary .chevron { transform: rotate(180deg); }
@@ -78,9 +81,14 @@
                     <div class="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-slate-800 text-white flex items-center justify-center shadow-md"><i class="fa-solid fa-building-shield"></i></div>
                     防疫中心興建工程 QC 管制
                 </h1>
-                <p class="text-slate-600 mt-2 text-sm md:text-base font-bold flex flex-wrap items-center gap-2">預壘樁試體管制排程系統 <span class="bg-emerald-100 text-emerald-800 px-3 py-1 rounded-md text-xs font-black border border-emerald-300 shadow-sm"><i class="fa-solid fa-circle-check"></i> V17 模組化正式版</span></p>
+                <p class="text-slate-600 mt-2 text-sm md:text-base font-bold flex flex-wrap items-center gap-2">預壘樁試體管制排程系統 <span class="bg-emerald-100 text-emerald-800 px-3 py-1 rounded-md text-xs font-black border border-emerald-300 shadow-sm"><i class="fa-solid fa-circle-check"></i> V17.1 AI 智慧分析版</span></p>
             </div>
             <div id="sync-status" class="flex items-center gap-2 px-4 py-2.5 bg-[#EFF6FF] rounded-xl text-sm font-black text-blue-800 border border-blue-200 shadow-sm"><i class="fa-solid fa-cloud-arrow-up animate-pulse"></i> 系統連線中...</div>
+        </div>
+
+        <div class="flex border-b-2 border-slate-300 pl-4 no-print">
+            <div id="tab-schedule" class="nav-tab active" onclick="switchView('schedule')"><i class="fa-solid fa-calendar-check text-lg"></i> 試體打設與排程表</div>
+            <div id="tab-concrete" class="nav-tab" onclick="switchView('concrete')"><i class="fa-solid fa-flask text-lg"></i> 📊 ACI 214 強度統計分析</div>
         </div>
 
         <div id="view-schedule" class="space-y-5">
@@ -247,10 +255,111 @@
                 <div class="rounded-xl border-2 border-slate-300 overflow-hidden min-w-[800px] shadow-sm"><table class="w-full text-left border-collapse table-fixed" style="table-layout: fixed;"><thead class="bg-slate-100 border-b-2 border-slate-300"><tr><th class="p-3 text-center font-black text-red-600 text-sm" style="width: 14.28%;">週日</th><th class="p-3 text-center font-black text-slate-700 text-sm" style="width: 14.28%;">週一</th><th class="p-3 text-center font-black text-slate-700 text-sm" style="width: 14.28%;">週二</th><th class="p-3 text-center font-black text-slate-700 text-sm" style="width: 14.28%;">週三</th><th class="p-3 text-center font-black text-slate-700 text-sm" style="width: 14.28%;">週四</th><th class="p-3 text-center font-black text-slate-700 text-sm" style="width: 14.28%;">週五</th><th class="p-3 text-center font-black text-red-600 text-sm" style="width: 14.28%;">週六</th></tr></thead><tbody id="calendar-body" class="bg-white"></tbody></table></div>
             </div>
         </div>
+
+        <div id="view-concrete" class="space-y-5 hidden">
+            <div class="bg-blue-50/50 p-5 rounded-2xl shadow-sm border border-blue-200 no-print">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 border-b border-blue-200 pb-3 gap-4">
+                    <h3 class="font-black text-blue-800 text-lg flex items-center gap-2">
+                        <i class="fa-solid fa-pen-to-square"></i> 登錄 28 天抗壓試驗報告 (獨立資料庫)
+                    </h3>
+                    <div class="flex items-center gap-3 bg-white px-4 py-2 rounded-lg border border-blue-100 shadow-sm">
+                        <span class="text-sm font-black text-slate-600">設計強度 fc'</span>
+                        <input type="number" id="fc-prime" value="280" class="w-20 border-2 border-slate-300 rounded text-center font-bold outline-none focus:border-blue-500 py-1" onchange="calculateConcreteStats()">
+                        <span class="text-xs font-bold text-slate-500">kgf/cm²</span>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-6 gap-4 items-end">
+                    <div class="md:col-span-1">
+                        <label class="block text-slate-600 font-black mb-2 text-sm">澆置/取樣日期</label>
+                        <input type="date" id="concrete-date" class="border-2 border-slate-300 rounded-lg px-3 py-2 font-bold text-blue-900 w-full bg-white outline-none focus:border-blue-600">
+                    </div>
+                    <div class="md:col-span-1">
+                        <label class="block text-slate-600 font-black mb-2 text-sm">識別號/樁號</label>
+                        <input type="text" id="concrete-id" placeholder="如: P101" class="border-2 border-slate-300 rounded-lg px-3 py-2 font-bold text-blue-900 w-full bg-white outline-none focus:border-blue-600">
+                    </div>
+                    <div class="md:col-span-1">
+                        <label class="block text-slate-600 font-black mb-2 text-sm">試體 #1</label>
+                        <input type="number" id="concrete-s1" placeholder="強度值" class="border-2 border-slate-300 rounded-lg px-3 py-2 font-bold text-blue-900 w-full bg-white outline-none focus:border-blue-600">
+                    </div>
+                    <div class="md:col-span-1">
+                        <label class="block text-slate-600 font-black mb-2 text-sm">試體 #2</label>
+                        <input type="number" id="concrete-s2" placeholder="強度值" class="border-2 border-slate-300 rounded-lg px-3 py-2 font-bold text-blue-900 w-full bg-white outline-none focus:border-blue-600">
+                    </div>
+                    <div class="md:col-span-1">
+                        <label class="block text-slate-600 font-black mb-2 text-sm">試體 #3</label>
+                        <input type="number" id="concrete-s3" placeholder="強度值" class="border-2 border-slate-300 rounded-lg px-3 py-2 font-bold text-blue-900 w-full bg-white outline-none focus:border-blue-600">
+                    </div>
+                    <div class="md:col-span-1">
+                        <button onclick="addConcreteRecord()" class="bg-blue-600 hover:bg-blue-700 text-white w-full py-2.5 rounded-lg font-black shadow-md transition flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-plus"></i> 新增數據
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-300 overflow-x-auto">
+                    <h3 class="font-black text-slate-800 text-lg mb-4 flex justify-between items-center border-b border-slate-100 pb-3">
+                        <span class="flex items-center gap-2"><i class="fa-solid fa-table text-slate-500"></i> 強度檢驗紀錄明細</span>
+                        <span class="text-sm font-black bg-blue-100 text-blue-800 px-3 py-1 rounded-lg border border-blue-200" id="concrete-count">總計: 0 組</span>
+                    </h3>
+                    <div class="max-h-[550px] overflow-y-auto pr-2">
+                        <table class="w-full text-left border-collapse table-fixed min-w-[500px]">
+                            <thead class="bg-slate-50 sticky top-0 shadow-sm border-b-2 border-slate-300">
+                                <tr>
+                                    <th class="p-3 text-center text-slate-700 font-black text-sm">日期</th>
+                                    <th class="p-3 text-center text-slate-700 font-black text-sm">識別號</th>
+                                    <th class="p-3 text-center text-slate-500 font-black text-sm">#1</th>
+                                    <th class="p-3 text-center text-slate-500 font-black text-sm">#2</th>
+                                    <th class="p-3 text-center text-slate-500 font-black text-sm">#3</th>
+                                    <th class="p-3 text-center text-blue-800 bg-blue-100 font-black text-sm">平均 (X)</th>
+                                    <th class="p-3 text-center text-orange-800 bg-orange-100 font-black text-sm">全距 (R)</th>
+                                    <th class="p-3 text-center text-slate-700 font-black text-sm no-print">操作</th>
+                                </tr>
+                            </thead>
+                            <tbody id="concrete-body" class="bg-white divide-y divide-slate-100">
+                                </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="space-y-6">
+                    <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-300">
+                        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 border-b border-slate-100 pb-3 gap-2">
+                            <h3 class="font-black text-slate-800 text-lg flex items-center gap-2">
+                                <i class="fa-solid fa-chart-area text-blue-600"></i> X-bar 管制圖 (平均變異)
+                            </h3>
+                            <div class="text-xs sm:text-sm font-mono font-black text-slate-600 bg-slate-100 px-3 py-1.5 rounded-lg border border-slate-200" id="x-bar-stats">
+                                等待數據...
+                            </div>
+                        </div>
+                        <div class="relative h-[250px] w-full"><canvas id="xBarChart"></canvas></div>
+                    </div>
+
+                    <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-300">
+                        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 border-b border-slate-100 pb-3 gap-2">
+                            <h3 class="font-black text-slate-800 text-lg flex items-center gap-2">
+                                <i class="fa-solid fa-chart-line text-orange-600"></i> R 管制圖 (均勻度監控)
+                            </h3>
+                            <div class="text-xs sm:text-sm font-mono font-black text-slate-600 bg-slate-100 px-3 py-1.5 rounded-lg border border-slate-200" id="r-chart-stats">
+                                等待數據...
+                            </div>
+                        </div>
+                        <div class="relative h-[250px] w-full"><canvas id="rChart"></canvas></div>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="ai-report-wrapper"></div>
+            
+        </div>
     </div>
 
     <div id="custom-modal" class="fixed inset-0 z-[100] flex items-center justify-center hidden bg-slate-900/70 backdrop-blur-sm transition-opacity px-4"><div class="bg-white rounded-3xl shadow-2xl max-w-sm w-full overflow-hidden border-2 border-slate-300"><div class="p-5 border-b border-slate-200 flex items-center gap-3 text-lg font-black text-slate-800" id="custom-modal-header"></div><div class="p-6 text-slate-700 text-base leading-relaxed font-bold" id="custom-modal-message"></div><div class="p-4 bg-slate-100 text-right border-t border-slate-200"><button onclick="closeModal()" class="px-6 py-2.5 bg-slate-800 hover:bg-black text-white rounded-xl font-black shadow-md border border-slate-900 text-base">我知道了</button></div></div></div>
+    
     <div id="recon-modal" class="fixed inset-0 z-[100] flex items-center justify-center hidden bg-slate-900/70 backdrop-blur-sm transition-opacity px-4"><div class="bg-white rounded-3xl shadow-2xl max-w-6xl w-full overflow-hidden flex flex-col max-h-[90vh] border-2 border-slate-300"><div class="p-5 border-b border-slate-300 flex justify-between items-center bg-white sticky top-0 z-10"><h3 class="text-xl font-black text-slate-800 flex items-center gap-2"><i class="fa-solid fa-scale-balanced text-slate-500 mr-2"></i> 數量申報勾稽表</h3><button onclick="closeReconModal()" class="w-10 h-10 flex items-center justify-center rounded-full bg-slate-100 border-2 border-slate-300 text-slate-600 hover:bg-slate-200 font-black"><i class="fa-solid fa-xmark text-xl"></i></button></div><div class="p-0 overflow-x-auto overflow-y-auto flex-1 bg-white"><table class="w-full text-left border-collapse min-w-[800px]"><thead class="bg-slate-50 sticky top-0 shadow-sm z-10 border-b-2 border-slate-300"><tr><th class="p-4 border-b border-slate-300 text-slate-700 font-black text-sm text-center max-w-[120px]">排程編號</th><th class="p-4 border-b border-slate-300 text-slate-700 font-black text-sm">施工日期</th><th class="p-4 border-b border-slate-300 text-[#1E3A8A] font-black text-sm text-center">A車(系統)</th><th class="p-4 border-b border-slate-300 text-[#1E3A8A] font-black text-sm text-center">B車(系統)</th><th class="p-4 border-b border-slate-300 text-slate-900 font-black text-lg text-center bg-slate-100">總計</th><th class="p-4 border-b border-slate-300 text-[#B45309] font-black text-base text-center bg-[#FFFBEB]">日報數量</th><th class="p-4 border-b border-slate-300 text-center font-black text-slate-600 text-sm">狀態</th></tr></thead><tbody id="recon-body" class="text-base text-slate-800 divide-y divide-slate-200"></tbody></table></div><div class="p-4 bg-slate-100 flex justify-end items-center"><button onclick="closeReconModal()" class="px-6 py-2.5 bg-slate-800 text-white rounded-xl font-black shadow-md text-base">關閉</button></div></div></div>
+    
     <div id="matrix-modal" class="fixed inset-0 z-[100] flex items-center justify-center hidden bg-slate-900/80 backdrop-blur-sm transition-opacity px-4"><div class="bg-white rounded-3xl shadow-2xl max-w-6xl w-full overflow-hidden flex flex-col max-h-[95vh] border-2 border-slate-300"><div class="p-5 border-b border-slate-300 flex justify-between items-center bg-white sticky top-0 z-10"><h3 class="text-xl font-black text-slate-800 flex items-center gap-2"><i class="fa-solid fa-border-all text-slate-500 mr-2"></i> 613 支防呆矩陣</h3><button onclick="closeMatrixModal()" class="w-10 h-10 flex items-center justify-center rounded-full bg-slate-100 border-2 border-slate-300 text-slate-600 hover:bg-slate-200 font-black"><i class="fa-solid fa-xmark text-xl"></i></button></div><div class="p-4 bg-slate-50 border-b border-slate-300 flex flex-wrap gap-5 items-center justify-between z-10 shadow-sm sticky top-0"><div class="flex gap-5 text-sm font-black items-center flex-wrap"><div class="flex items-center gap-2"><span class="w-5 h-5 block rounded bg-[#F1F5F9] border border-[#CBD5E1]"></span> 未登錄 (<span id="matrix-count-missing">0</span>)</div><div class="flex items-center gap-2"><span class="w-5 h-5 block rounded bg-[#1E3A8A] border border-[#172554] shadow-sm"></span> 已登錄 (<span id="matrix-count-ok">0</span>)</div><div class="flex items-center gap-2"><span class="w-5 h-5 block rounded bg-[#DC2626] border border-[#991B1B] shadow-sm"></span> 重複登錄 (<span id="matrix-count-error">0</span>)</div></div><button onclick="closeMatrixModal()" class="px-6 py-2.5 bg-slate-800 text-white rounded-xl text-sm font-black">關閉雷達</button></div><div class="p-6 overflow-y-auto flex-1 bg-slate-100"><div id="matrix-container" class="flex flex-wrap gap-2.5 justify-center md:justify-start"></div></div></div></div>
 
     <script src="./coordinates.js"></script>
