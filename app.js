@@ -5,10 +5,10 @@ import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/f
 const firebaseConfig = { apiKey: "AIzaSyAp1ZVuW95Api3kaQUPgttESZ0RGTEi8H8", authDomain: "cdc-qc-system.firebaseapp.com", projectId: "cdc-qc-system", storageBucket: "cdc-qc-system.firebasestorage.app", messagingSenderId: "745920606237", appId: "1:745920606237:web:7fb9c22a84de208e6e56f4" };
 const GAS_API_URL = "https://script.google.com/macros/s/AKfycbx1aCB8jyqFnPrekpu3QIAIWCaIpAeRIVjJOkDxTpzjOhw9oAk86NO4f1YhL6TkiZQedA/exec";
 
-// 全域變數初始化 (擴充 POND_A 與 POND_BC)
+// 全域變數初始化 (回歸主系統單純 A, B 車)
 window.defaultSpecialPiles = { '23': 'FULL', '54': 'PARTIAL', '100': 'FULL', '135': 'PARTIAL', '174': 'FULL', '201': 'PARTIAL', '251': 'PARTIAL', '283': 'FULL', '339': 'FULL', '377': 'FULL', '432': 'FULL', '476': 'FULL' };
-window.exceptionDates = []; window.exceptionA = []; window.exceptionB = []; window.exceptionPondA = []; window.exceptionPondBC = [];
-window.extraWorkA = []; window.extraWorkB = []; window.extraPondA = []; window.extraPondBC = [];
+window.exceptionDates = []; window.exceptionA = []; window.exceptionB = [];
+window.extraWorkA = []; window.extraWorkB = [];
 window.pileNumbers = {}; window.statusSample = {}; window.statusLab = {}; window.statusTest = {}; window.remarks = {}; window.contractorReports = {}; 
 window.specialPilesData = window.defaultSpecialPiles; 
 window.scheduleData = []; window.concreteData = []; 
@@ -25,9 +25,7 @@ const initFirebase = async () => {
                     if (snapshot.exists()) {
                         const data = snapshot.data();
                         window.exceptionDates = data.exceptionDates || []; window.exceptionA = data.exceptionA || []; window.exceptionB = data.exceptionB || [];
-                        window.exceptionPondA = data.exceptionPondA || []; window.exceptionPondBC = data.exceptionPondBC || [];
                         window.extraWorkA = data.extraWorkA || []; window.extraWorkB = data.extraWorkB || []; 
-                        window.extraPondA = data.extraPondA || []; window.extraPondBC = data.extraPondBC || [];
                         window.pileNumbers = data.pileNumbers || {}; window.statusSample = data.statusSample || {}; window.statusLab = data.statusLab || {};
                         window.statusTest = data.statusTest || data.completionStatus || {}; window.remarks = data.remarks || {}; window.contractorReports = data.contractorReports || {};
                         window.specialPilesData = data.specialPilesDataStr ? JSON.parse(data.specialPilesDataStr) : (data.specialPilesData || window.defaultSpecialPiles);
@@ -46,8 +44,8 @@ const initFirebase = async () => {
 window.saveDataToCloud = async () => { 
     if (isCloudEnabled && auth.currentUser) { 
         await setDoc(doc(db, 'scheduleData', 'mainState'), { 
-            exceptionDates: window.exceptionDates, exceptionA: window.exceptionA, exceptionB: window.exceptionB, exceptionPondA: window.exceptionPondA, exceptionPondBC: window.exceptionPondBC,
-            extraWorkA: window.extraWorkA, extraWorkB: window.extraWorkB, extraPondA: window.extraPondA, extraPondBC: window.extraPondBC,
+            exceptionDates: window.exceptionDates, exceptionA: window.exceptionA, exceptionB: window.exceptionB,
+            extraWorkA: window.extraWorkA, extraWorkB: window.extraWorkB,
             pileNumbers: window.pileNumbers, statusSample: window.statusSample, statusLab: window.statusLab, statusTest: window.statusTest, remarks: window.remarks, contractorReports: window.contractorReports, specialPilesDataStr: JSON.stringify(window.specialPilesData)
         }, { merge: true }); 
     } 
@@ -69,27 +67,28 @@ window.refreshAll = () => {
     window.updateExtraUI();
 };
 
-// 🔥 產生 4 台機具/區域的排程
+// 🔥 退回單純 A 車、B 車之主排程邏輯
 window.generateSchedule = () => {
     window.scheduleData.length = 0; 
     const startDateA = new Date(2026, 4, 5); const startDateB = new Date(2026, 4, 9); 
-    const startPondA = new Date(2026, 4, 15); const startPondBC = new Date(2026, 4, 20); // 預設起始日可調
     const endDate = new Date(2026, 6, 30); 
-    let cA = 1, cB = 1, cPA = 1, cPBC = 1;
+    let cA = 1, cB = 1;
 
     for (let d = new Date(startDateA); d <= endDate; d.setDate(d.getDate() + 1)) {
         const dStr = window.toDateString(d); const isSun = d.getDay() === 0;
-        const makeR = (m, prefix, c, t) => { 
+        const isExGlobal = window.exceptionDates.includes(dStr);
+        const isExA = isExGlobal || window.exceptionA.includes(dStr);
+        const isExB = isExGlobal || window.exceptionB.includes(dStr);
+
+        const makeR = (m, c, t) => { 
             let dem = addDays(t, 1); if (dem.getDay() === 0) dem = addDays(dem, 1);
             let col = new Date(dem); while (col.getDay() !== 2 && col.getDay() !== 5) col = addDays(col, 1);
             let tes = addDays(t, 28); if (tes.getDay() === 6) tes = addDays(tes, 2); else if (tes.getDay() === 0) tes = addDays(tes, 1);
-            return { id: `${prefix}${c}`, machine: m, sampleDate: new Date(t), demoldDate: dem, collectDate: col, testDate: tes };
+            return { id: `${m}${c}`, machine: m, sampleDate: new Date(t), demoldDate: dem, collectDate: col, testDate: tes };
         };
 
-        if (d >= startDateA && ((!isSun && !window.exceptionDates.includes(dStr) && !window.exceptionA.includes(dStr)) || window.extraWorkA.includes(dStr))) { window.scheduleData.push(makeR('A', 'A', cA++, new Date(d))); }
-        if (d >= startDateB && ((!isSun && !window.exceptionDates.includes(dStr) && !window.exceptionB.includes(dStr)) || window.extraWorkB.includes(dStr))) { window.scheduleData.push(makeR('B', 'B', cB++, new Date(d))); }
-        if (d >= startPondA && ((!isSun && !window.exceptionDates.includes(dStr) && !window.exceptionPondA.includes(dStr)) || window.extraPondA.includes(dStr))) { window.scheduleData.push(makeR('POND_A', 'PA', cPA++, new Date(d))); }
-        if (d >= startPondBC && ((!isSun && !window.exceptionDates.includes(dStr) && !window.exceptionPondBC.includes(dStr)) || window.extraPondBC.includes(dStr))) { window.scheduleData.push(makeR('POND_BC', 'PBC', cPBC++, new Date(d))); }
+        if (d >= startDateA && ((!isSun && !isExA) || window.extraWorkA.includes(dStr))) { window.scheduleData.push(makeR('A', cA++, new Date(d))); }
+        if (d >= startDateB && ((!isSun && !isExB) || window.extraWorkB.includes(dStr))) { window.scheduleData.push(makeR('B', cB++, new Date(d))); }
     }
 };
 
@@ -112,12 +111,12 @@ window.switchView = (viewId) => {
 
 window.filterData = (f) => { 
     window.currentFilter = f; 
-    ['btn-ALL', 'btn-A', 'btn-B', 'btn-POND_A', 'btn-POND_BC'].forEach(id => {
+    ['btn-ALL', 'btn-A', 'btn-B'].forEach(id => {
         const b = document.getElementById(id);
-        if(b) b.className = "px-3 py-1.5 rounded-lg text-xs font-black bg-white text-slate-700 border border-slate-300 shadow-sm hover:bg-slate-100 transition";
+        if(b) b.className = "px-4 py-1.5 rounded-lg text-sm font-black bg-white text-slate-700 border border-slate-300 shadow-sm hover:bg-slate-100 transition";
     });
     const activeBtn = document.getElementById('btn-' + f);
-    if(activeBtn) activeBtn.className = "px-3 py-1.5 rounded-lg text-xs font-black bg-slate-800 text-white shadow border border-slate-900 transition";
+    if(activeBtn) activeBtn.className = "px-4 py-1.5 rounded-lg text-sm font-black bg-slate-800 text-white shadow border border-slate-900 transition";
     if(window.currentView === 'calendar') { window.renderCalendar(); } else { window.renderTable(f); }
 };
 
@@ -202,27 +201,24 @@ window.updatePile = (id, val) => { const v = val.trim(); if (!v) delete window.p
 window.updateRemark = (id, val) => { const v = val.trim(); if (!v) delete window.remarks[id]; else window.remarks[id] = v; window.saveDataToCloud(); };
 
 window.updateDashboard = () => {
-    const usedA = new Set(); const usedB = new Set(); const usedPA = new Set(); const usedPBC = new Set();
-    const workedDates = new Set(); const donePilesList = [];
+    const usedA = new Set(); const usedB = new Set(); const workedDates = new Set(); const donePilesList = [];
     Object.entries(window.pileNumbers).forEach(([id, val]) => { 
         const nums = (String(val).match(/\d+/g) || []).map(n => parseInt(n, 10)); 
         if (nums.length > 0) { 
             nums.forEach(n => { 
                 donePilesList.push(n); 
-                if (id.startsWith('PA')) usedPA.add(n); 
-                else if (id.startsWith('PBC')) usedPBC.add(n);
-                else if (id.startsWith('A')) usedA.add(n); 
+                if (id.startsWith('A')) usedA.add(n); 
                 else if (id.startsWith('B')) usedB.add(n); 
             }); 
             const item = window.scheduleData.find(s => s.id === id); if (item) workedDates.add(window.toDateString(item.sampleDate)); 
         } 
     });
-    const cA = usedA.size; const cB = usedB.size; const cPA = usedPA.size; const cPBC = usedPBC.size;
-    const pilesCount = cA + cB + cPA + cPBC; 
+    const cA = usedA.size; const cB = usedB.size; 
+    const pilesCount = cA + cB; 
     const maxDonePile = Math.max(...donePilesList, 0);
     const todayDate = new Date(); todayDate.setHours(0,0,0,0);
     
-    document.getElementById('prog-piles-ab').innerText = `A:${cA} | B:${cB} | 池A:${cPA} | 池BC:${cPBC}`;
+    document.getElementById('prog-piles-ab').innerText = `A: ${cA} | B: ${cB}`;
     document.getElementById('prog-piles-text').innerText = pilesCount;
     const pilesPct = ((pilesCount/TOTAL_PILES_LIMIT)*100).toFixed(1);
     document.getElementById('prog-piles-pct').innerText = `${pilesPct}%`;
@@ -380,14 +376,12 @@ window.renderCalendar = () => {
                 const isExAll = window.exceptionDates.includes(dateStr); 
                 const isExA = isExAll || window.exceptionA.includes(dateStr); 
                 const isExB = isExAll || window.exceptionB.includes(dateStr);
-                const isExPA = isExAll || window.exceptionPondA.includes(dateStr);
-                const isExPBC = isExAll || window.exceptionPondBC.includes(dateStr);
 
                 let exBadge = '';
                 if(isExAll) exBadge = `<span class="text-[10px] bg-red-600 text-white px-1.5 py-0.5 rounded shadow-sm font-black border border-red-700 whitespace-nowrap">全區停</span>`; 
                 else {
                     let stopped = [];
-                    if(isExA) stopped.push('A'); if(isExB) stopped.push('B'); if(isExPA) stopped.push('池A'); if(isExPBC) stopped.push('池BC');
+                    if(isExA) stopped.push('A'); if(isExB) stopped.push('B');
                     if(stopped.length > 0) exBadge = `<span class="text-[10px] bg-red-500 text-white px-1.5 py-0.5 rounded shadow-sm font-black border border-red-600 whitespace-nowrap">${stopped.join('/')}停</span>`;
                 }
 
@@ -395,7 +389,7 @@ window.renderCalendar = () => {
                 let cellHtml = `<div class="font-black text-lg mb-1 flex justify-between items-center"><span class="${isToday ? 'bg-slate-800 text-white rounded px-2.5 py-1 shadow-sm' : 'text-slate-600'}">${date}</span> ${exBadge}</div><div class="flex flex-col gap-1 overflow-y-auto max-h-24 calendar-scroll pr-1">`;
                 if (eventsMap[date]) { eventsMap[date].forEach(e => { cellHtml += `<div class="cal-tag ${e.tagClass} break-all text-[11px] p-1"><b>${e.type}:</b> ${e.label}</div>`; }); }
                 cellHtml += `</div>`; 
-                if(isExAll) cell.classList.add('bg-red-50'); else if (isExA || isExB || isExPA || isExPBC) cell.classList.add('bg-orange-50/50');
+                if(isExAll) cell.classList.add('bg-red-50'); else if (isExA || isExB) cell.classList.add('bg-orange-50/50');
                 cell.innerHTML = cellHtml; date++;
             }
             row.appendChild(cell);
@@ -437,7 +431,7 @@ window.renderReconTable = () => {
             else statusHtml = `<span class="bg-[#FEF2F2] text-[#DC2626] px-4 py-2 rounded-lg font-black animate-pulse whitespace-nowrap"><i class="fa-solid fa-xmark"></i> 誤差 ${Math.abs(rNum - stat.total)} 支</span>`;
         }
         const idBadges = stat.ids.map(id => `<span class="bg-slate-200 text-slate-700 px-2 py-1 rounded text-xs mx-0.5 whitespace-nowrap">${id}</span>`).join('');
-        tbody.innerHTML += `<tr class="border-b-2 border-slate-100 hover:bg-slate-50 transition"><td class="p-4 text-center font-black text-slate-600 max-w-[150px] whitespace-normal">${idBadges}</td><td class="p-4 font-black text-slate-700 whitespace-nowrap">${window.formatMinguo(stat.dateObj)}</td><td class="p-4 text-center font-black text-[#1E3A8A] text-lg">${stat.A||'-'}</td><td class="p-4 text-center font-black text-[#1E3A8A] text-lg">${stat.B||'-'}</td><td class="p-4 font-black text-2xl text-slate-900 text-center bg-slate-50/50">${stat.total}</td><td class="p-4 text-center bg-[#FCF9F2]"><input type="number" class="border-2 border-[#B45309] rounded-lg px-3 py-2 w-28 text-center font-black text-[#B45309] text-xl outline-none focus:ring-2 focus:ring-orange-400" value="${reportVal}" onchange="updateContractorReport('${dStr}', this.value)"></td><td class="p-4 text-center">${statusHtml}</td></tr>`;
+        tbody.innerHTML += `<tr class="border-b-2 border-slate-100 hover:bg-slate-50 transition"><td class="p-4 text-center font-black text-slate-600 max-w-[150px] whitespace-normal">${idBadges}</td><td class="p-4 font-black text-slate-700 whitespace-nowrap">${window.formatMinguo(stat.dateObj).split('(')[0]}</td><td class="p-4 text-center font-black text-[#1E3A8A] text-lg">${stat.A||'-'}</td><td class="p-4 text-center font-black text-[#1E3A8A] text-lg">${stat.B||'-'}</td><td class="p-4 font-black text-2xl text-slate-900 text-center bg-slate-50/50">${stat.total}</td><td class="p-4 text-center bg-[#FCF9F2]"><input type="number" class="border-2 border-[#B45309] rounded-lg px-3 py-2 w-28 text-center font-black text-[#B45309] text-xl outline-none focus:ring-2 focus:ring-orange-400" value="${reportVal}" onchange="updateContractorReport('${dStr}', this.value)"></td><td class="p-4 text-center">${statusHtml}</td></tr>`;
     });
 };
 
@@ -449,20 +443,18 @@ window.exportCSV = () => {
     });
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' }); 
     const link = document.createElement("a"); link.href = URL.createObjectURL(blob); 
-    link.download = `預壘樁進度與試體追蹤表_V17.5全區擴充版.csv`; link.click();
+    link.download = `預壘樁進度與試體追蹤表_V17.5_A_B版.csv`; link.click();
 };
 
 window.calculateMaterials = () => { const totalSandM3 = (parseFloat(document.getElementById('calc-sand-bucket').value)||0) * ((parseFloat(document.getElementById('calc-vol').value)||0)/1000) * (parseFloat(document.getElementById('calc-batches').value)||0); const totalCemTon = (parseFloat(document.getElementById('calc-cem-bucket').value)||0) * ((parseFloat(document.getElementById('calc-vol').value)||0)/1000) * (parseFloat(document.getElementById('calc-batches').value)||0) * 1.4; const resDiv = document.getElementById('calc-result'); resDiv.innerHTML = `<div class="flex justify-around items-center"><div class="text-center font-black text-sm text-slate-500">理論砂用量<br><span class="text-2xl font-black text-slate-800">${totalSandM3.toFixed(2)} <span class="text-sm">m³</span></span></div><div class="text-center font-black text-sm text-slate-500">理論水泥用量<br><span class="text-2xl font-black text-slate-800">${totalCemTon.toFixed(2)} <span class="text-sm">噸</span></span></div></div>`; resDiv.classList.remove('hidden'); };
 
-// 🔥 支援 5 區的例外停機
+// 🔥 退回單純的 A 車、B 車停機與加班機制
 window.addExceptionDate = () => { 
     const m = document.getElementById('exception-machine').value; const val = document.getElementById('exception-date-input').value; 
     if (val) { 
         if (m === 'ALL' && !window.exceptionDates.includes(val)) window.exceptionDates.push(val); 
         if (m === 'A' && !window.exceptionA.includes(val)) window.exceptionA.push(val); 
         if (m === 'B' && !window.exceptionB.includes(val)) window.exceptionB.push(val); 
-        if (m === 'POND_A' && !window.exceptionPondA.includes(val)) window.exceptionPondA.push(val); 
-        if (m === 'POND_BC' && !window.exceptionPondBC.includes(val)) window.exceptionPondBC.push(val); 
         window.saveDataToCloud(); document.getElementById('exception-date-input').value = ""; window.refreshAll(); 
     } 
 };
@@ -470,47 +462,36 @@ window.removeExceptionDate = (m, val) => {
     if(m === 'ALL') window.exceptionDates = window.exceptionDates.filter(d => d !== val); 
     if(m === 'A') window.exceptionA = window.exceptionA.filter(d => d !== val); 
     if(m === 'B') window.exceptionB = window.exceptionB.filter(d => d !== val); 
-    if(m === 'POND_A') window.exceptionPondA = window.exceptionPondA.filter(d => d !== val); 
-    if(m === 'POND_BC') window.exceptionPondBC = window.exceptionPondBC.filter(d => d !== val); 
     window.saveDataToCloud(); window.refreshAll(); 
 };
 
-// 🔥 支援 5 區的加班設定
 window.addExtraDate = () => { 
     const m = document.getElementById('extra-machine').value; const val = document.getElementById('extra-date-input').value; 
     if (val) { 
         if (m === 'A' && !window.extraWorkA.includes(val)) window.extraWorkA.push(val); 
         if (m === 'B' && !window.extraWorkB.includes(val)) window.extraWorkB.push(val); 
-        if (m === 'POND_A' && !window.extraPondA.includes(val)) window.extraPondA.push(val); 
-        if (m === 'POND_BC' && !window.extraPondBC.includes(val)) window.extraPondBC.push(val); 
         window.saveDataToCloud(); document.getElementById('extra-date-input').value = ""; window.refreshAll(); 
     } 
 };
 window.removeExtraDate = (m, val) => { 
     if (m === 'A') window.extraWorkA = window.extraWorkA.filter(d => d !== val); 
     if (m === 'B') window.extraWorkB = window.extraWorkB.filter(d => d !== val); 
-    if (m === 'POND_A') window.extraPondA = window.extraPondA.filter(d => d !== val); 
-    if (m === 'POND_BC') window.extraPondBC = window.extraPondBC.filter(d => d !== val); 
     window.saveDataToCloud(); window.refreshAll(); 
 };
 
 window.updateExtraUI = () => {
-    const expAll = document.getElementById('exception-list-all'); if(expAll) expAll.innerHTML = '<span class="text-[10px] text-red-400 font-bold w-full">全區：</span>'; 
-    const expA = document.getElementById('exception-list-a'); if(expA) expA.innerHTML = '<span class="text-[10px] text-orange-400 font-bold w-full">A車：</span>';
-    const expB = document.getElementById('exception-list-b'); if(expB) expB.innerHTML = '<span class="text-[10px] text-amber-400 font-bold w-full">B車：</span>';
-    const expPA = document.getElementById('exception-list-pa'); if(expPA) expPA.innerHTML = '<span class="text-[10px] text-purple-400 font-bold w-full">池A：</span>';
-    const expPBC = document.getElementById('exception-list-pbc'); if(expPBC) expPBC.innerHTML = '<span class="text-[10px] text-indigo-400 font-bold w-full">池BC：</span>';
+    const expAll = document.getElementById('exception-list-all'); if(expAll) expAll.innerHTML = '<span class="text-[10px] text-red-400 font-bold w-full">全區停機：</span>'; 
+    const expA = document.getElementById('exception-list-a'); if(expA) expA.innerHTML = '<span class="text-[10px] text-orange-400 font-bold w-full">A車停機：</span>';
+    const expB = document.getElementById('exception-list-b'); if(expB) expB.innerHTML = '<span class="text-[10px] text-amber-400 font-bold w-full">B車停機：</span>';
     
     const renderExTag = (container, m, val) => { if(!container) return; const parts = val.split('-'); const tag = document.createElement('span'); tag.className = "bg-white text-red-700 px-2 py-0.5 rounded text-[11px] font-black border border-red-200 shadow-sm whitespace-nowrap"; tag.innerHTML = `${parts[1]}/${parts[2]} <i class="fa-solid fa-xmark cursor-pointer ml-1 opacity-60 hover:opacity-100" onclick="removeExceptionDate('${m}', '${val}')"></i>`; container.appendChild(tag); };
     window.exceptionDates.forEach(val => renderExTag(expAll, 'ALL', val)); window.exceptionA.forEach(val => renderExTag(expA, 'A', val)); window.exceptionB.forEach(val => renderExTag(expB, 'B', val));
-    window.exceptionPondA.forEach(val => renderExTag(expPA, 'POND_A', val)); window.exceptionPondBC.forEach(val => renderExTag(expPBC, 'POND_BC', val));
 
     const extraContainer = document.getElementById('extra-list'); 
     if(extraContainer) { 
         extraContainer.innerHTML = ""; 
         const renderExWTag = (m, val, label) => { const parts = val.split('-'); const tag = document.createElement('span'); tag.className = "bg-white text-blue-700 px-2 py-0.5 rounded text-[11px] font-black border border-blue-200 shadow-sm whitespace-nowrap"; tag.innerHTML = `${label}:${parts[1]}/${parts[2]} <i class="fa-solid fa-xmark cursor-pointer ml-1 opacity-60 hover:opacity-100" onclick="removeExtraDate('${m}', '${val}')"></i>`; extraContainer.appendChild(tag); }; 
         window.extraWorkA.forEach(val => renderExWTag('A', val, 'A車')); window.extraWorkB.forEach(val => renderExWTag('B', val, 'B車')); 
-        window.extraPondA.forEach(val => renderExWTag('POND_A', val, '池A')); window.extraPondBC.forEach(val => renderExWTag('POND_BC', val, '池BC')); 
     }
 };
 
@@ -549,21 +530,33 @@ window.syncFromContractor = async () => {
 };
 
 // ==========================================
-// ACI 214 強度統計分析與 AI 專家診斷 (支援5區)
+// ACI 214 強度統計分析與 AI 專家診斷 (🔥 依澆置區域 ZONE 分析)
 // ==========================================
+
+const zoneMap = {
+    'A_NORMAL': 'A車 (一般區)',
+    'A_POND_BC': 'A車 (滯洪池BC)',
+    'B_NORMAL': 'B車 (一般區)',
+    'B_POND_A': 'B車 (滯洪池A)',
+    'A_ALL': '【A車總體品質】',
+    'B_ALL': '【B車總體品質】',
+    'ALL': '全區 (A+B)'
+};
+
 window.addConcreteRecord = () => {
     const dateStr = document.getElementById('concrete-date').value || window.toDateString(new Date());
     const id = document.getElementById('concrete-id').value.trim() || `P-${Math.floor(Math.random()*1000)}`;
     const s1 = parseFloat(document.getElementById('concrete-s1').value);
     const s2 = parseFloat(document.getElementById('concrete-s2').value);
     const s3 = parseFloat(document.getElementById('concrete-s3').value);
-    const machine = document.getElementById('concrete-machine-select').value;
+    const zone = document.getElementById('concrete-zone-select').value; // 儲存 Zone
 
     if(isNaN(s1) || isNaN(s2) || isNaN(s3)) { alert("請完整填寫 3 顆試體數值！"); return; }
     const max = Math.max(s1, s2, s3); const min = Math.min(s1, s2, s3);
     const avg = (s1 + s2 + s3) / 3; const range = max - min;
 
-    window.concreteData.push({ timestamp: Date.now(), date: dateStr, id: id, machine: machine, s1: s1, s2: s2, s3: s3, avg: avg, range: range });
+    // 將區域(Zone)屬性綁定至該筆資料
+    window.concreteData.push({ timestamp: Date.now(), date: dateStr, id: id, zone: zone, s1: s1, s2: s2, s3: s3, avg: avg, range: range });
     window.concreteData.sort((a, b) => new Date(a.date) - new Date(b.date));
     
     document.getElementById('concrete-s1').value = ''; document.getElementById('concrete-s2').value = ''; document.getElementById('concrete-s3').value = ''; document.getElementById('concrete-id').value = '';
@@ -581,9 +574,20 @@ window.deleteConcreteRecord = (ts) => {
 
 window.calculateConcreteStats = () => {
     const targetFc = parseFloat(document.getElementById('fc-prime')?.value) || 280;
-    const filter = document.getElementById('concrete-machine-filter')?.value || 'ALL';
+    const filter = document.getElementById('concrete-zone-filter')?.value || 'ALL';
     
-    let data = filter === 'ALL' ? window.concreteData : window.concreteData.filter(d => d.machine === filter);
+    // 🔥 智慧過濾器：處理 Zone 的母子集關係
+    let data = window.concreteData;
+    if (filter !== 'ALL') {
+        if (filter === 'A_ALL') {
+            data = data.filter(d => d.zone && d.zone.startsWith('A_'));
+        } else if (filter === 'B_ALL') {
+            data = data.filter(d => d.zone && d.zone.startsWith('B_'));
+        } else {
+            data = data.filter(d => d.zone === filter);
+        }
+    }
+    
     let totalAvg = 0, totalRange = 0, n = data.length;
     
     if (n > 0) {
@@ -612,17 +616,16 @@ window.renderConcreteUI = (CL, UCL, LCL, R_CL, R_UCL, fcPrime, data) => {
     tbody.innerHTML = '';
     document.getElementById('concrete-count').innerText = `總計: ${data.length} 組`;
     
-    const machineNameMap = { 'A': 'A車', 'B': 'B車', 'POND_A': '滯洪池A', 'POND_BC': '滯洪池BC' };
-    
-    if(data.length === 0) { tbody.innerHTML = `<tr><td colspan="8" class="p-8 text-center text-slate-500 font-bold">尚無檢驗資料。</td></tr>`; }
+    if(data.length === 0) { tbody.innerHTML = `<tr><td colspan="8" class="p-8 text-center text-slate-500 font-bold">目前此區域尚無檢驗資料。</td></tr>`; }
     
     data.forEach(d => {
         const isFail = d.avg < fcPrime;
         const avgClass = isFail ? 'text-red-600 bg-red-50 border border-red-200 rounded px-2 py-1' : 'text-blue-700';
-        const mLabel = machineNameMap[d.machine] || d.machine;
+        const zLabel = zoneMap[d.zone] || d.zone || '未歸類';
+        
         tbody.innerHTML += `<tr class="hover:bg-slate-50 border-b border-slate-200">
             <td class="p-3 text-center text-slate-600 font-bold">${d.date.replace(/^\d{4}-/, '')}</td>
-            <td class="p-3 text-center font-black text-indigo-700">${mLabel}</td>
+            <td class="p-3 text-center font-black text-indigo-700">${zLabel}</td>
             <td class="p-3 text-center text-slate-800 font-black">${d.id}</td>
             <td class="p-3 text-center text-slate-500 font-bold">${d.s1}/${d.s2}/${d.s3}</td>
             <td class="p-3 text-center bg-blue-50/50"><span class="font-black ${avgClass}">${d.avg.toFixed(1)}</span></td>
@@ -670,8 +673,7 @@ const generateAIReport = (total, avg, target, min, passRate, sd, uclR, scope) =>
     let reportContainer = document.getElementById('ai-report-wrapper');
     if(!reportContainer) return;
     
-    const scopeMap = { 'ALL': '全區', 'A': 'A車', 'B': 'B車', 'POND_A': '滯洪池A', 'POND_BC': '滯洪池BC' };
-    const scopeLabel = scopeMap[scope] || scope;
+    const scopeLabel = zoneMap[scope] || scope;
     
     let reportHtml = `
         <div class="col-span-1 xl:col-span-2 bg-gradient-to-r from-amber-50 to-orange-50 p-6 rounded-2xl border border-amber-200 shadow-sm mt-6 mb-8">
@@ -693,8 +695,15 @@ const generateAIReport = (total, avg, target, min, passRate, sd, uclR, scope) =>
     else if (sd < 30) sdStr = '<span class="text-blue-600 font-black">正常 (標準差 15~30)</span>，變異度符合一般施工規範要求。';
     else sdStr = '<span class="text-amber-600 font-black">偏高 (標準差 > 30)</span>，顯示該區段波動顯著，建議查核施工穩定度。';
     
+    // 檢查該區是否有破 UCL_R 的紀錄
     let highRangeCount = 0;
-    window.concreteData.forEach(d => { if((scope === 'ALL' || d.machine === scope) && d.range > uclR) highRangeCount++; });
+    // 因為前面傳入的 `data` 已經被過濾過了，我們可以直接遍歷目前顯示的數據來判斷
+    let currentData = filter === 'ALL' ? window.concreteData : 
+                      (scope === 'A_ALL' ? window.concreteData.filter(d=>d.zone && d.zone.startsWith('A_')) :
+                      (scope === 'B_ALL' ? window.concreteData.filter(d=>d.zone && d.zone.startsWith('B_')) : 
+                      window.concreteData.filter(d=>d.zone === scope)));
+                      
+    currentData.forEach(d => { if(d.range > uclR) highRangeCount++; });
     let rangeWarning = '';
     if(highRangeCount > 0) rangeWarning = `<br><span class="text-red-600 bg-red-100 px-2 py-0.5 rounded text-sm ml-1 animate-pulse">⚠️ 警告：發現 ${highRangeCount} 組試體組內全距超越 R-UCL，試驗離散度偏高。</span>`;
 
