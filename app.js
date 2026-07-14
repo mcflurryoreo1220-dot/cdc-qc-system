@@ -16,6 +16,7 @@ window.extraWorkA = []; window.extraWorkB = [];
 window.pileNumbers = {}; window.statusSample = {}; window.statusLab = {}; window.statusTest = {}; window.remarks = {}; window.contractorReports = {}; 
 window.specialPilesData = {}; 
 window.scheduleData = []; 
+window.concreteData = []; // 🔥 新增：雲端強度資料庫陣列
 window.currentFilter = 'ALL'; 
 window.currentView = 'table'; 
 window.currentCalDate = new Date(2026, 4, 1); 
@@ -27,6 +28,7 @@ const initFirebase = async () => {
         const app = initializeApp(firebaseConfig); auth = getAuth(app); db = getFirestore(app); isCloudEnabled = true; await signInAnonymously(auth);
         onAuthStateChanged(auth, (user) => {
             if (user) {
+                // 1. 監聽主排程進度
                 onSnapshot(doc(db, 'scheduleData', 'mainState'), (snapshot) => {
                     if (snapshot.exists()) {
                         const data = snapshot.data();
@@ -46,6 +48,17 @@ const initFirebase = async () => {
 
                     document.getElementById('sync-status').innerHTML = '<i class="fa-solid fa-cloud-check text-emerald-600"></i> 雲端即時連線中';
                     window.refreshAll();
+                });
+
+                // 🔥 2. 監聽 ACI 214 獨立強度資料庫
+                onSnapshot(doc(db, 'scheduleData', 'concreteState'), (snapshot) => {
+                    if (snapshot.exists()) {
+                        window.concreteData = snapshot.data().records || [];
+                    } else {
+                        window.concreteData = [];
+                    }
+                    // 若目前停留在強度分頁，則即時更新圖表
+                    if (window.currentView === 'concrete') window.calculateConcreteStats();
                 });
             }
         });
@@ -67,6 +80,19 @@ window.saveDataToCloud = async () => {
     } 
 };
 
+// 🔥 獨立儲存：將強度資料上傳至獨立節點，絕不干擾排程資料
+window.saveConcreteDataToCloud = async () => {
+    if (isCloudEnabled && auth.currentUser) {
+        try {
+            await setDoc(doc(db, 'scheduleData', 'concreteState'), {
+                records: window.concreteData
+            }, { merge: true });
+        } catch (err) { console.error('強度存檔失敗', err); }
+    } else {
+        localStorage.setItem('Concrete_ACI214_DB', JSON.stringify(window.concreteData));
+    }
+};
+
 window.toDateString = (d) => { const y=d.getFullYear(); const m=String(d.getMonth()+1).padStart(2,'0'); const dt=String(d.getDate()).padStart(2,'0'); return `${y}-${m}-${dt}`; };
 window.formatMinguo = (d) => { const y=d.getFullYear()-1911; const m=String(d.getMonth()+1).padStart(2,'0'); const dt=String(d.getDate()).padStart(2,'0'); const day=["日","一","二","三","四","五","六"][d.getDay()]; return `${y}/${m}/${dt}(${day})`; };
 const addDays = (d, days) => { let r=new Date(d); r.setDate(r.getDate()+days); return r; };
@@ -80,7 +106,6 @@ window.refreshAll = () => {
     try { if (window.updateExtraUI) window.updateExtraUI(); } catch(e) {}
 };
 
-// 🔥 修復 1：處理 NaN 錯誤與排程計算邏輯
 window.generateSchedule = () => {
     window.scheduleData.length = 0; const startDateA = new Date(2026, 4, 5); const startDateB = new Date(2026, 4, 9); const endDate = new Date(2026, 6, 30); let cA = 1, cB = 1;
     for (let d = new Date(startDateA); d <= endDate; d.setDate(d.getDate() + 1)) {
@@ -115,6 +140,7 @@ window.toggleView = (v) => {
     window.currentView = v; 
     document.getElementById('table-view').classList.toggle('hidden', v !== 'table'); 
     document.getElementById('calendar-view').classList.toggle('hidden', v !== 'calendar'); 
+    
     const btnTable = document.getElementById('btn-view-table');
     const btnCal = document.getElementById('btn-view-cal');
     if(btnTable) btnTable.className = v === 'table' ? "px-4 py-1.5 rounded-md text-sm font-black bg-slate-800 text-white shadow transition" : "px-4 py-1.5 rounded-md text-sm font-black bg-slate-100 text-slate-700 hover:bg-slate-300 transition border border-slate-300";
@@ -122,7 +148,6 @@ window.toggleView = (v) => {
     if (v === 'calendar') window.renderCalendar(); 
 };
 
-// 🔥 修復 2：A車/B車過濾按鈕顏色切換與過濾邏輯
 window.filterData = (f) => { 
     window.currentFilter = f; 
     const btnAll = document.getElementById('btn-ALL');
@@ -464,7 +489,6 @@ window.exportCSV = () => {
 window.changeMonth = (o) => { window.currentCalDate.setMonth(window.currentCalDate.getMonth() + o); window.renderCalendar(); };
 window.calculateMaterials = () => { const totalSandM3 = (parseFloat(document.getElementById('calc-sand-bucket').value)||0) * ((parseFloat(document.getElementById('calc-vol').value)||0)/1000) * (parseFloat(document.getElementById('calc-batches').value)||0); const totalCemTon = (parseFloat(document.getElementById('calc-cem-bucket').value)||0) * ((parseFloat(document.getElementById('calc-vol').value)||0)/1000) * (parseFloat(document.getElementById('calc-batches').value)||0) * 1.4; const resDiv = document.getElementById('calc-result'); resDiv.innerHTML = `<div class="flex justify-around items-center"><div class="text-center font-black text-sm text-slate-500">理論砂用量<br><span class="text-2xl font-black text-slate-800">${totalSandM3.toFixed(2)} <span class="text-sm">m³</span></span></div><div class="text-center font-black text-sm text-slate-500">理論水泥用量<br><span class="text-2xl font-black text-slate-800">${totalCemTon.toFixed(2)} <span class="text-sm">噸</span></span></div></div>`; resDiv.classList.remove('hidden'); };
 
-// 🔥 修復 3：例外停機的 3 分類顯示邏輯
 window.addExceptionDate = () => { const m = document.getElementById('exception-machine').value; const val = document.getElementById('exception-date-input').value; if (val) { if (m === 'ALL' && !window.exceptionDates.includes(val)) window.exceptionDates.push(val); if (m === 'A' && !window.exceptionA.includes(val)) window.exceptionA.push(val); if (m === 'B' && !window.exceptionB.includes(val)) window.exceptionB.push(val); window.saveDataToCloud(); document.getElementById('exception-date-input').value = ""; window.refreshAll(); } };
 window.removeExceptionDate = (m, val) => { if(m === 'ALL') window.exceptionDates = window.exceptionDates.filter(d => d !== val); if(m === 'A') window.exceptionA = window.exceptionA.filter(d => d !== val); if(m === 'B') window.exceptionB = window.exceptionB.filter(d => d !== val); window.saveDataToCloud(); window.refreshAll(); };
 window.addExtraDate = () => { const m = document.getElementById('extra-machine').value; const val = document.getElementById('extra-date-input').value; if (val) { if (m === 'A' && !window.extraWorkA.includes(val)) window.extraWorkA.push(val); if (m === 'B' && !window.extraWorkB.includes(val)) window.extraWorkB.push(val); window.saveDataToCloud(); document.getElementById('extra-date-input').value = ""; window.refreshAll(); } };
@@ -531,6 +555,109 @@ window.syncFromContractor = async () => {
         if (updatedCount > 0) window.showModal("同步成功！", `透過 API 自動更新了 <b class="text-blue-600 text-lg">${updatedCount}</b> 筆排程！`, "success"); 
         else window.showModal("進度載入完成", "地圖與資料已更新，目前進度已是最新狀態。", "success"); 
     } catch (error) { window.showModal("API 同步失敗", error.message, "error"); } finally { btn.innerHTML = originalHtml; btn.disabled = false; }
+};
+
+// ========================================================
+// 🔥 獨立安全模組：ACI 214 混凝土品質管制圖 (X-bar & R) 引擎
+// ========================================================
+const CONCRETE_DB_KEY = 'Concrete_ACI214_DB';
+window.concreteData = JSON.parse(localStorage.getItem(CONCRETE_DB_KEY)) || [];
+let xBarChartInst = null; let rChartInst = null;
+
+// ACI 管制圖統計常數 (樣本數 n=3)
+const A2 = 1.023; const D4 = 2.574; const D3 = 0;
+
+window.addConcreteRecord = () => {
+    const dateStr = document.getElementById('concrete-date').value || window.toDateString(new Date());
+    const id = document.getElementById('concrete-id').value.trim() || `P-${Math.floor(Math.random()*1000)}`;
+    const s1 = parseFloat(document.getElementById('concrete-s1').value);
+    const s2 = parseFloat(document.getElementById('concrete-s2').value);
+    const s3 = parseFloat(document.getElementById('concrete-s3').value);
+
+    if(isNaN(s1) || isNaN(s2) || isNaN(s3)) { alert("請完整填寫 3 顆試體數值以符合 ACI 214 (n=3) 規範！"); return; }
+
+    const max = Math.max(s1, s2, s3); const min = Math.min(s1, s2, s3);
+    const avg = (s1 + s2 + s3) / 3; const range = max - min;
+
+    window.concreteData.push({ timestamp: Date.now(), date: dateStr, id: id, s1: s1, s2: s2, s3: s3, avg: avg, range: range });
+    window.concreteData.sort((a, b) => new Date(a.date) - new Date(b.date));
+    
+    document.getElementById('concrete-s1').value = ''; document.getElementById('concrete-s2').value = ''; document.getElementById('concrete-s3').value = ''; document.getElementById('concrete-id').value = '';
+    
+    window.saveConcreteDataToCloud();
+    window.calculateConcreteStats();
+};
+
+window.deleteConcreteRecord = (ts) => {
+    if(confirm("確定刪除此筆試驗資料？")) {
+        window.concreteData = window.concreteData.filter(d => d.timestamp !== ts);
+        window.saveConcreteDataToCloud();
+        window.calculateConcreteStats();
+    }
+};
+
+window.calculateConcreteStats = () => {
+    const targetFc = parseFloat(document.getElementById('fc-prime')?.value) || 280; // 設計強度固定或從畫面抓
+    let totalAvg = 0, totalRange = 0; const n = window.concreteData.length;
+
+    if(n > 0) {
+        window.concreteData.forEach(d => { totalAvg += d.avg; totalRange += d.range; });
+        const X_bar_bar = totalAvg / n; const R_bar = totalRange / n;
+        const UCL_X = X_bar_bar + (A2 * R_bar); const LCL_X = X_bar_bar - (A2 * R_bar);
+        const UCL_R = D4 * R_bar; const LCL_R = 0;
+        
+        renderConcreteUI(X_bar_bar, UCL_X, LCL_X, R_bar, UCL_R, LCL_R, targetFc);
+    } else {
+        renderConcreteUI(0, 0, 0, 0, 0, 0, targetFc);
+    }
+};
+
+const renderConcreteUI = (X_bar_bar, UCL_X, LCL_X, R_bar, UCL_R, LCL_R, fcPrime) => {
+    const tbody = document.getElementById('concrete-body'); 
+    if(!tbody) return; // 防呆，若不在該分頁就不執行
+    
+    tbody.innerHTML = '';
+    document.getElementById('concrete-count').innerText = `總計: ${window.concreteData.length} 組`;
+    
+    if(window.concreteData.length === 0) { tbody.innerHTML = `<tr><td colspan="8" class="p-8 text-center text-slate-500 font-bold">尚無檢驗資料，請於上方新增。</td></tr>`; }
+    
+    window.concreteData.forEach(d => {
+        const isFail = d.avg < fcPrime;
+        const avgClass = isFail ? 'text-red-600 bg-red-50 border border-red-200 rounded px-2 py-1' : 'text-blue-700';
+        tbody.innerHTML += `<tr class="hover:bg-slate-50 border-b border-slate-200"><td class="p-3 text-center text-slate-600 font-bold">${d.date.replace(/^\d{4}-/, '')}</td><td class="p-3 text-center text-slate-800 font-black">${d.id}</td><td class="p-3 text-center text-slate-500 font-bold">${d.s1}</td><td class="p-3 text-center text-slate-500 font-bold">${d.s2}</td><td class="p-3 text-center text-slate-500 font-bold">${d.s3}</td><td class="p-3 text-center bg-blue-50/50"><span class="font-black ${avgClass}">${d.avg.toFixed(1)}</span></td><td class="p-3 text-center bg-orange-50/50 font-black text-orange-700">${d.range.toFixed(1)}</td><td class="p-3 text-center no-print"><button onclick="deleteConcreteRecord(${d.timestamp})" class="bg-slate-200 hover:bg-red-500 text-slate-600 hover:text-white w-8 h-8 rounded-full transition shadow-sm"><i class="fa-solid fa-trash-can text-sm"></i></button></td></tr>`;
+    });
+
+    if(window.concreteData.length > 0) {
+        document.getElementById('x-bar-stats').innerHTML = `UCL: <span class="text-blue-600">${UCL_X.toFixed(1)}</span> | CL: <span class="text-emerald-600">${X_bar_bar.toFixed(1)}</span> | LCL: <span class="text-orange-600">${LCL_X.toFixed(1)}</span>`;
+        document.getElementById('r-chart-stats').innerHTML = `UCL: <span class="text-red-600">${UCL_R.toFixed(1)}</span> | CL: <span class="text-emerald-600">${R_bar.toFixed(1)}</span>`;
+    } else {
+        document.getElementById('x-bar-stats').innerHTML = "等待數據..."; document.getElementById('r-chart-stats').innerHTML = "等待數據...";
+    }
+
+    const labels = window.concreteData.map(d => d.id);
+    const dataX = window.concreteData.map(d => d.avg);
+    const dataR = window.concreteData.map(d => d.range);
+    const hasData = window.concreteData.length > 0;
+
+    const ctxX = document.getElementById('xBarChart');
+    if(!ctxX) return;
+    
+    if(xBarChartInst) xBarChartInst.destroy();
+    xBarChartInst = new Chart(ctxX.getContext('2d'), { type: 'line', data: { labels: labels, datasets: [
+        { label: '單組平均強度 (X)', data: dataX, borderColor: '#2563EB', backgroundColor: 'rgba(37, 99, 235, 0.1)', pointBackgroundColor: '#1E3A8A', borderWidth: 3, pointRadius: 5, fill: true, tension: 0.2 },
+        { label: `總平均 (CL)`, data: hasData ? dataX.map(()=>X_bar_bar) : [], borderColor: '#10B981', borderWidth: 2, pointRadius: 0, borderDash: [5,5] },
+        { label: `上限 (UCL)`, data: hasData ? dataX.map(()=>UCL_X) : [], borderColor: '#F59E0B', borderWidth: 2, pointRadius: 0 },
+        { label: `下限 (LCL)`, data: hasData ? dataX.map(()=>LCL_X) : [], borderColor: '#F59E0B', borderWidth: 2, pointRadius: 0 },
+        { label: `設計強度 (${fcPrime})`, data: hasData ? dataX.map(()=>fcPrime) : [], borderColor: '#EF4444', borderWidth: 3, pointRadius: 0, borderDash: [6,6] }
+    ]}, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top' } } }});
+
+    const ctxR = document.getElementById('rChart');
+    if(rChartInst) rChartInst.destroy();
+    rChartInst = new Chart(ctxR.getContext('2d'), { type: 'line', data: { labels: labels, datasets: [
+        { label: '單組全距 (R)', data: dataR, borderColor: '#B45309', backgroundColor: 'rgba(180, 83, 9, 0.1)', pointBackgroundColor: '#78350F', borderWidth: 3, pointRadius: 5, fill: true, tension: 0.2 },
+        { label: `全距平均 (CL)`, data: hasData ? dataR.map(()=>R_bar) : [], borderColor: '#10B981', borderWidth: 2, pointRadius: 0, borderDash: [5,5] },
+        { label: `上限 (UCL)`, data: hasData ? dataR.map(()=>UCL_R) : [], borderColor: '#EF4444', borderWidth: 2, pointRadius: 0 }
+    ]}, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top' } } }});
 };
 
 // 正式環境初始化
