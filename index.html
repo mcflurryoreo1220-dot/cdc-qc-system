@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>衛生福利部防疫中心 - 試體管制系統 V17.0 正式營運版</title>
+    <title>衛生福利部防疫中心 - QC 戰情室 (V17 模組化重構版)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/svg-pan-zoom@3.6.1/dist/svg-pan-zoom.min.js"></script>
@@ -12,12 +12,10 @@
         :root { --bg-color: #F8FAFC; --text-main: #0F172A; --border-color: #CBD5E1; --color-blue-deep: #1E3A8A; --color-orange-deep: #B45309; --color-green-deep: #166534; }
         body { font-family: 'Noto Sans TC', sans-serif; background-color: var(--bg-color); color: var(--text-main); letter-spacing: 0.02em; scroll-behavior: smooth; }
         
-        /* 表格設計：強制不換行，適應單螢幕 */
         .table-header th { font-size: 15px; font-weight: 900; padding: 14px 6px; background-color: #FFFFFF; color: #1E293B; border-bottom: 2px solid #94A3B8; position: sticky; top: 0; z-index: 20; text-align: center; white-space: nowrap; }
         .modern-row td { padding: 8px 6px; font-size: 15px; line-height: 1.5; vertical-align: middle; border-bottom: 1px solid var(--border-color); transition: all 0.2s ease; text-align: center; font-weight: 700; }
         .modern-row:hover:not(.completed-row) { background-color: #F1F5F9; box-shadow: inset 4px 0 0 0 var(--color-blue-deep); }
         
-        /* 樁號與備註：強制單行不換行，橫向捲動 */
         .pile-input, .remark-input { 
             border: 2px solid #94A3B8; border-radius: 6px; padding: 0 10px; width: 100%; 
             font-size: 15px; font-weight: 900; transition: all 0.2s; 
@@ -41,7 +39,6 @@
         .tag-demold { background-color: #E2E8F0; border-left-color: #64748B; color: #334155; }
         .tag-lab { background-color: #FEF3C7; border-left-color: var(--color-orange-deep); color: #92400E; }
         .tag-test { background-color: #D1FAE5; border-left-color: var(--color-green-deep); color: #065F46; }
-        .calendar-scroll::-webkit-scrollbar { width: 6px; } .calendar-scroll::-webkit-scrollbar-thumb { background-color: #94A3B8; border-radius: 10px; }
 
         .matrix-box { width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; font-size: 0.95rem; font-weight: 900; border-radius: 8px; transition: all 0.2s; cursor: default; }
         .box-missing { background-color: #F1F5F9; color: #64748B; border: 1px solid #CBD5E1; } 
@@ -62,10 +59,7 @@
         details > summary::-webkit-details-marker { display: none; }
         details[open] > summary .chevron { transform: rotate(180deg); }
 
-        @media print {
-            .no-print { display: none !important; }
-            body { background: white; }
-        }
+        @media print { .no-print { display: none !important; } body { background: white; } }
     </style>
 </head>
 <body class="p-3 md:p-6 relative">
@@ -84,19 +78,15 @@
                     <div class="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-slate-800 text-white flex items-center justify-center shadow-md"><i class="fa-solid fa-building-shield"></i></div>
                     防疫中心興建工程 QC 管制
                 </h1>
-                <p class="text-slate-600 mt-2 text-sm md:text-base font-bold flex flex-wrap items-center gap-2">預壘樁試體管制排程系統 <span class="bg-emerald-100 text-emerald-800 px-3 py-1 rounded-md text-xs font-black border border-emerald-300 shadow-sm"><i class="fa-solid fa-circle-check"></i> V17.0 正式營運版</span></p>
+                <p class="text-slate-600 mt-2 text-sm md:text-base font-bold flex flex-wrap items-center gap-2">預壘樁試體管制排程系統 <span class="bg-emerald-100 text-emerald-800 px-3 py-1 rounded-md text-xs font-black border border-emerald-300 shadow-sm"><i class="fa-solid fa-circle-check"></i> V17 模組化正式版</span></p>
             </div>
-            
-            <div class="flex items-center gap-3">
-                <div id="sync-status" class="flex items-center gap-2 px-4 py-2.5 bg-[#EFF6FF] rounded-xl text-sm font-black text-blue-800 border border-blue-200 shadow-sm"><i class="fa-solid fa-cloud-arrow-up animate-pulse"></i> 系統連線中...</div>
-            </div>
+            <div id="sync-status" class="flex items-center gap-2 px-4 py-2.5 bg-[#EFF6FF] rounded-xl text-sm font-black text-blue-800 border border-blue-200 shadow-sm"><i class="fa-solid fa-cloud-arrow-up animate-pulse"></i> 系統連線中...</div>
         </div>
 
         <div id="view-schedule" class="space-y-5">
-            
             <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-300 relative">
                 <div class="flex flex-col xl:flex-row justify-between items-start xl:items-center mb-4 gap-4">
-                    <h3 class="font-black text-slate-800 text-lg flex items-center gap-2"><i class="fa-solid fa-map-location-dot text-[#1E3A8A]"></i> 全區進度戰情地圖 <span class="text-xs bg-slate-200 text-slate-600 px-2 py-1 rounded-md ml-1 border border-slate-300">支援縮放/拖曳</span></h3>
+                    <h3 class="font-black text-slate-800 text-lg flex items-center gap-2"><i class="fa-solid fa-map-location-dot text-[#1E3A8A]"></i> 全區進度戰情地圖</h3>
                     <div class="flex flex-wrap gap-3 items-center w-full xl:w-auto">
                         <div class="flex gap-2 w-full md:w-auto">
                             <input type="text" id="map-search-input" placeholder="搜尋樁號 (如: 613)" class="border-2 border-slate-300 rounded-lg px-3 py-1.5 shadow-sm outline-none text-sm font-bold w-full md:w-40 focus:border-[#1E3A8A]">
@@ -175,17 +165,19 @@
                         <input type="date" id="exception-date-input" class="border-2 border-slate-300 rounded-lg px-2 py-1.5 text-sm font-bold bg-white w-36">
                         <button onclick="addExceptionDate()" class="bg-red-50 text-red-700 border border-red-300 px-4 py-1.5 rounded-lg text-sm font-black hover:bg-red-100 transition shadow-sm">新增</button>
                         <div class="w-full mt-2 grid grid-cols-1 md:grid-cols-3 gap-2">
-                            <div id="exception-list-all" class="flex flex-wrap gap-1.5 empty:hidden bg-red-50 p-2 rounded border border-red-100 min-h-[30px]"><span class="text-[10px] text-red-400 font-bold">全區停機：</span></div>
-                            <div id="exception-list-a" class="flex flex-wrap gap-1.5 empty:hidden bg-orange-50 p-2 rounded border border-orange-100 min-h-[30px]"><span class="text-[10px] text-orange-400 font-bold">A車停機：</span></div>
-                            <div id="exception-list-b" class="flex flex-wrap gap-1.5 empty:hidden bg-amber-50 p-2 rounded border border-amber-100 min-h-[30px]"><span class="text-[10px] text-amber-400 font-bold">B車停機：</span></div>
+                            <div id="exception-list-all" class="flex flex-wrap gap-1.5 empty:hidden bg-red-50 p-2 rounded border border-red-100 min-h-[30px]"><span class="text-[10px] text-red-400 font-bold w-full">全區停機：</span></div>
+                            <div id="exception-list-a" class="flex flex-wrap gap-1.5 empty:hidden bg-orange-50 p-2 rounded border border-orange-100 min-h-[30px]"><span class="text-[10px] text-orange-400 font-bold w-full">A車停機：</span></div>
+                            <div id="exception-list-b" class="flex flex-wrap gap-1.5 empty:hidden bg-amber-50 p-2 rounded border border-amber-100 min-h-[30px]"><span class="text-[10px] text-amber-400 font-bold w-full">B車停機：</span></div>
                         </div>
                     </div>
-                    <div class="flex-1 p-4 bg-slate-50 rounded-xl border border-slate-200 flex flex-wrap gap-3 items-center shadow-sm">
-                        <span class="font-black text-slate-700 text-sm"><i class="fa-solid fa-play-circle text-blue-600"></i> 加班：</span>
-                        <select id="extra-machine" class="border-2 border-slate-300 rounded-lg px-2 py-1.5 text-sm font-black bg-white"><option value="A">A車</option><option value="B">B車</option></select>
-                        <input type="date" id="extra-date-input" class="border-2 border-slate-300 rounded-lg px-2 py-1.5 text-sm font-bold bg-white w-36">
-                        <button onclick="addExtraDate()" class="bg-blue-50 text-blue-700 border border-blue-300 px-4 py-1.5 rounded-lg text-sm font-black hover:bg-blue-100 transition shadow-sm">新增</button>
-                        <div id="extra-list" class="flex flex-wrap gap-2 w-full mt-2 empty:hidden"></div>
+                    <div class="flex-1 p-4 bg-slate-50 rounded-xl border border-slate-200 flex flex-wrap gap-3 items-start shadow-sm">
+                        <div class="flex items-center gap-3 w-full">
+                            <span class="font-black text-slate-700 text-sm"><i class="fa-solid fa-play-circle text-blue-600"></i> 加班：</span>
+                            <select id="extra-machine" class="border-2 border-slate-300 rounded-lg px-2 py-1.5 text-sm font-black bg-white"><option value="A">A車</option><option value="B">B車</option></select>
+                            <input type="date" id="extra-date-input" class="border-2 border-slate-300 rounded-lg px-2 py-1.5 text-sm font-bold bg-white w-36">
+                            <button onclick="addExtraDate()" class="bg-blue-50 text-blue-700 border border-blue-300 px-4 py-1.5 rounded-lg text-sm font-black hover:bg-blue-100 transition shadow-sm">新增</button>
+                        </div>
+                        <div id="extra-list" class="flex flex-wrap gap-2 w-full mt-2 empty:hidden bg-blue-50 p-2 rounded border border-blue-100 min-h-[30px]"></div>
                     </div>
                 </div>
             </details>
@@ -258,585 +250,10 @@
     </div>
 
     <div id="custom-modal" class="fixed inset-0 z-[100] flex items-center justify-center hidden bg-slate-900/70 backdrop-blur-sm transition-opacity px-4"><div class="bg-white rounded-3xl shadow-2xl max-w-sm w-full overflow-hidden border-2 border-slate-300"><div class="p-5 border-b border-slate-200 flex items-center gap-3 text-lg font-black text-slate-800" id="custom-modal-header"></div><div class="p-6 text-slate-700 text-base leading-relaxed font-bold" id="custom-modal-message"></div><div class="p-4 bg-slate-100 text-right border-t border-slate-200"><button onclick="closeModal()" class="px-6 py-2.5 bg-slate-800 hover:bg-black text-white rounded-xl font-black shadow-md border border-slate-900 text-base">我知道了</button></div></div></div>
-    
     <div id="recon-modal" class="fixed inset-0 z-[100] flex items-center justify-center hidden bg-slate-900/70 backdrop-blur-sm transition-opacity px-4"><div class="bg-white rounded-3xl shadow-2xl max-w-6xl w-full overflow-hidden flex flex-col max-h-[90vh] border-2 border-slate-300"><div class="p-5 border-b border-slate-300 flex justify-between items-center bg-white sticky top-0 z-10"><h3 class="text-xl font-black text-slate-800 flex items-center gap-2"><i class="fa-solid fa-scale-balanced text-slate-500 mr-2"></i> 數量申報勾稽表</h3><button onclick="closeReconModal()" class="w-10 h-10 flex items-center justify-center rounded-full bg-slate-100 border-2 border-slate-300 text-slate-600 hover:bg-slate-200 font-black"><i class="fa-solid fa-xmark text-xl"></i></button></div><div class="p-0 overflow-x-auto overflow-y-auto flex-1 bg-white"><table class="w-full text-left border-collapse min-w-[800px]"><thead class="bg-slate-50 sticky top-0 shadow-sm z-10 border-b-2 border-slate-300"><tr><th class="p-4 border-b border-slate-300 text-slate-700 font-black text-sm text-center max-w-[120px]">排程編號</th><th class="p-4 border-b border-slate-300 text-slate-700 font-black text-sm">施工日期</th><th class="p-4 border-b border-slate-300 text-[#1E3A8A] font-black text-sm text-center">A車(系統)</th><th class="p-4 border-b border-slate-300 text-[#1E3A8A] font-black text-sm text-center">B車(系統)</th><th class="p-4 border-b border-slate-300 text-slate-900 font-black text-lg text-center bg-slate-100">總計</th><th class="p-4 border-b border-slate-300 text-[#B45309] font-black text-base text-center bg-[#FFFBEB]">日報數量</th><th class="p-4 border-b border-slate-300 text-center font-black text-slate-600 text-sm">狀態</th></tr></thead><tbody id="recon-body" class="text-base text-slate-800 divide-y divide-slate-200"></tbody></table></div><div class="p-4 bg-slate-100 flex justify-end items-center"><button onclick="closeReconModal()" class="px-6 py-2.5 bg-slate-800 text-white rounded-xl font-black shadow-md text-base">關閉</button></div></div></div>
-    
     <div id="matrix-modal" class="fixed inset-0 z-[100] flex items-center justify-center hidden bg-slate-900/80 backdrop-blur-sm transition-opacity px-4"><div class="bg-white rounded-3xl shadow-2xl max-w-6xl w-full overflow-hidden flex flex-col max-h-[95vh] border-2 border-slate-300"><div class="p-5 border-b border-slate-300 flex justify-between items-center bg-white sticky top-0 z-10"><h3 class="text-xl font-black text-slate-800 flex items-center gap-2"><i class="fa-solid fa-border-all text-slate-500 mr-2"></i> 613 支防呆矩陣</h3><button onclick="closeMatrixModal()" class="w-10 h-10 flex items-center justify-center rounded-full bg-slate-100 border-2 border-slate-300 text-slate-600 hover:bg-slate-200 font-black"><i class="fa-solid fa-xmark text-xl"></i></button></div><div class="p-4 bg-slate-50 border-b border-slate-300 flex flex-wrap gap-5 items-center justify-between z-10 shadow-sm sticky top-0"><div class="flex gap-5 text-sm font-black items-center flex-wrap"><div class="flex items-center gap-2"><span class="w-5 h-5 block rounded bg-[#F1F5F9] border border-[#CBD5E1]"></span> 未登錄 (<span id="matrix-count-missing">0</span>)</div><div class="flex items-center gap-2"><span class="w-5 h-5 block rounded bg-[#1E3A8A] border border-[#172554] shadow-sm"></span> 已登錄 (<span id="matrix-count-ok">0</span>)</div><div class="flex items-center gap-2"><span class="w-5 h-5 block rounded bg-[#DC2626] border border-[#991B1B] shadow-sm"></span> 重複登錄 (<span id="matrix-count-error">0</span>)</div></div><button onclick="closeMatrixModal()" class="px-6 py-2.5 bg-slate-800 text-white rounded-xl text-sm font-black">關閉雷達</button></div><div class="p-6 overflow-y-auto flex-1 bg-slate-100"><div id="matrix-container" class="flex flex-wrap gap-2.5 justify-center md:justify-start"></div></div></div></div>
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-
-        // 🔥 Firebase 正式連線設定
-        const firebaseConfig = { apiKey: "AIzaSyAp1ZVuW95Api3kaQUPgttESZ0RGTEi8H8", authDomain: "cdc-qc-system.firebaseapp.com", projectId: "cdc-qc-system", storageBucket: "cdc-qc-system.firebasestorage.app", messagingSenderId: "745920606237", appId: "1:745920606237:web:7fb9c22a84de208e6e56f4" };
-        const GAS_API_URL = "https://script.google.com/macros/s/AKfycbx1aCB8jyqFnPrekpu3QIAIWCaIpAeRIVjJOkDxTpzjOhw9oAk86NO4f1YhL6TkiZQedA/exec";
-        
-        window.baseCoordinates = [[1,-105.5,154.9],[2,-15.5,134.9],[3,74.5,134.9],[4,164.5,134.9],[5,254.5,134.9],[6,344.5,134.9],[7,434.5,134.9],[8,524.5,134.9],[9,614.5,134.9],[10,699.1,134.9],[11,789.1,134.9],[12,879.1,134.9],[13,969.1,134.9],[14,1059.1,134.9],[15,1149.1,134.9],[16,1239.1,134.9],[17,1329.1,134.9],[18,1419.1,134.9],[19,1509.1,134.9],[20,1599.1,134.9],[21,1689.1,134.9],[22,1779.1,134.9],[23,1869.1,134.9],[24,1959.1,134.9],[25,2049.1,134.9],[26,2139.1,134.9],[27,2229.1,134.9],[28,2319.1,134.9],[29,2409.1,134.9],[30,2499.1,134.9],[31,2589.1,134.9],[32,2679.1,134.9],[33,2769.1,134.9],[34,2859.1,134.9],[35,2949.1,134.9],[36,3039.1,134.9],[37,3129.1,134.9],[38,3219.1,134.9],[39,3309.1,134.9],[40,3399.1,134.9],[41,3489.1,134.9],[42,3579.1,134.9],[43,3669.1,134.9],[44,3759.1,134.9],[45,3849.1,134.9],[46,3939.1,134.9],[47,4029.1,134.9],[48,4119.1,134.9],[49,4209.1,134.9],[50,4299.1,134.9],[51,4389.1,134.9],[52,4479.1,134.9],[53,4569.1,134.9],[54,4659.1,134.9],[55,4749.1,134.9],[56,4839.1,134.9],[57,4929.1,134.9],[58,5019.1,134.9],[59,5109.1,134.9],[60,5199.1,134.9],[61,5289.1,134.9],[62,5379.1,134.9],[63,5469.1,134.9],[64,5559.1,134.9],[65,5649.1,134.9],[66,5739.1,134.9],[67,5829.1,134.9],[68,5919.1,134.9],[69,6009.1,134.9],[70,6099.1,134.9],[71,6189.1,134.9],[72,6279.1,134.9],[73,6369.1,134.9],[74,6459.1,134.9],[75,6549.1,134.9],[76,6639.1,134.9],[77,6729.1,134.9],[78,6819.1,134.9],[79,6909.1,134.9],[80,6999.1,134.9],[81,7089.1,134.9],[82,7179.1,134.9],[83,7269.1,134.9],[84,7359.1,134.9],[85,7449.1,134.9],[86,7539.1,134.9],[87,7629.1,134.9],[88,7719.1,134.9],[89,7809.1,134.9],[90,7899.1,134.9],[91,7989.1,134.9],[92,8079.1,134.9],[93,8169.1,134.9],[94,8259.1,134.9],[95,8349.1,134.9],[96,8439.1,134.9],[97,8529.1,134.9],[98,8619.1,134.9],[99,8709.1,134.9],[100,8793.6,134.9],[101,8883.6,134.9],[102,8973.6,134.9],[103,9063.6,134.9],[104,9153.6,134.9],[105,9243.6,134.9],[106,9333.6,134.9],[107,9423.6,134.9],[108,9513.6,134.9],[109,9603.6,134.9],[110,9693.6,134.9],[111,9783.6,134.9],[112,9873.6,134.9],[113,9963.6,134.9],[114,10053.6,134.9],[115,10143.6,134.9],[116,10233.6,134.9],[117,10323.6,134.9],[118,10413.6,134.9],[119,10503.6,134.9],[120,10593.6,134.9],[121,10683.6,134.9],[122,10773.6,134.9],[123,10863.6,134.9],[124,10953.6,134.9],[125,11043.6,134.9],[126,11133.6,134.9],[127,11223.6,134.9],[128,11313.6,134.9],[129,11403.6,134.9],[130,11493.6,134.9],[131,11583.6,134.9],[132,11673.6,134.9],[133,11763.6,134.9],[134,11853.6,134.9],[135,11943.6,134.9],[136,12033.6,134.9],[137,12123.6,134.9],[138,12213.6,134.9],[139,12303.6,134.9],[140,12393.6,134.9],[141,12483.6,134.9],[142,12573.6,134.9],[143,12663.6,134.9],[144,12753.6,134.9],[145,12843.6,134.9],[146,12933.6,134.9],[147,13023.6,134.9],[148,13113.6,134.9],[149,13203.6,134.9],[150,13293.6,134.9],[151,13383.6,134.9],[152,13473.6,134.9],[153,13563.6,134.9],[154,13653.6,134.9],[155,13743.6,134.9],[156,13833.6,134.9],[157,13923.6,134.9],[158,13974.5,60.0],[159,14021.1,-17.0],[160,14067.8,-93.9],[161,14060.3,-183.5],[162,14060.3,-273.5],[163,14060.3,-363.5],[164,14060.3,-453.5],[165,14060.3,-543.5],[166,14060.3,-633.5],[167,14060.3,-723.5],[168,14060.3,-813.5],[169,14060.3,-903.5],[170,14060.3,-993.5],[171,14060.3,-1083.5],[172,14060.3,-1173.5],[173,14060.3,-1263.5],[174,14060.3,-1353.5],[175,14060.3,-1443.5],[176,14060.3,-1533.5],[177,14060.3,-1623.5],[178,14060.3,-1713.5],[179,14060.3,-1803.5],[180,14060.3,-1893.5],[181,14060.3,-1983.5],[182,14060.3,-2073.5],[183,14060.3,-2163.5],[184,14060.3,-2253.5],[185,14060.3,-2343.5],[186,14060.3,-2433.5],[187,14060.3,-2523.5],[188,14060.3,-2613.5],[189,14060.3,-2703.5],[190,14060.3,-2793.5],[191,14060.3,-2883.5],[192,14060.3,-2973.5],[193,14060.3,-3063.5],[194,14060.3,-3153.5],[195,14060.3,-3243.5],[196,14060.3,-3333.5],[197,14060.3,-3423.5],[198,14060.3,-3513.5],[199,14060.3,-3603.5],[200,14060.3,-3693.5],[201,14060.3,-3783.5],[202,14060.3,-3873.5],[203,14060.3,-3963.5],[204,14060.3,-4053.5],[205,14060.3,-4143.5],[206,14060.3,-4233.5],[207,14060.3,-4323.5],[208,14060.3,-4413.5],[209,14060.3,-4503.5],[210,14060.3,-4593.5],[211,14060.3,-4683.5],[212,14060.3,-4773.5],[213,14060.3,-4863.5],[214,14060.3,-4953.5],[215,14060.3,-5043.5],[216,14060.3,-5133.5],[217,14060.3,-5223.5],[218,14060.3,-5313.5],[219,14060.3,-5403.5],[220,14060.3,-5493.5],[221,14060.3,-5583.5],[222,13991.1,-5640.1],[223,13901.1,-5640.1],[224,13811.1,-5640.1],[225,13721.1,-5640.1],[226,13631.1,-5640.1],[227,13541.1,-5640.1],[228,13451.1,-5640.1],[229,13361.1,-5640.1],[230,13271.1,-5640.1],[231,13181.1,-5640.1],[232,13091.1,-5640.1],[233,13001.1,-5640.1],[234,12911.1,-5640.1],[235,12821.1,-5640.1],[236,12731.1,-5640.1],[237,12641.1,-5640.1],[238,12551.1,-5640.1],[239,12461.1,-5640.1],[240,12371.1,-5640.1],[241,12281.1,-5640.1],[242,12191.1,-5640.1],[243,12101.1,-5640.1],[244,12011.1,-5640.1],[245,11921.1,-5640.1],[246,11831.1,-5640.1],[247,11741.1,-5640.1],[248,11651.1,-5640.1],[249,11561.1,-5640.1],[250,11471.1,-5640.1],[251,11381.1,-5640.1],[252,11291.1,-5640.1],[253,11201.1,-5640.1],[254,11111.1,-5640.1],[255,11021.1,-5640.1],[256,10931.1,-5640.1],[257,10841.1,-5640.1],[258,10751.1,-5640.1],[259,10661.1,-5640.1],[260,10571.1,-5640.1],[261,10481.1,-5640.1],[262,10391.1,-5640.1],[263,10301.1,-5640.1],[264,10211.1,-5640.1],[265,10121.1,-5640.1],[266,10031.1,-5640.1],[267,9941.1,-5640.1],[268,9851.1,-5640.1],[269,9761.1,-5640.1],[270,9671.1,-5640.1],[271,9581.1,-5640.1],[272,9491.1,-5640.1],[273,9401.1,-5640.1],[274,9311.1,-5640.1],[275,9221.1,-5640.1],[276,9131.1,-5640.1],[277,9041.1,-5640.1],[278,8951.1,-5640.1],[279,8861.1,-5640.1],[280,8771.1,-5640.1],[281,8681.1,-5640.1],[282,8591.1,-5640.1],[283,8501.1,-5640.1],[284,8411.1,-5640.1],[285,8321.1,-5640.1],[286,8231.1,-5640.1],[287,8141.1,-5640.1],[288,8051.1,-5640.1],[289,7961.1,-5640.1],[290,7871.1,-5640.1],[291,7781.1,-5640.1],[292,7691.1,-5640.1],[293,7601.1,-5640.1],[294,7511.1,-5640.1],[295,7421.1,-5640.1],[296,7331.1,-5640.1],[297,7241.1,-5640.1],[298,7151.1,-5640.1],[299,7061.1,-5640.1],[300,6971.1,-5640.1],[301,6881.1,-5640.1],[302,6791.1,-5640.1],[303,6701.1,-5640.1],[304,6611.1,-5640.1],[305,6521.1,-5640.1],[306,6431.1,-5640.1],[307,6341.1,-5640.1],[308,6251.1,-5640.1],[309,6161.1,-5640.1],[310,6071.1,-5640.1],[311,5981.1,-5640.1],[312,5891.1,-5640.1],[313,5801.1,-5640.1],[314,5711.1,-5640.1],[315,5621.1,-5640.1],[316,5531.1,-5640.1],[317,5441.1,-5640.1],[318,5351.1,-5640.1],[319,5261.1,-5655.1],[320,5245.3,-5565.1],[321,5245.3,-5475.1],[322,5245.3,-5385.1],[323,5245.3,-5295.1],[324,5245.3,-5205.1],[325,5245.3,-5115.1],[326,5245.3,-5025.1],[327,5245.3,-4935.1],[328,5245.3,-4845.1],[329,5245.3,-4755.1],[330,5245.3,-4665.1],[331,5245.3,-4575.1],[332,5245.3,-4485.1],[333,5245.3,-4395.1],[334,5245.3,-4305.1],[335,5245.3,-4215.1],[336,5245.3,-4125.1],[337,5245.3,-4035.1],[338,5245.3,-3945.1],[339,5245.3,-3855.1],[340,5245.3,-3765.1],[341,5245.3,-3675.1],[342,5245.3,-3585.1],[343,5245.3,-3495.1],[344,5245.3,-3405.1],[345,5245.3,-3315.1],[346,5245.3,-3225.1],[347,5245.3,-3135.1],[348,5245.3,-3045.1],[349,5245.3,-2955.1],[350,5245.3,-2865.1],[351,5245.3,-2775.1],[352,5245.3,-2685.1],[353,5245.3,-2595.1],[354,5245.3,-2505.1],[355,5245.3,-2415.1],[356,5245.3,-2325.1],[357,5245.3,-2235.1],[358,5245.3,-2145.1],[359,5245.3,-2055.1],[360,5245.3,-1965.1],[361,5245.3,-1875.1],[362,5155.3,-1875.1],[363,5065.3,-1875.1],[364,4975.3,-1875.1],[365,4885.3,-1875.1],[366,4795.3,-1875.1],[367,4705.3,-1875.1],[368,4615.3,-1875.1],[369,4525.3,-1875.1],[370,4435.3,-1875.1],[371,4345.3,-1875.1],[372,4255.3,-1875.1],[373,4165.3,-1875.1],[374,4075.3,-1875.1],[375,3985.3,-1875.1],[376,3895.3,-1875.1],[377,3805.3,-1875.1],[378,3715.3,-1875.1],[379,3625.3,-1875.1],[380,3535.3,-1875.1],[381,3445.3,-1875.1],[382,3355.3,-1875.1],[383,3265.3,-1875.1],[384,3175.3,-1875.1],[385,3085.3,-1875.1],[386,2995.3,-1875.1],[387,2905.3,-1875.1],[388,2815.3,-1875.1],[389,2725.3,-1875.1],[390,2640.3,-1875.1],[391,2640.3,-1965.1],[392,2640.3,-2055.1],[393,2640.3,-2145.1],[394,2640.3,-2235.1],[395,2640.3,-2325.1],[396,2640.3,-2415.1],[397,2640.3,-2505.1],[398,2640.3,-2595.1],[399,2640.3,-2685.1],[400,2640.3,-2775.1],[401,2640.3,-2865.1],[402,2640.3,-2955.1],[403,2640.3,-3045.1],[404,2640.3,-3135.1],[405,2640.3,-3225.1],[406,2640.3,-3315.1],[407,2640.3,-3405.1],[408,2640.3,-3495.1],[409,2640.3,-3585.1],[410,2640.3,-3675.1],[411,2640.3,-3765.1],[412,2640.3,-3855.1],[413,2640.3,-3945.1],[414,2640.3,-4035.1],[415,2640.3,-4125.1],[416,2640.3,-4215.1],[417,2640.3,-4305.1],[418,2640.3,-4395.1],[419,2550.3,-4440.1],[420,2460.3,-4440.1],[421,2370.3,-4440.1],[422,2280.3,-4440.1],[423,2190.3,-4440.1],[424,2100.3,-4440.1],[425,2010.3,-4440.1],[426,1920.3,-4440.1],[427,1830.3,-4440.1],[428,1740.3,-4440.1],[429,1650.3,-4440.1],[430,1560.3,-4440.1],[431,1470.3,-4440.1],[432,1380.3,-4440.1],[433,1290.3,-4440.1],[434,1200.3,-4440.1],[435,1110.3,-4440.1],[436,1020.3,-4440.1],[437,930.3,-4440.1],[438,840.3,-4440.1],[439,750.3,-4440.1],[440,660.3,-4440.1],[441,570.3,-4440.1],[442,480.3,-4440.1],[443,390.3,-4440.1],[444,300.3,-4440.1],[445,210.3,-4440.1],[446,120.3,-4440.1],[447,30.3,-4440.1],[448,-59.7,-4440.1],[449,-149.7,-4440.1],[450,-129.7,-4350.1],[451,-129.7,-4260.1],[452,-129.7,-4170.1],[453,-129.7,-4080.1],[454,-129.7,-3990.1],[455,-129.7,-3900.1],[456,-129.7,-3810.1],[457,-129.7,-3720.1],[458,-129.7,-3630.1],[459,-129.7,-3540.1],[460,-129.7,-3450.1],[461,-129.7,-3360.1],[462,-129.7,-3270.1],[463,-129.7,-3180.1],[464,-129.7,-3090.1],[465,-129.7,-3000.1],[466,-129.7,-2910.1],[467,-129.7,-2820.1],[468,-129.7,-2730.1],[469,-129.7,-2640.1],[470,-129.7,-2550.1],[471,-129.7,-2460.1],[472,-129.7,-2370.1],[473,-129.7,-2280.1],[474,-129.7,-2190.1],[475,-129.7,-2100.1],[476,-129.7,-2010.1],[477,-129.7,-1920.1],[478,-129.7,-1830.1],[479,-129.7,-1740.1],[480,-129.7,-1650.1],[481,-129.7,-1560.1],[482,-129.7,-1470.1],[483,-129.7,-1380.1],[484,-129.7,-1290.1],[485,-129.7,-1200.1],[486,-129.7,-1110.1],[487,-129.7,-1020.1],[488,-129.7,-930.1],[489,-129.7,-840.1],[490,-129.7,-745.1],[491,-129.7,-655.1],[492,-129.7,-565.1],[493,-129.7,-475.1],[494,-129.7,-385.1],[495,-129.7,-295.1],[496,-129.7,-205.1],[497,-129.7,-115.1],[498,-129.7,-25.1],[499,-129.7,64.9],[500,14152.3,-3480.1],[501,14242.3,-3480.1],[502,14332.3,-3480.1],[503,14422.3,-3480.1],[504,14512.3,-3480.1],[505,14602.3,-3480.1],[506,14692.3,-3480.1],[507,14782.3,-3480.1],[508,14872.3,-3480.1],[509,14962.3,-3480.1],[510,15052.3,-3480.1],[511,15142.3,-3480.1],[512,15232.3,-3480.1],[513,15240.3,-3570.1],[514,15240.3,-3660.1],[515,15240.3,-3750.1],[516,15240.3,-3840.1],[517,15240.3,-3930.1],[518,15240.3,-4020.1],[519,15240.3,-4110.1],[520,15240.3,-4200.1],[521,15240.3,-4290.1],[522,15240.3,-4380.1],[523,15240.3,-4470.1],[524,15240.3,-4560.1],[525,15240.3,-4650.1],[526,15240.3,-4740.1],[527,15240.3,-4830.1],[528,15240.3,-4920.1],[529,15240.3,-5010.1],[530,15240.3,-5100.1],[531,15240.3,-5190.1],[532,15240.3,-5280.1],[533,15240.3,-5370.1],[534,15240.3,-5460.1],[535,15240.3,-5550.1],[536,15230.3,-5640.1],[537,15140.3,-5640.1],[538,15050.3,-5640.1],[539,14960.3,-5640.1],[540,14870.3,-5640.1],[541,14780.3,-5640.1],[542,14690.3,-5640.1],[543,14600.3,-5640.1],[544,14510.3,-5640.1],[545,14420.3,-5640.1],[546,14330.3,-5640.1],[547,14240.3,-5640.1],[548,14150.3,-5640.1],[549,-219.7,-3560.1],[550,-309.7,-3560.1],[551,-399.7,-3560.1],[552,-489.7,-3560.1],[553,-579.7,-3560.1],[554,-669.7,-3560.1],[555,-759.7,-3560.1],[556,-849.7,-3560.1],[557,-939.7,-3560.1],[558,-1029.7,-3560.1],[559,-1119.7,-3560.1],[560,-1209.7,-3560.1],[561,-1299.7,-3560.1],[562,-1389.7,-3560.1],[563,-1479.7,-3560.1],[564,-1569.7,-3560.1],[565,-1659.7,-3560.1],[566,-1749.7,-3560.1],[567,-1839.7,-3560.1],[568,-1809.7,-3470.1],[569,-1809.7,-3380.1],[570,-1809.7,-3290.1],[571,-1809.7,-3200.1],[572,-1809.7,-3110.1],[573,-1809.7,-3020.1],[574,-1809.7,-2930.1],[575,-1809.7,-2840.1],[576,-1809.7,-2750.1],[577,-1809.7,-2660.1],[578,-1809.7,-2570.1],[579,-1809.7,-2480.1],[580,-1809.7,-2390.1],[581,-1809.7,-2300.1],[582,-1824.7,-2210.1],[583,-1734.7,-2170.1],[584,-1644.7,-2170.1],[585,-1554.7,-2170.1],[586,-1464.7,-2170.1],[587,-1374.7,-2170.1],[588,-1284.7,-2170.1],[589,-1194.7,-2170.1],[590,-1194.7,-2080.0],[591,-1194.7,-1990.0],[592,-1194.7,-1899.9],[593,-1194.7,-1809.9],[594,-1194.7,-1719.8],[595,-1194.7,-1629.8],[596,-1194.7,-1539.7],[597,-1194.7,-1449.7],[598,-1194.7,-1359.6],[599,-1194.7,-1269.6],[600,-1194.7,-1179.5],[601,-1194.7,-1089.5],[602,-1208.2,-999.4],[603,-1122.2,-970.1],[604,-1032.6,-970.1],[605,-942.6,-970.1],[606,-852.6,-970.1],[607,-762.6,-970.1],[608,-672.6,-970.1],[609,-582.6,-970.1],[610,-492.6,-970.1],[611,-402.6,-970.1],[612,-312.6,-970.1],[613,-222.6,-970.1]];
-
-        window.defaultSpecialPiles = {
-            '23': 'FULL', '54': 'PARTIAL', '100': 'FULL', '135': 'PARTIAL', '174': 'FULL',
-            '201': 'PARTIAL', '251': 'PARTIAL', '283': 'FULL', '339': 'FULL', '377': 'FULL',
-            '432': 'FULL', '476': 'FULL'
-        };
-
-        window.exceptionDates = []; window.exceptionA = []; window.exceptionB = []; 
-        window.extraWorkA = []; window.extraWorkB = []; 
-        window.pileNumbers = {}; window.statusSample = {}; window.statusLab = {}; window.statusTest = {}; window.remarks = {}; window.contractorReports = {}; 
-        window.specialPilesData = {}; window.mapCoordinates = []; 
-
-        window.scheduleData = []; 
-        window.currentFilter = 'ALL'; 
-        window.currentView = 'table'; 
-        window.currentCalDate = new Date(2026, 4, 1); 
-        window.currentSmartFilter = 'ALL'; 
-        const TOTAL_PILES_LIMIT = 613; let isCloudEnabled = false; let db, auth;
-
-        const initFirebase = async () => {
-            try {
-                const app = initializeApp(firebaseConfig); auth = getAuth(app); db = getFirestore(app); isCloudEnabled = true; await signInAnonymously(auth);
-                onAuthStateChanged(auth, (user) => {
-                    if (user) {
-                        onSnapshot(doc(db, 'scheduleData', 'mainState'), (snapshot) => {
-                            if (snapshot.exists()) {
-                                const data = snapshot.data();
-                                window.exceptionDates = data.exceptionDates || []; window.exceptionA = data.exceptionA || []; window.exceptionB = data.exceptionB || [];
-                                window.extraWorkA = data.extraWorkA || []; window.extraWorkB = data.extraWorkB || []; 
-                                window.pileNumbers = data.pileNumbers || {}; window.statusSample = data.statusSample || {}; window.statusLab = data.statusLab || {};
-                                window.statusTest = data.statusTest || data.completionStatus || {}; window.remarks = data.remarks || {}; window.contractorReports = data.contractorReports || {};
-                                
-                                if (data.specialPilesDataStr) window.specialPilesData = JSON.parse(data.specialPilesDataStr);
-                                else if (data.specialPilesData) window.specialPilesData = data.specialPilesData;
-                                else window.specialPilesData = window.defaultSpecialPiles;
-                            } else { window.specialPilesData = window.defaultSpecialPiles; }
-                            
-                            const cleanedData = {};
-                            for (const [k, v] of Object.entries(window.specialPilesData)) { if (k && k !== 'NaN' && k !== '0') cleanedData[k] = v; }
-                            window.specialPilesData = cleanedData;
-
-                            document.getElementById('sync-status').innerHTML = '<i class="fa-solid fa-cloud-check text-emerald-600"></i> 雲端即時連線中';
-                            window.refreshAll();
-                        });
-                    }
-                });
-            } catch (e) { 
-                document.getElementById('sync-status').innerHTML = '<i class="fa-solid fa-triangle-exclamation text-amber-600"></i> 雲端連線失敗，單機運作中'; 
-                window.specialPilesData = window.defaultSpecialPiles;
-                window.refreshAll(); 
-            }
-        };
-
-        window.saveDataToCloud = async () => { 
-            if (isCloudEnabled && auth.currentUser) { 
-                try { 
-                    await setDoc(doc(db, 'scheduleData', 'mainState'), { 
-                        exceptionDates: window.exceptionDates, exceptionA: window.exceptionA, exceptionB: window.exceptionB, extraWorkA: window.extraWorkA, extraWorkB: window.extraWorkB, pileNumbers: window.pileNumbers, statusSample: window.statusSample, statusLab: window.statusLab, statusTest: window.statusTest, remarks: window.remarks, contractorReports: window.contractorReports, 
-                        specialPilesDataStr: JSON.stringify(window.specialPilesData)
-                    }, { merge: true }); 
-                } catch (err) { console.error('存檔失敗', err); } 
-            } 
-        };
-
-        window.toDateString = (d) => { const y=d.getFullYear(); const m=String(d.getMonth()+1).padStart(2,'0'); const dt=String(d.getDate()).padStart(2,'0'); return `${y}-${m}-${dt}`; };
-        window.formatMinguo = (d) => { const y=d.getFullYear()-1911; const m=String(d.getMonth()+1).padStart(2,'0'); const dt=String(d.getDate()).padStart(2,'0'); const day=["日","一","二","三","四","五","六"][d.getDay()]; return `${y}/${m}/${dt}(${day})`; };
-        const addDays = (d, days) => { let r=new Date(d); r.setDate(r.getDate()+days); return r; };
-
-        window.refreshAll = () => { 
-            try { window.generateSchedule(); } catch(e) { console.error('Schedule Error', e); }
-            try { window.renderTable(window.currentFilter); } catch(e) { console.error('Table Error', e); }
-            try { window.updateDashboard(); } catch(e) { console.error('Dashboard Error', e); }
-            try { window.renderMap(); } catch(e) { console.error('Map Error', e); document.getElementById('map-container').innerHTML='地圖繪製發生錯誤，請重新整理'; }
-            try { if (window.currentView === 'calendar') window.renderCalendar(); } catch(e) {}
-            try { if (window.updateExtraUI) window.updateExtraUI(); } catch(e) {}
-        };
-
-window.generateSchedule = () => {
-            window.scheduleData.length = 0; const startDateA = new Date(2026, 4, 5); const startDateB = new Date(2026, 4, 9); const endDate = new Date(2026, 6, 30); let cA = 1, cB = 1;
-            for (let d = new Date(startDateA); d <= endDate; d.setDate(d.getDate() + 1)) {
-                const dStr = window.toDateString(d); const isSun = d.getDay() === 0; 
-                const isExGlobal = window.exceptionDates.includes(dStr); 
-                const isExA = isExGlobal || window.exceptionA.includes(dStr); 
-                const isExB = isExGlobal || window.exceptionB.includes(dStr);
-                
-                const makeR = (m, c, t) => { 
-                    let dem = addDays(t, 1); if (dem.getDay() === 0) dem = addDays(dem, 1); 
-                    let col = new Date(dem); while (col.getDay() !== 2 && col.getDay() !== 5) col = addDays(col, 1); 
-                    let tes = addDays(t, 28); if (tes.getDay() === 6) tes = addDays(tes, 2); else if (tes.getDay() === 0) tes = addDays(tes, 1); 
-                    return { id: `${m}${c}`, machine: m, sampleDate: new Date(t), demoldDate: dem, collectDate: col, testDate: tes }; 
-                };
-                
-                // 🔥 修正點：確保即使遇到停工，也不會產生 NaN，只有在工作日時才推進計數器
-                if (d >= startDateA) { 
-                    if ((!isSun && !isExA) || window.extraWorkA.includes(dStr)) {
-                        window.scheduleData.push(makeR('A', cA, new Date(d)));
-                        cA++;
-                    } 
-                }
-                if (d >= startDateB) { 
-                    if ((!isSun && !isExB) || window.extraWorkB.includes(dStr)) {
-                        window.scheduleData.push(makeR('B', cB, new Date(d)));
-                        cB++;
-                    } 
-                }
-            }
-        };
-
-        // 🔥 修復: 切換月曆功能
-        window.toggleView = (v) => { 
-            window.currentView = v; 
-            
-            // 處理區塊顯示隱藏
-            document.getElementById('table-view').classList.toggle('hidden', v !== 'table'); 
-            document.getElementById('calendar-view').classList.toggle('hidden', v !== 'calendar'); 
-            
-            // 處理按鈕的顏色同步
-            const btnTable = document.getElementById('btn-view-table');
-            const btnCal = document.getElementById('btn-view-cal');
-            
-            if(btnTable) btnTable.className = v === 'table' ? "px-4 py-2 rounded-lg text-sm font-black bg-slate-800 text-white shadow-md transition w-1/2 md:w-auto" : "px-4 py-2 rounded-lg text-sm font-black bg-slate-100 text-slate-700 hover:bg-slate-300 transition border border-slate-300 w-1/2 md:w-auto";
-            if(btnCal) btnCal.className = v === 'calendar' ? "px-4 py-2 rounded-lg text-sm font-black bg-slate-800 text-white shadow-md transition w-1/2 md:w-auto" : "px-4 py-2 rounded-lg text-sm font-black bg-slate-100 text-slate-700 hover:bg-slate-300 transition border border-slate-300 w-1/2 md:w-auto";
-
-            // 如果切換到月曆，立刻渲染
-            if (v === 'calendar') window.renderCalendar(); 
-        };
-
-        // 🔥 修復: A車/B車過濾按鈕顏色切換與過濾邏輯
-        window.filterData = (f) => { 
-            window.currentFilter = f; 
-            
-            // 處理按鈕樣式切換
-            const btnAll = document.getElementById('btn-ALL');
-            const btnA = document.getElementById('btn-A');
-            const btnB = document.getElementById('btn-B');
-            
-            [btnAll, btnA, btnB].forEach(b => { 
-                if(b) b.className = "px-4 py-1.5 rounded-xl text-sm font-black bg-white text-slate-700 border-2 border-slate-300 hover:bg-slate-100 transition shadow-sm"; 
-            });
-            
-            if(f === 'ALL' && btnAll) btnAll.className = "px-4 py-1.5 rounded-xl text-sm font-black bg-slate-800 text-white shadow-md border border-slate-900 transition";
-            if(f === 'A' && btnA) btnA.className = "px-4 py-1.5 rounded-xl text-sm font-black bg-slate-800 text-white shadow-md border border-slate-900 transition";
-            if(f === 'B' && btnB) btnB.className = "px-4 py-1.5 rounded-xl text-sm font-black bg-slate-800 text-white shadow-md border border-slate-900 transition";
-            
-            // 重新渲染畫面
-            if(window.currentView === 'calendar') {
-                window.renderCalendar();
-            } else {
-                // ⚠️修復核心：這裡必須正確傳入 f (即 'A' 或 'B')，讓表格正確篩選
-                window.renderTable(f); 
-            }
-        };
-
-        window.setSmartFilter = (type) => {
-            window.currentSmartFilter = type;
-            const btnAll = document.getElementById('filter-smart-all'), btnField = document.getElementById('filter-smart-field'), btnTest = document.getElementById('filter-smart-test');
-            [btnAll, btnField, btnTest].forEach(b => b.className = "flex-1 lg:flex-none px-3 py-1.5 md:py-2 rounded-lg text-[11px] md:text-sm font-bold text-slate-500 hover:text-slate-800 transition");
-            if(type === 'ALL') btnAll.className = "flex-1 lg:flex-none px-3 py-1.5 md:py-2 rounded-lg text-[11px] md:text-sm font-black bg-white text-slate-800 shadow-sm border border-slate-200";
-            if(type === 'FIELD') btnField.className = "flex-1 lg:flex-none px-3 py-1.5 md:py-2 rounded-lg text-[11px] md:text-sm font-black bg-[#1E3A8A] text-white shadow-sm";
-            if(type === 'TEST') btnTest.className = "flex-1 lg:flex-none px-3 py-1.5 md:py-2 rounded-lg text-[11px] md:text-sm font-black bg-[#166534] text-white shadow-sm";
-            window.renderTable(window.currentFilter);
-        };
-
-        window.scrollToTodo = () => {
-            window.setSmartFilter('ALL'); 
-            setTimeout(() => {
-                const today = new Date(); today.setHours(0,0,0,0); let targetId = null;
-                for (let item of window.scheduleData) {
-                    const isS = window.statusSample[item.id], isL = window.statusLab[item.id], isT = window.statusTest[item.id];
-                    if (!isS && item.sampleDate <= today) { targetId = item.id; break; }
-                    if (!isL && item.collectDate <= today) { targetId = item.id; break; }
-                    if (!isT && item.testDate <= today) { targetId = item.id; break; }
-                }
-                if (!targetId) { for (let item of window.scheduleData) { if (!window.statusSample[item.id] || !window.statusLab[item.id] || !window.statusTest[item.id]) { targetId = item.id; break; } } }
-                if (targetId) {
-                    const row = document.getElementById(`row-${targetId}`);
-                    if (row) { row.scrollIntoView({behavior: 'smooth', block: 'center'}); row.classList.add('bg-amber-100', 'ring-4', 'ring-amber-400', 'transition-all', 'duration-500'); setTimeout(() => row.classList.remove('bg-amber-100', 'ring-4', 'ring-amber-400'), 3000); }
-                } else { window.showModal("任務皆已完成", "所有表單中的排程皆已結案！", "success"); }
-            }, 100);
-        };
-
-        window.renderTable = (filter) => {
-            const tbody = document.getElementById('schedule-body'); tbody.innerHTML = '';
-            const searchTerm = (document.getElementById('search-input')?.value || '').trim().toLowerCase();
-            
-            // 雙重過濾：先過濾車別，再過濾狀態
-            let filteredData = window.scheduleData.filter(i => filter === 'ALL' || i.machine === filter);
-            const todayDate = new Date(); todayDate.setHours(0,0,0,0);
-            
-            filteredData.forEach(item => {
-                const isS = window.statusSample[item.id], isL = window.statusLab[item.id], isT = window.statusTest[item.id];
-                const pNum = window.pileNumbers[item.id] || '';
-                const pileCount = (String(pNum).match(/\d+/g) || []).length;
-                const countBadge = pileCount > 0 ? `<div class="bg-blue-100 text-blue-800 font-black px-2 py-0.5 rounded text-center text-sm shadow-sm border border-blue-200">${pileCount}</div>` : `<div class="text-slate-300 font-black text-center">-</div>`;
-
-                if (window.currentSmartFilter === 'FIELD' && isL) return; 
-                if (window.currentSmartFilter === 'TEST' && (!isL || isT)) return; 
-                if (searchTerm && !item.id.toLowerCase().includes(searchTerm) && !String(pNum).includes(searchTerm)) return;
-                
-                const tr = document.createElement('tr'); 
-                tr.id = `row-${item.id}`; 
-                tr.className = `modern-row row-hover divide-slate-200 divide-x-0 ${isT ? 'completed-row' : ''}`;
-                
-                let testBadge = '';
-                if (!isT && isL) { 
-                    const diffTime = item.testDate - todayDate; const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                    if (diffDays === 0) testBadge = `<span class="ml-1 bg-red-600 text-white px-2 py-0.5 rounded text-[11px] font-black animate-pulse shadow-sm border border-red-700 whitespace-nowrap">今日壓測</span>`;
-                    else if (diffDays > 0 && diffDays <= 3) testBadge = `<span class="ml-1 bg-amber-500 text-white px-2 py-0.5 rounded text-[11px] font-black shadow-sm border border-amber-600 whitespace-nowrap">剩${diffDays}天</span>`;
-                    else if (diffDays < 0) testBadge = `<span class="ml-1 bg-slate-600 text-white px-2 py-0.5 rounded text-[11px] font-black shadow-sm border border-slate-700 whitespace-nowrap">逾期${Math.abs(diffDays)}天</span>`;
-                }
-
-                // 乾淨的單行輸入框
-                tr.innerHTML = `
-                    <td class="font-black text-slate-800">${item.id}</td>
-                    <td>${countBadge}</td>
-                    <td class="pl-3 pr-3"><input type="text" class="pile-input" title="${pNum}" ${isT ? 'readonly' : ''} onchange="updatePile('${item.id}', this.value)" placeholder="輸入對應樁號..." value="${pNum}"></td>
-                    <td class="bg-blue-50/70"><label class="flex justify-center items-center gap-1.5 cursor-pointer w-full h-full"><input type="checkbox" class="status-checkbox cb-sample" ${isS?'checked':''} onclick="toggleStatus('${item.id}', 'sample')"><span class="font-black whitespace-nowrap text-[15px] ${isS?'text-slate-400 line-through':'text-[#1E3A8A]'}">${window.formatMinguo(item.sampleDate).split('(')[0]}</span></label></td>
-                    <td class="font-bold text-slate-600 whitespace-nowrap text-[15px]">${window.formatMinguo(item.demoldDate).split('(')[0]}</td>
-                    <td class="bg-orange-50/70"><label class="flex justify-center items-center gap-1.5 cursor-pointer w-full h-full"><input type="checkbox" class="status-checkbox cb-lab" ${isL?'checked':''} onclick="toggleStatus('${item.id}', 'lab')"><span class="font-black whitespace-nowrap text-[15px] ${isL?'text-slate-400 line-through':'text-[#B45309]'}">${window.formatMinguo(item.collectDate).split('(')[0]}</span></label></td>
-                    <td class="bg-green-50/70"><label class="flex justify-center items-center gap-1.5 cursor-pointer w-full h-full"><input type="checkbox" class="status-checkbox cb-test" ${isT?'checked':''} onclick="toggleStatus('${item.id}', 'test')"><span class="font-black whitespace-nowrap flex flex-col justify-center items-center text-[15px] ${isT?'text-slate-400 line-through':'text-[#166534]'}"><span>${window.formatMinguo(item.testDate).split('(')[0]}</span>${testBadge}</span></label></td>
-                    <td class="pl-3 pr-3"><input type="text" class="remark-input" ${isT?'readonly':''} onchange="updateRemark('${item.id}', this.value)" placeholder="輸入備註或狀態..." value="${window.remarks[item.id]||''}"></td>
-                `;
-                tbody.appendChild(tr);
-            });
-        };
-
-        window.toggleStatus = (id, type) => { 
-            if (type === 'sample') window.statusSample[id] = !window.statusSample[id]; 
-            if (type === 'lab') window.statusLab[id] = !window.statusLab[id]; 
-            if (type === 'test') window.statusTest[id] = !window.statusTest[id]; 
-            window.saveDataToCloud(); window.refreshAll(); 
-        };
-        window.updatePile = (id, val) => { const v = val.trim(); if (!v) delete window.pileNumbers[id]; else window.pileNumbers[id] = v; window.saveDataToCloud(); window.refreshAll(); };
-        window.updateRemark = (id, val) => { const v = val.trim(); if (!v) delete window.remarks[id]; else window.remarks[id] = v; window.saveDataToCloud(); };
-
-        window.updateDashboard = () => {
-            const usedA = new Set(); const usedB = new Set(); const workedDates = new Set(); const donePilesList = [];
-            Object.entries(window.pileNumbers).forEach(([id, val]) => { 
-                const nums = (String(val).match(/\d+/g) || []).map(n => parseInt(n, 10)); 
-                if (nums.length > 0) { 
-                    nums.forEach(n => { donePilesList.push(n); if (id.startsWith('A')) usedA.add(n); else if (id.startsWith('B')) usedB.add(n); }); 
-                    const item = window.scheduleData.find(s => s.id === id); if (item) workedDates.add(window.toDateString(item.sampleDate)); 
-                } 
-            });
-            const countA = usedA.size; const countB = usedB.size; const pilesCount = countA + countB; const workedDays = workedDates.size;
-            const maxDonePile = Math.max(...donePilesList, 0);
-            const todayDate = new Date(); todayDate.setHours(0,0,0,0);
-            
-            document.getElementById('prog-piles-ab').innerText = `A: ${countA} | B: ${countB}`;
-            document.getElementById('prog-piles-text').innerText = pilesCount;
-            const pilesPct = ((pilesCount/TOTAL_PILES_LIMIT)*100).toFixed(1);
-            document.getElementById('prog-piles-pct').innerText = `${pilesPct}%`;
-            document.getElementById('prog-piles-bar').style.width = `${pilesPct}%`;
-
-            let cS=0, cL=0, cT=0; window.scheduleData.forEach(i => { if(window.statusSample[i.id]) cS++; if(window.statusLab[i.id]) cL++; if(window.statusTest[i.id]) cT++; });
-            document.getElementById('prog-sample-text').innerText = cS; document.getElementById('prog-sample-total').innerText = `/ ${window.scheduleData.length} 組`; document.getElementById('prog-sample-bar').style.width = `${window.scheduleData.length > 0 ? (cS/window.scheduleData.length)*100 : 0}%`;
-            document.getElementById('prog-lab-text').innerText = cL; document.getElementById('prog-lab-total').innerText = `/ ${window.scheduleData.length} 組`; document.getElementById('prog-lab-bar').style.width = `${window.scheduleData.length > 0 ? (cL/window.scheduleData.length)*100 : 0}%`;
-            document.getElementById('prog-test-text').innerText = cT; document.getElementById('prog-test-total').innerText = `/ ${window.scheduleData.length} 組`; document.getElementById('prog-test-bar').style.width = `${window.scheduleData.length > 0 ? (cT/window.scheduleData.length)*100 : 0}%`;
-
-            let nextTestDate = null; let nextTestDays = Infinity;
-            window.scheduleData.forEach(item => { 
-                if (!window.statusTest[item.id] && window.statusLab[item.id]) { 
-                    const diffTime = item.testDate - todayDate; const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
-                    if (diffDays < nextTestDays) { nextTestDays = diffDays; nextTestDate = item.testDate; } 
-                } 
-            });
-            const nextTestEl = document.getElementById('next-test-info');
-            if (nextTestDate) {
-                let tagClass = "bg-green-100 text-green-800 border border-green-300"; let daysText = `剩 ${nextTestDays} 天`;
-                if (nextTestDays === 0) { tagClass = "bg-red-500 text-white animate-pulse border border-red-700"; daysText = "今日壓測!"; } else if (nextTestDays <= 3 && nextTestDays > 0) tagClass = "bg-amber-400 text-amber-900 border border-amber-500"; else if (nextTestDays < 0) { tagClass = "bg-slate-600 text-white border border-slate-800"; daysText = `逾期 ${Math.abs(nextTestDays)} 天`; }
-                nextTestEl.innerHTML = `近期: ${window.formatMinguo(nextTestDate).split('(')[0]} <span class="ml-1 font-black opacity-90">(${daysText})</span>`;
-                nextTestEl.className = `text-[10px] md:text-[11px] font-black px-2 py-0.5 rounded shadow-sm ${tagClass}`;
-            } else { nextTestEl.innerHTML = "無待壓測排程"; nextTestEl.className = "text-[10px] md:text-[11px] font-bold text-green-200 bg-green-800 px-2 py-0.5 rounded border border-green-900"; }
-
-            if (pilesCount > 0 && workedDays > 0) {
-                const avgRate = pilesCount / workedDays; 
-                const estDays = Math.ceil((TOTAL_PILES_LIMIT - pilesCount) / avgRate);
-                let simDate = new Date(); let added = 0; 
-                while(added < estDays) { 
-                    simDate.setDate(simDate.getDate() + 1); 
-                    const dStr = window.toDateString(simDate); 
-                    const isExGlobal = window.exceptionDates.includes(dStr); const isExA = isExGlobal || window.exceptionA.includes(dStr); const isExB = isExGlobal || window.exceptionB.includes(dStr); 
-                    if (simDate.getDay() !== 0 && (!isExA || !isExB)) added++; 
-                }
-                document.getElementById('prediction-metrics').innerHTML = `<div class="bg-white border border-slate-200 px-4 py-2 rounded-lg flex flex-col items-center"><span class="text-[10px] font-black text-slate-500 uppercase">動態產能</span><span class="text-xl font-black text-slate-800">${avgRate.toFixed(1)} <span class="text-xs text-slate-500 font-bold">支/日</span></span></div><div class="bg-white border border-slate-200 px-4 py-2 rounded-lg flex flex-col items-center"><span class="text-[10px] font-black text-slate-500 uppercase">預估剩餘</span><span class="text-xl font-black text-[#B45309]">${estDays} <span class="text-xs text-slate-500 font-bold">天</span></span></div><div class="bg-orange-50 border border-orange-300 px-4 py-2 rounded-lg flex flex-col items-center"><span class="text-[10px] font-black text-orange-600 uppercase">預估完工日</span><span class="text-xl font-black text-[#B45309]">${window.formatMinguo(simDate).split('(')[0]}</span></div>`;
-            } else {
-                document.getElementById('prediction-metrics').innerHTML = `<div class="text-slate-500 font-bold px-4 py-2 bg-slate-50 rounded-lg w-full text-center text-sm">歷史數據掃描中... (輸入樁號後將啟動運算)</div>`;
-            }
-
-            const radarContainer = document.getElementById('special-pile-radar'); let radarHtml = '';
-            Object.entries(window.specialPilesData).sort((a,b)=> Number(a[0]) - Number(b[0])).forEach(([pId, type]) => {
-                if (!pId || pId === 'NaN' || pId === '0') return; 
-                const idNum = Number(pId);
-                const typeIcon = type === 'FULL' ? '<i class="fa-solid fa-layer-group" title="傾度/應力/完整性試驗"></i>' : '<i class="fa-solid fa-ruler-combined" title="傾度/應力計"></i>';
-                
-                let sClass = 'bg-slate-100 border-slate-300 text-slate-600', sText = '待命中', tagColor = 'bg-slate-700 text-white';
-
-                if (donePilesList.includes(idNum)) {
-                    sClass = 'bg-emerald-50 border-emerald-200 text-emerald-700 opacity-60'; sText = '已完成'; tagColor = 'bg-emerald-600 text-white';
-                } else if (donePilesList.includes(idNum - 1) || donePilesList.includes(idNum + 1) || donePilesList.includes(idNum - 2) || donePilesList.includes(idNum + 2)) {
-                    sClass = 'bg-red-50 border-red-400 text-red-700 ring-1 ring-red-400/50 animate-pulse'; sText = '🚨 鄰樁開鑽'; tagColor = 'bg-red-600 text-white shadow-sm';
-                } else if (maxDonePile > 0 && maxDonePile >= idNum - 15 && maxDonePile < idNum) {
-                    sClass = 'bg-amber-50 border-amber-300 text-amber-800'; sText = '⚠️ 逼近中'; tagColor = 'bg-amber-500 text-white shadow-sm';
-                }
-
-                radarHtml += `
-                    <div class="inline-flex items-center border rounded-full shadow-sm pl-1 pr-2 py-1 transition hover:-translate-y-0.5 ${sClass}">
-                        <span class="${tagColor} text-xs font-black px-2 py-1 rounded-full mr-1.5 flex items-center gap-1">${typeIcon} P${idNum}</span>
-                        <span class="text-xs font-bold whitespace-nowrap">${sText}</span>
-                        <button onclick="editSpecialPile('${pId}')" class="ml-1 w-5 h-5 flex items-center justify-center rounded-full bg-white/50 hover:bg-white text-slate-400 hover:text-blue-600 transition"><i class="fa-solid fa-pen text-[9px]"></i></button>
-                    </div>
-                `;
-            });
-            radarContainer.innerHTML = radarHtml;
-        };
-
-        window.renderMap = () => {
-            const container = document.getElementById('map-container');
-            if (!window.baseCoordinates || window.baseCoordinates.length === 0) return; 
-            
-            const pileStatusMap = {};
-            window.scheduleData.forEach(item => {
-                const pNumStr = window.pileNumbers[item.id] || '';
-                if (!pNumStr) return;
-                const nums = (String(pNumStr).match(/\d+/g) || []);
-                const isS = window.statusSample[item.id], isL = window.statusLab[item.id], isT = window.statusTest[item.id];
-                
-                let targetColor = '#FFFFFF', targetStroke = '#1E3A8A', zIndex = 1, textStatus = '已排程(未取樣)'; 
-                if (isT) { targetColor = '#166534'; targetStroke = '#14532D'; zIndex = 4; textStatus = '✅ 已壓測結案'; } 
-                else if (isL) { targetColor = '#B45309'; targetStroke = '#78350F'; zIndex = 3; textStatus = '🚚 實驗室已收件'; }
-                else if (isS) { targetColor = '#1E3A8A'; targetStroke = '#172554'; zIndex = 2; textStatus = '🧱 已取樣'; }
-
-                const sD = item.sampleDate ? window.formatMinguo(item.sampleDate).split('(')[0] : '-'; 
-                const lD = item.collectDate ? window.formatMinguo(item.collectDate).split('(')[0] : '-'; 
-                const tD = item.testDate ? window.formatMinguo(item.testDate).split('(')[0] : '-';
-                nums.forEach(num => { pileStatusMap[num] = { fill: targetColor, stroke: targetStroke, z: zIndex, sDate: sD, lDate: lD, tDate: tD, textStatus: textStatus }; });
-            });
-            
-            let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
-            const mappedPoints = window.baseCoordinates.map(arr => {
-                const id = arr[0], x = arr[1], y = -arr[2]; 
-                if (x < minX) minX = x; if (x > maxX) maxX = x; if (y < minY) minY = y; if (y > maxY) maxY = y;
-                const statusObj = pileStatusMap[id] || { fill: '#F1F5F9', stroke: '#CBD5E1', z: 0, sDate: '-', lDate: '-', tDate: '-', textStatus: '尚未排程' }; 
-                return { id, x, y, ...statusObj }; 
-            }).sort((a, b) => a.z - b.z);
-            
-            const paddingX = 1000, paddingY = 1000;
-            const viewBoxStr = `${minX - paddingX} ${minY - paddingY} ${(maxX - minX) + paddingX * 2} ${(maxY - minY) + paddingY * 2}`;
-            
-            let circlesHtml = '';
-            mappedPoints.forEach(p => { 
-                let specialDeco = '';
-                const sType = window.specialPilesData[String(p.id)];
-                if (sType) {
-                    const strokeColor = sType === 'FULL' ? '#60A5FA' : '#FBBF24';
-                    specialDeco = `<circle cx="${p.x}" cy="${p.y}" r="110" fill="none" stroke="${strokeColor}" stroke-width="25" stroke-dasharray="40,20" class="animate-[spin_10s_linear_infinite]" style="transform-origin: ${p.x}px ${p.y}px"></circle><text x="${p.x}" y="${p.y-120}" font-size="80" fill="${strokeColor}" text-anchor="middle" font-weight="bold">★</text>`;
-                }
-                circlesHtml += `${specialDeco}<circle id="map-pile-${p.id}" class="pile-circle" cx="${p.x}" cy="${p.y}" r="60" fill="${p.fill}" stroke="${p.stroke}" stroke-width="15" onmouseover="showTooltip(event, '${p.id}', '${p.sDate}', '${p.lDate}', '${p.tDate}', '${p.textStatus}')" onmouseout="hideTooltip()"></circle>`; 
-            });
-            
-            container.innerHTML = `<svg id="interactive-map" width="100%" height="100%" viewBox="${viewBoxStr}" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet"><g id="map-group">${circlesHtml}</g></svg>`;
-
-            const svg = document.getElementById('interactive-map');
-            if(svg) {
-                let isDown = false, startX, startY; let vb = viewBoxStr.split(' ').map(Number);
-                const startDrag = (clientX, clientY) => { isDown = true; svg.style.cursor = 'grabbing'; startX = clientX; startY = clientY; };
-                const moveDrag = (clientX, clientY) => {
-                    if (!isDown) return; 
-                    const dx = (startX - clientX) * (vb[2] / svg.clientWidth); const dy = (startY - clientY) * (vb[3] / svg.clientHeight);
-                    vb[0] += dx; vb[1] += dy; svg.setAttribute('viewBox', vb.join(' ')); startX = clientX; startY = clientY;
-                };
-                const stopDrag = () => { isDown = false; svg.style.cursor = 'grab'; };
-
-                svg.addEventListener('mousedown', e => startDrag(e.clientX, e.clientY));
-                svg.addEventListener('mouseleave', stopDrag);
-                svg.addEventListener('mouseup', stopDrag);
-                svg.addEventListener('mousemove', e => { e.preventDefault(); moveDrag(e.clientX, e.clientY); });
-                
-                svg.addEventListener('touchstart', e => { if(e.touches.length === 1) startDrag(e.touches[0].clientX, e.touches[0].clientY); }, {passive: false});
-                svg.addEventListener('touchmove', e => { if(e.touches.length === 1) { e.preventDefault(); moveDrag(e.touches[0].clientX, e.touches[0].clientY); } }, {passive: false});
-                svg.addEventListener('touchend', stopDrag);
-
-                svg.addEventListener('wheel', e => {
-                    e.preventDefault(); const scale = e.deltaY > 0 ? 1.2 : 0.8; const rect = svg.getBoundingClientRect();
-                    const mx = e.clientX - rect.left; const my = e.clientY - rect.top;
-                    const vx = vb[0] + (mx / svg.clientWidth) * vb[2]; const vy = vb[1] + (my / svg.clientHeight) * vb[3];
-                    vb[2] *= scale; vb[3] *= scale; vb[0] = vx - (mx / svg.clientWidth) * vb[2]; vb[1] = vy - (my / svg.clientHeight) * vb[3];
-                    svg.setAttribute('viewBox', vb.join(' '));
-                }, {passive: false});
-            }
-        };
-
-        window.showTooltip = (evt, pile, sDate, lDate, tDate, status) => {
-            const tooltip = document.getElementById('map-tooltip');
-            tooltip.style.display = 'block'; tooltip.style.left = (evt.pageX + 15) + 'px'; tooltip.style.top = (evt.pageY + 15) + 'px';
-            let sType = window.specialPilesData[String(pile)]; let spAlert = '';
-            if (sType) {
-                const tName = sType === 'FULL' ? '安全監測樁 (全項)' : '安全監測樁 (部分)';
-                const tColor = sType === 'FULL' ? 'text-blue-400' : 'text-amber-400';
-                spAlert = `<div class="${tColor} text-[12px] mb-1 font-black"><i class="fa-solid fa-star"></i> ${tName}</div>`;
-            }
-            tooltip.innerHTML = `${spAlert}<div class="font-black text-base mb-1 border-b border-slate-500 pb-1 text-blue-100">樁號: P${pile}</div><div class="text-sm my-1 text-amber-300">狀態: ${status}</div><div class="text-[13px] text-slate-300 mt-2">取樣日: ${sDate}</div><div class="text-[13px] text-slate-300">收件日: ${lDate}</div><div class="text-[13px] text-slate-300">壓測日: ${tDate}</div>`;
-        };
-        window.hideTooltip = () => { document.getElementById('map-tooltip').style.display = 'none'; };
-
-        // 🔥 修復: 確保月曆重新渲染時也套用最新的 Exception 設定
-        window.renderCalendar = () => { 
-            const year = window.currentCalDate.getFullYear(), month = window.currentCalDate.getMonth();
-            document.getElementById('calendar-title').innerText = `民國 ${year-1911} 年 ${month+1} 月`;
-            const eventsMap = {};
-            window.scheduleData.filter(i => window.currentFilter === 'ALL' || i.machine === window.currentFilter).forEach(item => {
-                const p = window.pileNumbers[item.id] ? `${item.id}(${window.pileNumbers[item.id]})` : item.id;
-                const addE = (dt, type, label, tagClass) => { if (dt.getFullYear() === year && dt.getMonth() === month) { const d = dt.getDate(); if (!eventsMap[d]) eventsMap[d] = []; eventsMap[d].push({ label, tagClass, type }); } };
-                addE(item.sampleDate, '取樣', p, 'tag-sample'); addE(item.demoldDate, '拆模', p, 'tag-demold'); addE(item.collectDate, '收件', p, 'tag-lab'); addE(item.testDate, '壓測', p, 'tag-test');
-            });
-            const firstDay = new Date(year, month, 1).getDay(), daysInMonth = new Date(year, month + 1, 0).getDate();
-            const tbody = document.getElementById('calendar-body'); tbody.innerHTML = ''; let date = 1;
-            for (let i = 0; i < 6; i++) {
-                const row = document.createElement('tr');
-                for (let j = 0; j < 7; j++) {
-                    const cell = document.createElement('td'); cell.className = 'border-r border-b border-slate-300 p-2 align-top h-36 bg-white transition hover:bg-slate-100';
-                    if (j === 0 || j === 6) cell.classList.add('bg-slate-100/50');
-                    if (i === 0 && j < firstDay || date > daysInMonth) { cell.innerHTML = ''; } else {
-                        const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(date).padStart(2,'0')}`;
-                        const isExGlobal = window.exceptionDates.includes(dateStr); const isExA = window.exceptionA.includes(dateStr); const isExB = window.exceptionB.includes(dateStr);
-                        let exBadge = '';
-                        if(isExGlobal) exBadge = `<span class="text-[10px] bg-red-600 text-white px-1.5 py-0.5 rounded shadow-sm font-black border border-red-700 whitespace-nowrap">全區停</span>`; else if (isExA && isExB) exBadge = `<span class="text-[10px] bg-red-600 text-white px-1.5 py-0.5 rounded shadow-sm font-black border border-red-700 whitespace-nowrap">A/B停</span>`; else if (isExA) exBadge = `<span class="text-[10px] bg-red-500 text-white px-1.5 py-0.5 rounded shadow-sm font-black border border-red-600 whitespace-nowrap">A停</span>`; else if (isExB) exBadge = `<span class="text-[10px] bg-red-500 text-white px-1.5 py-0.5 rounded shadow-sm font-black border border-red-600 whitespace-nowrap">B停</span>`;
-                        let isToday = new Date().getFullYear() === year && new Date().getMonth() === month && new Date().getDate() === date;
-                        let cellHtml = `<div class="font-black text-lg mb-1 flex justify-between items-center"><span class="${isToday ? 'bg-slate-800 text-white rounded px-2.5 py-1 shadow-sm' : 'text-slate-600'}">${date}</span> ${exBadge}</div><div class="flex flex-col gap-1 overflow-y-auto max-h-24 calendar-scroll pr-1">`;
-                        if (eventsMap[date]) { eventsMap[date].forEach(e => { cellHtml += `<div class="cal-tag ${e.tagClass} break-all text-[11px] p-1"><b>${e.type}:</b> ${e.label}</div>`; }); }
-                        cellHtml += `</div>`; 
-                        if(isExGlobal || (isExA && isExB)) cell.classList.add('bg-red-50'); else if (isExA || isExB) cell.classList.add('bg-orange-50/50');
-                        cell.innerHTML = cellHtml; date++;
-                    }
-                    row.appendChild(cell);
-                }
-                tbody.appendChild(row); if (date > daysInMonth) break;
-            }
-        };
-
-        window.openMatrixModal = () => { window.renderMatrixGrid(); document.getElementById('matrix-modal').classList.remove('hidden'); };
-        window.closeMatrixModal = () => { document.getElementById('matrix-modal').classList.add('hidden'); };
-        window.renderMatrixGrid = () => {
-            const counts = new Array(TOTAL_PILES_LIMIT + 1).fill(0);
-            Object.values(window.pileNumbers).forEach(val => { const nums = (String(val).match(/\d+/g) || []).map(n => parseInt(n, 10)); nums.forEach(n => { if (n >= 1 && n <= TOTAL_PILES_LIMIT) counts[n]++; }); });
-            const container = document.getElementById('matrix-container'); container.innerHTML = ''; let statMissing = 0, statOk = 0, statError = 0;
-            for (let i = 1; i <= TOTAL_PILES_LIMIT; i++) {
-                const box = document.createElement('div'); let statusClass = '';
-                if (counts[i] === 0) { statusClass = 'box-missing'; statMissing++; } else if (counts[i] === 1) { statusClass = 'box-ok'; statOk++; } else { statusClass = 'box-error'; statError++; box.title = `重複 ${counts[i]} 次！`; }
-                box.className = `matrix-box ${statusClass}`; box.innerText = i; container.appendChild(box);
-            }
-            document.getElementById('matrix-count-missing').innerText = statMissing; document.getElementById('matrix-count-ok').innerText = statOk; document.getElementById('matrix-count-error').innerText = statError;
-        };
-
-        window.openReconModal = () => { window.renderReconTable(); document.getElementById('recon-modal').classList.remove('hidden'); };
-        window.closeReconModal = () => { document.getElementById('recon-modal').classList.add('hidden'); };
-        window.updateContractorReport = (dateStr, val) => { const num = parseInt(val, 10); if (isNaN(num)) delete window.contractorReports[dateStr]; else window.contractorReports[dateStr] = num; window.saveDataToCloud(); window.renderReconTable(); };
-        
-        window.renderReconTable = () => {
-            const dailyStats = {};
-            window.scheduleData.forEach(item => { const count = (String(window.pileNumbers[item.id] || "")).match(/\d+/g)?.length || 0; if (count > 0) { const dateStr = window.toDateString(item.sampleDate); if (!dailyStats[dateStr]) dailyStats[dateStr] = { A: 0, B: 0, total: 0, dateObj: item.sampleDate, ids: [] }; dailyStats[dateStr][item.machine] += count; dailyStats[dateStr].total += count; dailyStats[dateStr].ids.push(item.id); } });
-            const sortedDates = Object.keys(dailyStats).sort((a, b) => new Date(b) - new Date(a));
-            const tbody = document.getElementById('recon-body'); tbody.innerHTML = '';
-            if(sortedDates.length === 0) { tbody.innerHTML = '<tr><td colspan="7" class="p-8 text-center text-slate-500 font-black">尚無打設登錄資料</td></tr>'; return; }
-            sortedDates.forEach((dStr, index) => {
-                const stat = dailyStats[dStr]; const reportVal = window.contractorReports[dStr] !== undefined ? window.contractorReports[dStr] : '';
-                let statusHtml = '<span class="text-slate-400 text-sm font-black">- 待填報 -</span>'; 
-                if (reportVal !== '') {
-                    const rNum = parseInt(reportVal, 10);
-                    if (rNum === stat.total) statusHtml = '<span class="bg-[#F2F7F4] text-[#166534] px-4 py-2 rounded-lg font-black whitespace-nowrap"><i class="fa-solid fa-check"></i> 吻合</span>';
-                    else statusHtml = `<span class="bg-[#FEF2F2] text-[#DC2626] px-4 py-2 rounded-lg font-black animate-pulse whitespace-nowrap"><i class="fa-solid fa-xmark"></i> 誤差 ${Math.abs(rNum - stat.total)} 支</span>`;
-                }
-                const idBadges = stat.ids.map(id => `<span class="bg-slate-200 text-slate-700 px-2 py-1 rounded text-xs mx-0.5 whitespace-nowrap">${id}</span>`).join('');
-                tbody.innerHTML += `<tr class="border-b-2 border-slate-100 hover:bg-slate-50 transition"><td class="p-4 text-center font-black text-slate-600 max-w-[150px] whitespace-normal">${idBadges}</td><td class="p-4 font-black text-slate-700 whitespace-nowrap">${window.formatMinguo(stat.dateObj).split('(')[0]}</td><td class="p-4 text-center font-black text-[#1E3A8A] text-lg">${stat.A||'-'}</td><td class="p-4 text-center font-black text-[#1E3A8A] text-lg">${stat.B||'-'}</td><td class="p-4 font-black text-2xl text-slate-900 text-center bg-slate-50/50">${stat.total}</td><td class="p-4 text-center bg-[#FCF9F2]"><input type="number" class="border-2 border-[#B45309] rounded-lg px-3 py-2 w-28 text-center font-black text-[#B45309] text-xl outline-none focus:ring-2 focus:ring-orange-400" value="${reportVal}" onchange="updateContractorReport('${dStr}', this.value)"></td><td class="p-4 text-center">${statusHtml}</td></tr>`;
-            });
-        };
-
-        window.exportCSV = () => {
-            let csv = "\uFEFF取樣編號,打設樁號,取樣日期,取樣狀態,實驗室收件,收件狀態,抗壓會驗,結案狀態,系統備註\n";
-            window.scheduleData.forEach(i => { 
-                const p = window.pileNumbers[i.id] || ''; const r = window.remarks[i.id] || '';
-                csv += `${i.id},"${p}",${window.toDateString(i.sampleDate)},${window.statusSample[i.id]?'已取樣':'未完成'},${window.toDateString(i.collectDate)},${window.statusLab[i.id]?'已收件':'未完成'},${window.toDateString(i.testDate)},${window.statusTest[i.id]?'已結案':'待辦'},"${r}"\n`; 
-            });
-            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' }); 
-            const link = document.createElement("a"); link.href = URL.createObjectURL(blob); 
-            link.download = `預壘樁進度與試體追蹤表_V17.0正式版.csv`; link.click();
-        };
-
-        window.changeMonth = (o) => { window.currentCalDate.setMonth(window.currentCalDate.getMonth() + o); window.renderCalendar(); };
-        window.calculateMaterials = () => { const totalSandM3 = (parseFloat(document.getElementById('calc-sand-bucket').value)||0) * ((parseFloat(document.getElementById('calc-vol').value)||0)/1000) * (parseFloat(document.getElementById('calc-batches').value)||0); const totalCemTon = (parseFloat(document.getElementById('calc-cem-bucket').value)||0) * ((parseFloat(document.getElementById('calc-vol').value)||0)/1000) * (parseFloat(document.getElementById('calc-batches').value)||0) * 1.4; const resDiv = document.getElementById('calc-result'); resDiv.innerHTML = `<div class="flex justify-around items-center"><div class="text-center font-black text-sm text-slate-500">理論砂用量<br><span class="text-2xl font-black text-slate-800">${totalSandM3.toFixed(2)} <span class="text-sm">m³</span></span></div><div class="text-center font-black text-sm text-slate-500">理論水泥用量<br><span class="text-2xl font-black text-slate-800">${totalCemTon.toFixed(2)} <span class="text-sm">噸</span></span></div></div>`; resDiv.classList.remove('hidden'); };
-        
-        // 例外停機與加班按鈕功能
-        window.addExceptionDate = () => { const m = document.getElementById('exception-machine').value; const val = document.getElementById('exception-date-input').value; if (val) { if (m === 'ALL' && !window.exceptionDates.includes(val)) window.exceptionDates.push(val); if (m === 'A' && !window.exceptionA.includes(val)) window.exceptionA.push(val); if (m === 'B' && !window.exceptionB.includes(val)) window.exceptionB.push(val); window.saveDataToCloud(); document.getElementById('exception-date-input').value = ""; window.refreshAll(); } };
-        window.removeExceptionDate = (m, val) => { if(m === 'ALL') window.exceptionDates = window.exceptionDates.filter(d => d !== val); if(m === 'A') window.exceptionA = window.exceptionA.filter(d => d !== val); if(m === 'B') window.exceptionB = window.exceptionB.filter(d => d !== val); window.saveDataToCloud(); window.refreshAll(); };
-        window.addExtraDate = () => { const m = document.getElementById('extra-machine').value; const val = document.getElementById('extra-date-input').value; if (val) { if (m === 'A' && !window.extraWorkA.includes(val)) window.extraWorkA.push(val); if (m === 'B' && !window.extraWorkB.includes(val)) window.extraWorkB.push(val); window.saveDataToCloud(); document.getElementById('extra-date-input').value = ""; window.refreshAll(); } };
-        window.removeExtraDate = (m, val) => { if (m === 'A') window.extraWorkA = window.extraWorkA.filter(d => d !== val); if (m === 'B') window.extraWorkB = window.extraWorkB.filter(d => d !== val); window.saveDataToCloud(); window.refreshAll(); };
-        
-window.updateExtraUI = () => {
-            const expAll = document.getElementById('exception-list-all'); if(expAll) expAll.innerHTML = '<span class="text-[10px] text-red-400 font-bold w-full">全區停機：</span>'; 
-            const expA = document.getElementById('exception-list-a'); if(expA) expA.innerHTML = '<span class="text-[10px] text-orange-400 font-bold w-full">A車停機：</span>';
-            const expB = document.getElementById('exception-list-b'); if(expB) expB.innerHTML = '<span class="text-[10px] text-amber-400 font-bold w-full">B車停機：</span>';
-            
-            const renderExTag = (container, m, val, label) => { 
-                if(!container) return;
-                const parts = val.split('-'); const tag = document.createElement('span'); tag.className = "bg-white text-red-700 px-2 py-0.5 rounded text-[11px] font-black border border-red-200 shadow-sm whitespace-nowrap"; tag.innerHTML = `${parts[1]}/${parts[2]} <i class="fa-solid fa-xmark cursor-pointer ml-1 opacity-60 hover:opacity-100" onclick="removeExceptionDate('${m}', '${val}')"></i>`; container.appendChild(tag); 
-            };
-
-            window.exceptionDates.forEach(val => renderExTag(expAll, 'ALL', val, '全區')); 
-            window.exceptionA.forEach(val => renderExTag(expA, 'A', val, 'A車')); 
-            window.exceptionB.forEach(val => renderExTag(expB, 'B', val, 'B車'));
-
-            const extraContainer = document.getElementById('extra-list'); 
-            if(extraContainer) {
-                extraContainer.innerHTML = "";
-                const renderExWTag = (m, val) => { const parts = val.split('-'); const tag = document.createElement('span'); tag.className = "bg-white text-blue-700 px-2 py-0.5 rounded text-[11px] font-black border border-blue-200 shadow-sm whitespace-nowrap"; tag.innerHTML = `${m}車:${parts[1]}/${parts[2]} <i class="fa-solid fa-xmark cursor-pointer ml-1 opacity-60 hover:opacity-100" onclick="removeExtraDate('${m}', '${val}')"></i>`; extraContainer.appendChild(tag); };
-                window.extraWorkA.forEach(val => renderExWTag('A', val)); window.extraWorkB.forEach(val => renderExWTag('B', val));
-            }
-        };
-
-        window.searchMapPile = () => { const val = document.getElementById('map-search-input').value.trim(); if (!val) return; const num = val.replace(/\D/g, ''); const circle = document.getElementById('map-pile-' + num); if (circle) { document.querySelectorAll('.pile-circle').forEach(c => c.classList.remove('highlight-pile')); circle.classList.add('highlight-pile'); } else { window.showModal("搜尋失敗", `找不到樁號 P${num} 的座標紀錄。`, "error"); } };
-        window.showModal = (title, msg, type) => { document.getElementById('custom-modal-header').innerHTML = `<i class="fa-solid fa-${type === 'success' ? 'circle-check text-emerald-500' : 'triangle-exclamation text-red-500'}"></i> ${title}`; document.getElementById('custom-modal-message').innerHTML = msg; document.getElementById('custom-modal').classList.remove('hidden'); };
-        window.closeModal = () => document.getElementById('custom-modal').classList.add('hidden');
-
-        // 🔥 確保修復特別樁的編輯功能
-        window.editSpecialPile = (oldId) => {
-            const currentType = window.specialPilesData[oldId];
-            const newId = prompt(`目前安全監測樁為 P${oldId}。\n請輸入您想平移到的新樁號 (輸入純數字)。\n若欲刪除此紀錄請留白：`, oldId);
-            if (newId === null) return; 
-            const cleanNewId = newId.trim().replace(/\D/g, '');
-            if (cleanNewId === '') {
-                if (confirm(`確定要刪除安全監測樁 P${oldId} 嗎？`)) { delete window.specialPilesData[oldId]; window.saveDataToCloud(); window.refreshAll(); }
-            } else if (cleanNewId !== oldId) {
-                if(cleanNewId === '0' || isNaN(cleanNewId)) return alert("無效的樁號！");
-                delete window.specialPilesData[oldId]; window.specialPilesData[cleanNewId] = currentType; window.saveDataToCloud(); window.refreshAll();
-                window.showModal("換樁成功", `✅ 成功將安全監測樁由 P${oldId} 平移至 P${cleanNewId}！`, "success");
-            }
-        };
-
-        window.syncFromContractor = async () => {
-            const btn = document.getElementById('btn-sync-api'); const originalHtml = btn.innerHTML;
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-sm opacity-80"></i> 同步中...'; btn.disabled = true;
-            try {
-                const response = await fetch(GAS_API_URL); if (!response.ok) throw new Error("API 回應異常");
-                const dataMatrix = await response.json(); const groupedData = {};
-                for (let i = 1; i < dataMatrix.length; i++) {
-                    const cols = dataMatrix[i]; if (cols.length < 6) continue;
-                    const rawPile = String(cols[0] || '').trim(); const dateStr = String(cols[1] || '').trim().replace(/\//g, '-'); const machine = String(cols[2] || '').trim();
-                    const pileNum = rawPile.replace(/\D/g, ''); const machLetter = machine.includes('A') ? 'A' : (machine.includes('B') ? 'B' : '');
-                    if (pileNum && dateStr && machLetter) { const key = `${dateStr}_${machLetter}`; if (!groupedData[key]) groupedData[key] = []; groupedData[key].push(pileNum); }
-                }
-                let updatedCount = 0;
-                window.scheduleData.forEach(item => {
-                    const itemDateStr = window.toDateString(item.sampleDate); const key = `${itemDateStr}_${item.machine}`;
-                    if (groupedData[key]) { const newPileStr = groupedData[key].join('、'); if (!window.statusTest[item.id] && window.pileNumbers[item.id] !== newPileStr) { window.pileNumbers[item.id] = newPileStr; updatedCount++; } }
-                });
-                window.saveDataToCloud(); window.refreshAll(); 
-                if (updatedCount > 0) window.showModal("同步成功！", `透過 API 自動更新了 <b class="text-blue-600 text-lg">${updatedCount}</b> 筆排程！`, "success"); 
-                else window.showModal("進度載入完成", "地圖與資料已更新，目前進度已是最新狀態。", "success"); 
-            } catch (error) { window.showModal("API 同步失敗", error.message, "error"); } finally { btn.innerHTML = originalHtml; btn.disabled = false; }
-        };
-
-        // 正式環境初始化
-        window.refreshAll();
-        initFirebase();
-    </script>
+    <script src="./coordinates.js"></script>
+    <script type="module" src="./app.js"></script>
 </body>
 </html>
