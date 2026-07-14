@@ -16,7 +16,7 @@ window.extraWorkA = []; window.extraWorkB = [];
 window.pileNumbers = {}; window.statusSample = {}; window.statusLab = {}; window.statusTest = {}; window.remarks = {}; window.contractorReports = {}; 
 window.specialPilesData = {}; 
 window.scheduleData = []; 
-window.concreteData = []; // 🔥 新增：雲端強度資料庫陣列
+window.concreteData = []; // 🔥 ACI 強度庫
 window.currentFilter = 'ALL'; 
 window.currentView = 'table'; 
 window.currentCalDate = new Date(2026, 4, 1); 
@@ -28,7 +28,6 @@ const initFirebase = async () => {
         const app = initializeApp(firebaseConfig); auth = getAuth(app); db = getFirestore(app); isCloudEnabled = true; await signInAnonymously(auth);
         onAuthStateChanged(auth, (user) => {
             if (user) {
-                // 1. 監聽主排程進度
                 onSnapshot(doc(db, 'scheduleData', 'mainState'), (snapshot) => {
                     if (snapshot.exists()) {
                         const data = snapshot.data();
@@ -50,14 +49,12 @@ const initFirebase = async () => {
                     window.refreshAll();
                 });
 
-                // 🔥 2. 監聽 ACI 214 獨立強度資料庫
                 onSnapshot(doc(db, 'scheduleData', 'concreteState'), (snapshot) => {
                     if (snapshot.exists()) {
                         window.concreteData = snapshot.data().records || [];
                     } else {
                         window.concreteData = [];
                     }
-                    // 若目前停留在強度分頁，則即時更新圖表
                     if (window.currentView === 'concrete') window.calculateConcreteStats();
                 });
             }
@@ -80,17 +77,11 @@ window.saveDataToCloud = async () => {
     } 
 };
 
-// 🔥 獨立儲存：將強度資料上傳至獨立節點，絕不干擾排程資料
 window.saveConcreteDataToCloud = async () => {
     if (isCloudEnabled && auth.currentUser) {
-        try {
-            await setDoc(doc(db, 'scheduleData', 'concreteState'), {
-                records: window.concreteData
-            }, { merge: true });
-        } catch (err) { console.error('強度存檔失敗', err); }
-    } else {
-        localStorage.setItem('Concrete_ACI214_DB', JSON.stringify(window.concreteData));
-    }
+        try { await setDoc(doc(db, 'scheduleData', 'concreteState'), { records: window.concreteData }, { merge: true }); } 
+        catch (err) { console.error('強度存檔失敗', err); }
+    } else { localStorage.setItem('Concrete_ACI214_DB', JSON.stringify(window.concreteData)); }
 };
 
 window.toDateString = (d) => { const y=d.getFullYear(); const m=String(d.getMonth()+1).padStart(2,'0'); const dt=String(d.getDate()).padStart(2,'0'); return `${y}-${m}-${dt}`; };
@@ -101,7 +92,7 @@ window.refreshAll = () => {
     try { window.generateSchedule(); } catch(e) { console.error('Schedule Error', e); }
     try { window.renderTable(window.currentFilter); } catch(e) { console.error('Table Error', e); }
     try { window.updateDashboard(); } catch(e) { console.error('Dashboard Error', e); }
-    try { window.renderMap(); } catch(e) { console.error('Map Error', e); document.getElementById('map-container').innerHTML='地圖繪製發生錯誤，請重新整理'; }
+    try { window.renderMap(); } catch(e) { console.error('Map Error', e); }
     try { if (window.currentView === 'calendar') window.renderCalendar(); } catch(e) {}
     try { if (window.updateExtraUI) window.updateExtraUI(); } catch(e) {}
 };
@@ -121,18 +112,8 @@ window.generateSchedule = () => {
             return { id: `${m}${c}`, machine: m, sampleDate: new Date(t), demoldDate: dem, collectDate: col, testDate: tes };
         };
 
-        if (d >= startDateA) {
-            if ((!isSun && !isExA) || window.extraWorkA.includes(dStr)) {
-                window.scheduleData.push(makeR('A', cA, new Date(d)));
-                cA++;
-            }
-        }
-        if (d >= startDateB) {
-            if ((!isSun && !isExB) || window.extraWorkB.includes(dStr)) {
-                window.scheduleData.push(makeR('B', cB, new Date(d)));
-                cB++;
-            }
-        }
+        if (d >= startDateA) { if ((!isSun && !isExA) || window.extraWorkA.includes(dStr)) { window.scheduleData.push(makeR('A', cA, new Date(d))); cA++; } }
+        if (d >= startDateB) { if ((!isSun && !isExB) || window.extraWorkB.includes(dStr)) { window.scheduleData.push(makeR('B', cB, new Date(d))); cB++; } }
     }
 };
 
@@ -148,25 +129,26 @@ window.toggleView = (v) => {
     if (v === 'calendar') window.renderCalendar(); 
 };
 
+window.switchView = (viewId) => {
+    document.getElementById('tab-schedule').classList.remove('active');
+    document.getElementById('tab-concrete').classList.remove('active');
+    document.getElementById('view-schedule').classList.add('hidden');
+    document.getElementById('view-concrete').classList.add('hidden');
+    
+    document.getElementById(`tab-${viewId}`).classList.add('active');
+    document.getElementById(`view-${viewId}`).classList.remove('hidden');
+    
+    if(viewId === 'concrete') { setTimeout(() => window.calculateConcreteStats(), 50); }
+};
+
 window.filterData = (f) => { 
     window.currentFilter = f; 
-    const btnAll = document.getElementById('btn-ALL');
-    const btnA = document.getElementById('btn-A');
-    const btnB = document.getElementById('btn-B');
-    
-    [btnAll, btnA, btnB].forEach(b => { 
-        if(b) b.className = "px-4 py-1.5 rounded-xl text-sm font-black bg-white text-slate-700 border-2 border-slate-300 shadow-sm hover:bg-slate-100 transition"; 
-    });
-    
+    const btnAll = document.getElementById('btn-ALL'); const btnA = document.getElementById('btn-A'); const btnB = document.getElementById('btn-B');
+    [btnAll, btnA, btnB].forEach(b => { if(b) b.className = "px-4 py-1.5 rounded-xl text-sm font-black bg-white text-slate-700 border-2 border-slate-300 shadow-sm hover:bg-slate-100 transition"; });
     if(f === 'ALL' && btnAll) btnAll.className = "px-4 py-1.5 rounded-xl text-sm font-black bg-slate-800 text-white shadow border border-slate-900 transition";
     if(f === 'A' && btnA) btnA.className = "px-4 py-1.5 rounded-xl text-sm font-black bg-slate-800 text-white shadow border border-slate-900 transition";
     if(f === 'B' && btnB) btnB.className = "px-4 py-1.5 rounded-xl text-sm font-black bg-slate-800 text-white shadow border border-slate-900 transition";
-    
-    if(window.currentView === 'calendar') {
-        window.renderCalendar();
-    } else {
-        window.renderTable(f); 
-    }
+    if(window.currentView === 'calendar') { window.renderCalendar(); } else { window.renderTable(f); }
 };
 
 window.setSmartFilter = (type) => {
@@ -200,7 +182,6 @@ window.scrollToTodo = () => {
 window.renderTable = (filter) => {
     const tbody = document.getElementById('schedule-body'); tbody.innerHTML = '';
     const searchTerm = (document.getElementById('search-input')?.value || '').trim().toLowerCase();
-    
     let filteredData = window.scheduleData.filter(i => filter === 'ALL' || i.machine === filter);
     const todayDate = new Date(); todayDate.setHours(0,0,0,0);
     
@@ -304,13 +285,7 @@ window.updateDashboard = () => {
             sClass = 'bg-amber-50 border-amber-300 text-amber-800'; sText = '⚠️ 逼近中'; tagColor = 'bg-amber-500 text-white shadow-sm';
         }
 
-        radarHtml += `
-            <div class="inline-flex items-center border rounded-full shadow-sm pl-1 pr-2 py-1 transition hover:-translate-y-0.5 ${sClass}">
-                <span class="${tagColor} text-xs font-black px-2 py-1 rounded-full mr-1.5 flex items-center gap-1">${typeIcon} P${idNum}</span>
-                <span class="text-xs font-bold whitespace-nowrap">${sText}</span>
-                <button onclick="editSpecialPile('${pId}')" class="ml-1 w-5 h-5 flex items-center justify-center rounded-full bg-white/50 hover:bg-white text-slate-400 hover:text-blue-600 transition"><i class="fa-solid fa-pen text-[9px]"></i></button>
-            </div>
-        `;
+        radarHtml += `<div class="inline-flex items-center border rounded-full shadow-sm pl-1 pr-2 py-1 transition hover:-translate-y-0.5 ${sClass}"><span class="${tagColor} text-xs font-black px-2 py-1 rounded-full mr-1.5 flex items-center gap-1">${typeIcon} P${idNum}</span><span class="text-xs font-bold whitespace-nowrap">${sText}</span><button onclick="editSpecialPile('${pId}')" class="ml-1 w-5 h-5 flex items-center justify-center rounded-full bg-white/50 hover:bg-white text-slate-400 hover:text-blue-600 transition"><i class="fa-solid fa-pen text-[9px]"></i></button></div>`;
     });
     radarContainer.innerHTML = radarHtml;
 };
@@ -558,13 +533,8 @@ window.syncFromContractor = async () => {
 };
 
 // ========================================================
-// 🔥 獨立安全模組：ACI 214 混凝土品質管制圖 (X-bar & R) 引擎
+// 🔥 獨立安全模組：ACI 214 混凝土品質管制圖 (X-bar & R) 引擎與 AI 診斷
 // ========================================================
-const CONCRETE_DB_KEY = 'Concrete_ACI214_DB';
-window.concreteData = JSON.parse(localStorage.getItem(CONCRETE_DB_KEY)) || [];
-let xBarChartInst = null; let rChartInst = null;
-
-// ACI 管制圖統計常數 (樣本數 n=3)
 const A2 = 1.023; const D4 = 2.574; const D3 = 0;
 
 window.addConcreteRecord = () => {
@@ -597,51 +567,43 @@ window.deleteConcreteRecord = (ts) => {
 };
 
 window.calculateConcreteStats = () => {
-            const targetFc = parseFloat(document.getElementById('fc-prime')?.value) || 280;
-            let totalAvg = 0, totalRange = 0; const n = window.concreteData.length;
+    const targetFc = parseFloat(document.getElementById('fc-prime')?.value) || 280; 
+    let totalAvg = 0, totalRange = 0; const n = window.concreteData.length;
 
-            if(n > 0) {
-                // 1. 計算基本統計量
-                let minAvg = Infinity;
-                let passCount = 0;
-                const averages = [];
-                
-                window.concreteData.forEach(d => { 
-                    totalAvg += d.avg; 
-                    totalRange += d.range; 
-                    averages.push(d.avg);
-                    if(d.avg < minAvg) minAvg = d.avg;
-                    if(d.avg >= targetFc) passCount++;
-                });
-                
-                const X_bar_bar = totalAvg / n; 
-                const R_bar = totalRange / n;
-                const UCL_X = X_bar_bar + (A2 * R_bar); 
-                const LCL_X = X_bar_bar - (A2 * R_bar);
-                const UCL_R = D4 * R_bar; 
-                const LCL_R = 0;
+    if(n > 0) {
+        let minAvg = Infinity;
+        let passCount = 0;
+        const averages = [];
+        
+        window.concreteData.forEach(d => { 
+            totalAvg += d.avg; 
+            totalRange += d.range; 
+            averages.push(d.avg);
+            if(d.avg < minAvg) minAvg = d.avg;
+            if(d.avg >= targetFc) passCount++;
+        });
+        
+        const X_bar_bar = totalAvg / n; const R_bar = totalRange / n;
+        const UCL_X = X_bar_bar + (A2 * R_bar); const LCL_X = X_bar_bar - (A2 * R_bar);
+        const UCL_R = D4 * R_bar; const LCL_R = 0;
+        
+        // 計算標準差
+        let varianceSum = 0;
+        averages.forEach(val => { varianceSum += Math.pow(val - X_bar_bar, 2); });
+        const sd = Math.sqrt(varianceSum / n);
+        const passRate = ((passCount / n) * 100).toFixed(1);
 
-                // 2. 計算標準差 (Standard Deviation)
-                let varianceSum = 0;
-                averages.forEach(val => { varianceSum += Math.pow(val - X_bar_bar, 2); });
-                const sd = Math.sqrt(varianceSum / n);
-                const passRate = ((passCount / n) * 100).toFixed(1);
-
-                // 3. 渲染圖表與表格
-                renderConcreteUI(X_bar_bar, UCL_X, LCL_X, R_bar, UCL_R, LCL_R, targetFc);
-                
-                // 4. 🔥 啟動 AI 智慧診斷引擎
-                generateAIReport(n, X_bar_bar, targetFc, minAvg, passRate, sd, UCL_R);
-
-            } else {
-                renderConcreteUI(0, 0, 0, 0, 0, 0, targetFc);
-                generateAIReport(0, 0, targetFc, 0, 0, 0, 0); // 傳入空值以顯示預設訊息
-            }
-        };
+        renderConcreteUI(X_bar_bar, UCL_X, LCL_X, R_bar, UCL_R, LCL_R, targetFc);
+        generateAIReport(n, X_bar_bar, targetFc, minAvg, passRate, sd, UCL_R);
+    } else {
+        renderConcreteUI(0, 0, 0, 0, 0, 0, targetFc);
+        generateAIReport(0, 0, targetFc, 0, 0, 0, 0); 
+    }
+};
 
 const renderConcreteUI = (X_bar_bar, UCL_X, LCL_X, R_bar, UCL_R, LCL_R, fcPrime) => {
     const tbody = document.getElementById('concrete-body'); 
-    if(!tbody) return; // 防呆，若不在該分頁就不執行
+    if(!tbody) return; 
     
     tbody.innerHTML = '';
     document.getElementById('concrete-count').innerText = `總計: ${window.concreteData.length} 組`;
@@ -667,99 +629,123 @@ const renderConcreteUI = (X_bar_bar, UCL_X, LCL_X, R_bar, UCL_R, LCL_R, fcPrime)
     const hasData = window.concreteData.length > 0;
 
     const ctxX = document.getElementById('xBarChart');
-    if(!ctxX) return;
-    
-    if(xBarChartInst) xBarChartInst.destroy();
-    xBarChartInst = new Chart(ctxX.getContext('2d'), { type: 'line', data: { labels: labels, datasets: [
-        { label: '單組平均強度 (X)', data: dataX, borderColor: '#2563EB', backgroundColor: 'rgba(37, 99, 235, 0.1)', pointBackgroundColor: '#1E3A8A', borderWidth: 3, pointRadius: 5, fill: true, tension: 0.2 },
-        { label: `總平均 (CL)`, data: hasData ? dataX.map(()=>X_bar_bar) : [], borderColor: '#10B981', borderWidth: 2, pointRadius: 0, borderDash: [5,5] },
-        { label: `上限 (UCL)`, data: hasData ? dataX.map(()=>UCL_X) : [], borderColor: '#F59E0B', borderWidth: 2, pointRadius: 0 },
-        { label: `下限 (LCL)`, data: hasData ? dataX.map(()=>LCL_X) : [], borderColor: '#F59E0B', borderWidth: 2, pointRadius: 0 },
-        { label: `設計強度 (${fcPrime})`, data: hasData ? dataX.map(()=>fcPrime) : [], borderColor: '#EF4444', borderWidth: 3, pointRadius: 0, borderDash: [6,6] }
-    ]}, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top' } } }});
+    if(ctxX) {
+        if(window.xBarChartInst) window.xBarChartInst.destroy();
+        window.xBarChartInst = new Chart(ctxX.getContext('2d'), { type: 'line', data: { labels: labels, datasets: [
+            { label: '單組平均強度 (X)', data: dataX, borderColor: '#2563EB', backgroundColor: 'rgba(37, 99, 235, 0.1)', pointBackgroundColor: '#1E3A8A', borderWidth: 3, pointRadius: 5, fill: true, tension: 0.2 },
+            { label: `總平均 (CL)`, data: hasData ? dataX.map(()=>X_bar_bar) : [], borderColor: '#10B981', borderWidth: 2, pointRadius: 0, borderDash: [5,5] },
+            { label: `上限 (UCL)`, data: hasData ? dataX.map(()=>UCL_X) : [], borderColor: '#F59E0B', borderWidth: 2, pointRadius: 0 },
+            { label: `下限 (LCL)`, data: hasData ? dataX.map(()=>LCL_X) : [], borderColor: '#F59E0B', borderWidth: 2, pointRadius: 0 },
+            { label: `設計強度 (${fcPrime})`, data: hasData ? dataX.map(()=>fcPrime) : [], borderColor: '#EF4444', borderWidth: 3, pointRadius: 0, borderDash: [6,6] }
+        ]}, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top' } } }});
+    }
 
     const ctxR = document.getElementById('rChart');
-    if(rChartInst) rChartInst.destroy();
-    rChartInst = new Chart(ctxR.getContext('2d'), { type: 'line', data: { labels: labels, datasets: [
-        { label: '單組全距 (R)', data: dataR, borderColor: '#B45309', backgroundColor: 'rgba(180, 83, 9, 0.1)', pointBackgroundColor: '#78350F', borderWidth: 3, pointRadius: 5, fill: true, tension: 0.2 },
-        { label: `全距平均 (CL)`, data: hasData ? dataR.map(()=>R_bar) : [], borderColor: '#10B981', borderWidth: 2, pointRadius: 0, borderDash: [5,5] },
-        { label: `上限 (UCL)`, data: hasData ? dataR.map(()=>UCL_R) : [], borderColor: '#EF4444', borderWidth: 2, pointRadius: 0 }
-    ]}, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top' } } }});
+    if(ctxR) {
+        if(window.rChartInst) window.rChartInst.destroy();
+        window.rChartInst = new Chart(ctxR.getContext('2d'), { type: 'line', data: { labels: labels, datasets: [
+            { label: '單組全距 (R)', data: dataR, borderColor: '#B45309', backgroundColor: 'rgba(180, 83, 9, 0.1)', pointBackgroundColor: '#78350F', borderWidth: 3, pointRadius: 5, fill: true, tension: 0.2 },
+            { label: `全距平均 (CL)`, data: hasData ? dataR.map(()=>R_bar) : [], borderColor: '#10B981', borderWidth: 2, pointRadius: 0, borderDash: [5,5] },
+            { label: `上限 (UCL)`, data: hasData ? dataR.map(()=>UCL_R) : [], borderColor: '#EF4444', borderWidth: 2, pointRadius: 0 }
+        ]}, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top' } } }});
+    }
 };
 
-// ========================================================
-        // 🔥 AI 智慧品質診斷引擎 (專家系統邏輯)
-        // ========================================================
-        const generateAIReport = (total, avg, target, min, passRate, sd, uclR) => {
-            const reportContainer = document.getElementById('ai-report-content');
-            if(!reportContainer) {
-                // 如果 HTML 裡還沒有這個容器，我們就在圖表下方動態建立它
-                const parentDiv = document.querySelector('#view-concrete > div.grid');
-                if(!parentDiv) return;
-                
-                const aiDiv = document.createElement('div');
-                aiDiv.className = "col-span-1 xl:col-span-2 bg-gradient-to-r from-amber-50 to-orange-50 p-6 rounded-2xl border border-amber-200 shadow-sm mt-6 mb-8";
-                aiDiv.innerHTML = `
-                    <h3 class="text-lg font-black text-amber-900 mb-4 flex items-center gap-2">
-                        <i class="fa-solid fa-robot text-amber-600 text-xl"></i> AI 專家系統品質診斷報告 (ACI 214)
-                    </h3>
-                    <div id="ai-report-content" class="text-[15px] text-slate-800 font-bold leading-relaxed bg-white/80 p-5 rounded-xl border border-amber-300 shadow-inner">
-                        等待數據運算中...
-                    </div>
-                `;
-                parentDiv.parentNode.insertBefore(aiDiv, parentDiv.nextSibling);
-            }
+const generateAIReport = (total, avg, target, min, passRate, sd, uclR) => {
+    let reportContainer = document.getElementById('ai-report-wrapper');
+    if(!reportContainer) return;
+    
+    let reportHtml = `
+        <div class="col-span-1 xl:col-span-2 bg-gradient-to-r from-amber-50 to-orange-50 p-6 rounded-2xl border border-amber-200 shadow-sm mt-6 mb-8">
+            <h3 class="text-lg font-black text-amber-900 mb-4 flex items-center gap-2">
+                <i class="fa-solid fa-robot text-amber-600 text-xl"></i> AI 專家系統品質診斷報告 (ACI 214)
+            </h3>
+            <div id="ai-report-content" class="text-[15px] text-slate-800 font-bold leading-relaxed bg-white/80 p-5 rounded-xl border border-amber-300 shadow-inner">
+    `;
 
-            const contentEl = document.getElementById('ai-report-content');
-            if(total === 0) {
-                contentEl.innerHTML = "目前尚無足夠數據進行分析，請於上方登錄檢驗資料。";
-                return;
-            }
+    if(total === 0) {
+        reportHtml += `目前尚無足夠數據進行分析，請於上方登錄檢驗資料。</div></div>`;
+        reportContainer.innerHTML = reportHtml;
+        return;
+    }
 
-            let reportHtml = `<p class="mb-3">本次分析共計 <b>${total}</b> 組壓測數據，設計強度目標值為 <b>${target}</b> kgf/cm²。</p>`;
-            
-            // 1. 分析均勻度 (標準差與全距)
-            let sdStr = '';
-            if (sd < 15) sdStr = '<span class="text-emerald-600 font-black">極佳 (標準差 < 15)</span>，品質重現性高，拌合與施工控制非常理想。';
-            else if (sd < 30) sdStr = '<span class="text-blue-600 font-black">正常 (標準差 15~30)</span>，符合一般大地工程之變異容許範圍。';
-            else sdStr = '<span class="text-amber-600 font-black">偏高 (標準差 > 30)</span>，顯示近期配比不穩定或受環境干擾明顯。';
-            
-            // 檢查是否有全距異常
-            let highRangeCount = 0;
-            window.concreteData.forEach(d => { if(d.range > uclR) highRangeCount++; });
-            let rangeWarning = '';
-            if(highRangeCount > 0) {
-                rangeWarning = `<br><span class="text-red-600 bg-red-100 px-2 py-0.5 rounded text-sm ml-1 animate-pulse">⚠️ 警告：發現 ${highRangeCount} 組試體組內全距過大，可能有取樣或壓測瑕疵。</span>`;
-            }
+    reportHtml += `<p class="mb-3">本次分析共計 <b>${total}</b> 組壓測數據，設計強度目標值為 <b>${target}</b> kgf/cm²。</p>`;
+    
+    // 1. 分析均勻度
+    let sdStr = '';
+    if (sd < 15) sdStr = '<span class="text-emerald-600 font-black">極佳 (標準差 < 15)</span>，品質重現性高，拌合與施工控制非常理想。';
+    else if (sd < 30) sdStr = '<span class="text-blue-600 font-black">正常 (標準差 15~30)</span>，符合一般大地工程之變異容許範圍。';
+    else sdStr = '<span class="text-amber-600 font-black">偏高 (標準差 > 30)</span>，顯示近期配比不穩定或受環境干擾明顯。';
+    
+    let highRangeCount = 0;
+    window.concreteData.forEach(d => { if(d.range > uclR) highRangeCount++; });
+    let rangeWarning = '';
+    if(highRangeCount > 0) {
+        rangeWarning = `<br><span class="text-red-600 bg-red-100 px-2 py-0.5 rounded text-sm ml-1 animate-pulse">⚠️ 警告：發現 ${highRangeCount} 組試體組內全距過大，可能有取樣或壓測瑕疵。</span>`;
+    }
 
-            reportHtml += `<p class="mb-3">1. <b>施工均勻度指標：</b> 本區間強度標準差為 <b>${sd.toFixed(1)}</b>，品質均勻度評估為 ${sdStr}${rangeWarning}</p>`;
+    reportHtml += `<p class="mb-3">1. <b>施工均勻度指標：</b> 本區間強度標準差為 <b>${sd.toFixed(1)}</b>，品質均勻度評估為 ${sdStr}${rangeWarning}</p>`;
 
-            // 2. 分析合格率與 ACI 214 規範
-            if (passRate == 100) {
-                reportHtml += `<p class="mb-3">2. <b>合格率檢核：</b> 區間內抗壓強度 <b class="text-emerald-600 bg-emerald-100 px-2 py-0.5 rounded">100% 達標</b>。平均強度達 <b>${avg.toFixed(1)}</b> kgf/cm²，超越設計要求。</p>`;
-                
-                if (sd < 20 && highRangeCount === 0) { 
-                    reportHtml += `<div class="mt-5 p-4 bg-emerald-50 border-l-4 border-emerald-500 text-emerald-900 rounded shadow-sm">
-                        <div class="font-black mb-1"><i class="fa-solid fa-check-circle"></i> 系統綜合建議：</div>
-                        「目前施工品質優良，骨材與砂漿拌合均勻，強度不僅全數過關且波動極小。建議現場維持現行之鑽掘參數與配比設計，無須調整。」
-                    </div>`; 
-                } else { 
-                    reportHtml += `<div class="mt-5 p-4 bg-blue-50 border-l-4 border-blue-500 text-blue-900 rounded shadow-sm">
-                        <div class="font-black mb-1"><i class="fa-solid fa-info-circle"></i> 系統綜合建議：</div>
-                        「結構強度全數達標，安全無虞。惟近期數值波動稍微明顯或存在試驗誤差，建議現場主任提醒實驗室注意養護與壓測標準程序，以追求極致品質。」
-                    </div>`; 
-                }
-            } else {
-                reportHtml += `<p class="mb-3">2. <b>合格率檢核：</b> 區間內合格率為 <b class="text-red-600 bg-red-100 px-2 py-0.5 rounded">${passRate}%</b>，出現低於設計標準之異常值 (最低 <b class="text-red-600">${min}</b> kgf/cm²)。</p>`;
-                
-                reportHtml += `<div class="mt-5 p-4 bg-red-50 border-l-4 border-red-500 text-red-900 rounded shadow-sm">
-                    <div class="font-black mb-1"><i class="fa-solid fa-triangle-exclamation animate-pulse"></i> 系統緊急建議 (警戒)：</div>
-                    「注意：部分強度已低於設計邊界！建議立即啟動二級品管機制，<b>加強現場斗仔體積防呆查核</b>，並要求拌合廠提出配比檢討報告。必要時請對該異常樁號區域進行鑽心取樣檢測。」
-                </div>`;
-            }
+    // 2. 分析合格率
+    if (passRate == 100) {
+        reportHtml += `<p class="mb-3">2. <b>合格率檢核：</b> 區間內抗壓強度 <b class="text-emerald-600 bg-emerald-100 px-2 py-0.5 rounded">100% 達標</b>。平均強度達 <b>${avg.toFixed(1)}</b> kgf/cm²，超越設計要求。</p>`;
+        
+        if (sd < 20 && highRangeCount === 0) { 
+            reportHtml += `<div class="mt-5 p-4 bg-emerald-50 border-l-4 border-emerald-500 text-emerald-900 rounded shadow-sm"><div class="font-black mb-1"><i class="fa-solid fa-check-circle"></i> 系統綜合建議：</div>「目前施工品質優良，骨材與砂漿拌合均勻，強度不僅全數過關且波動極小。建議現場維持現行之鑽掘參數與配比設計，無須調整。」</div>`; 
+        } else { 
+            reportHtml += `<div class="mt-5 p-4 bg-blue-50 border-l-4 border-blue-500 text-blue-900 rounded shadow-sm"><div class="font-black mb-1"><i class="fa-solid fa-info-circle"></i> 系統綜合建議：</div>「結構強度全數達標，安全無虞。惟近期數值波動稍微明顯或存在試驗誤差，建議現場主任提醒實驗室注意養護與壓測標準程序，以追求極致品質。」</div>`; 
+        }
+    } else {
+        reportHtml += `<p class="mb-3">2. <b>合格率檢核：</b> 區間內合格率為 <b class="text-red-600 bg-red-100 px-2 py-0.5 rounded">${passRate}%</b>，出現低於設計標準之異常值 (最低 <b class="text-red-600">${min}</b> kgf/cm²)。</p>`;
+        reportHtml += `<div class="mt-5 p-4 bg-red-50 border-l-4 border-red-500 text-red-900 rounded shadow-sm"><div class="font-black mb-1"><i class="fa-solid fa-triangle-exclamation animate-pulse"></i> 系統緊急建議 (警戒)：</div>「注意：部分強度已低於設計邊界！建議立即啟動二級品管機制，<b>加強現場斗仔體積防呆查核</b>，並要求拌合廠提出配比檢討報告。必要時請對該異常樁號區域進行鑽心取樣檢測。」</div>`;
+    }
 
-            contentEl.innerHTML = reportHtml;
-        };
+    reportHtml += `</div></div>`;
+    reportContainer.innerHTML = reportHtml;
+};
+
+// 產生模擬資料 (符合真實常態分佈)
+window.generateSampleData = () => {
+    if(window.concreteData.length > 0 && !confirm("即將附加模擬資料，您確定嗎？")) return;
+    
+    const baseDate = new Date();
+    baseDate.setDate(baseDate.getDate() - 20); 
+    const targetFc = parseFloat(document.getElementById('fc-prime').value) || 280;
+    const targetMean = targetFc + 70; 
+    
+    for(let i=1; i<=15; i++) {
+        baseDate.setDate(baseDate.getDate() + 1);
+        if(baseDate.getDay() === 0) baseDate.setDate(baseDate.getDate() + 1);
+
+        let rand1 = Math.random(); let rand2 = Math.random();
+        let z = Math.sqrt(-2 * Math.log(rand1)) * Math.cos(2 * Math.PI * rand2);
+        let baseStr = targetMean + (z * 25);
+        
+        const s1 = Math.round(baseStr + (Math.random()*20 - 10));
+        const s2 = Math.round(baseStr + (Math.random()*20 - 10));
+        const s3 = Math.round(baseStr + (Math.random()*20 - 10));
+        const max = Math.max(s1, s2, s3); const min = Math.min(s1, s2, s3);
+
+        window.concreteData.push({
+            timestamp: Date.now() + i,
+            date: window.toDateString(baseDate),
+            id: `P-${100+i}`,
+            s1: s1, s2: s2, s3: s3,
+            avg: (s1+s2+s3)/3,
+            range: max - min
+        });
+    }
+    window.saveConcreteDataToCloud();
+    window.calculateConcreteStats();
+};
+
+window.clearAllData = () => {
+    if(confirm("警告：即將清空所有強度測試資料！確定嗎？")) {
+        window.concreteData = [];
+        window.saveConcreteDataToCloud();
+        window.calculateConcreteStats();
+    }
+};
 
 // 正式環境初始化
 initFirebase();
