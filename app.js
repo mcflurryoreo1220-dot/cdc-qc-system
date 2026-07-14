@@ -597,20 +597,47 @@ window.deleteConcreteRecord = (ts) => {
 };
 
 window.calculateConcreteStats = () => {
-    const targetFc = parseFloat(document.getElementById('fc-prime')?.value) || 280; // 設計強度固定或從畫面抓
-    let totalAvg = 0, totalRange = 0; const n = window.concreteData.length;
+            const targetFc = parseFloat(document.getElementById('fc-prime')?.value) || 280;
+            let totalAvg = 0, totalRange = 0; const n = window.concreteData.length;
 
-    if(n > 0) {
-        window.concreteData.forEach(d => { totalAvg += d.avg; totalRange += d.range; });
-        const X_bar_bar = totalAvg / n; const R_bar = totalRange / n;
-        const UCL_X = X_bar_bar + (A2 * R_bar); const LCL_X = X_bar_bar - (A2 * R_bar);
-        const UCL_R = D4 * R_bar; const LCL_R = 0;
-        
-        renderConcreteUI(X_bar_bar, UCL_X, LCL_X, R_bar, UCL_R, LCL_R, targetFc);
-    } else {
-        renderConcreteUI(0, 0, 0, 0, 0, 0, targetFc);
-    }
-};
+            if(n > 0) {
+                // 1. 計算基本統計量
+                let minAvg = Infinity;
+                let passCount = 0;
+                const averages = [];
+                
+                window.concreteData.forEach(d => { 
+                    totalAvg += d.avg; 
+                    totalRange += d.range; 
+                    averages.push(d.avg);
+                    if(d.avg < minAvg) minAvg = d.avg;
+                    if(d.avg >= targetFc) passCount++;
+                });
+                
+                const X_bar_bar = totalAvg / n; 
+                const R_bar = totalRange / n;
+                const UCL_X = X_bar_bar + (A2 * R_bar); 
+                const LCL_X = X_bar_bar - (A2 * R_bar);
+                const UCL_R = D4 * R_bar; 
+                const LCL_R = 0;
+
+                // 2. 計算標準差 (Standard Deviation)
+                let varianceSum = 0;
+                averages.forEach(val => { varianceSum += Math.pow(val - X_bar_bar, 2); });
+                const sd = Math.sqrt(varianceSum / n);
+                const passRate = ((passCount / n) * 100).toFixed(1);
+
+                // 3. 渲染圖表與表格
+                renderConcreteUI(X_bar_bar, UCL_X, LCL_X, R_bar, UCL_R, LCL_R, targetFc);
+                
+                // 4. 🔥 啟動 AI 智慧診斷引擎
+                generateAIReport(n, X_bar_bar, targetFc, minAvg, passRate, sd, UCL_R);
+
+            } else {
+                renderConcreteUI(0, 0, 0, 0, 0, 0, targetFc);
+                generateAIReport(0, 0, targetFc, 0, 0, 0, 0); // 傳入空值以顯示預設訊息
+            }
+        };
 
 const renderConcreteUI = (X_bar_bar, UCL_X, LCL_X, R_bar, UCL_R, LCL_R, fcPrime) => {
     const tbody = document.getElementById('concrete-body'); 
@@ -659,6 +686,80 @@ const renderConcreteUI = (X_bar_bar, UCL_X, LCL_X, R_bar, UCL_R, LCL_R, fcPrime)
         { label: `上限 (UCL)`, data: hasData ? dataR.map(()=>UCL_R) : [], borderColor: '#EF4444', borderWidth: 2, pointRadius: 0 }
     ]}, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top' } } }});
 };
+
+// ========================================================
+        // 🔥 AI 智慧品質診斷引擎 (專家系統邏輯)
+        // ========================================================
+        const generateAIReport = (total, avg, target, min, passRate, sd, uclR) => {
+            const reportContainer = document.getElementById('ai-report-content');
+            if(!reportContainer) {
+                // 如果 HTML 裡還沒有這個容器，我們就在圖表下方動態建立它
+                const parentDiv = document.querySelector('#view-concrete > div.grid');
+                if(!parentDiv) return;
+                
+                const aiDiv = document.createElement('div');
+                aiDiv.className = "col-span-1 xl:col-span-2 bg-gradient-to-r from-amber-50 to-orange-50 p-6 rounded-2xl border border-amber-200 shadow-sm mt-6 mb-8";
+                aiDiv.innerHTML = `
+                    <h3 class="text-lg font-black text-amber-900 mb-4 flex items-center gap-2">
+                        <i class="fa-solid fa-robot text-amber-600 text-xl"></i> AI 專家系統品質診斷報告 (ACI 214)
+                    </h3>
+                    <div id="ai-report-content" class="text-[15px] text-slate-800 font-bold leading-relaxed bg-white/80 p-5 rounded-xl border border-amber-300 shadow-inner">
+                        等待數據運算中...
+                    </div>
+                `;
+                parentDiv.parentNode.insertBefore(aiDiv, parentDiv.nextSibling);
+            }
+
+            const contentEl = document.getElementById('ai-report-content');
+            if(total === 0) {
+                contentEl.innerHTML = "目前尚無足夠數據進行分析，請於上方登錄檢驗資料。";
+                return;
+            }
+
+            let reportHtml = `<p class="mb-3">本次分析共計 <b>${total}</b> 組壓測數據，設計強度目標值為 <b>${target}</b> kgf/cm²。</p>`;
+            
+            // 1. 分析均勻度 (標準差與全距)
+            let sdStr = '';
+            if (sd < 15) sdStr = '<span class="text-emerald-600 font-black">極佳 (標準差 < 15)</span>，品質重現性高，拌合與施工控制非常理想。';
+            else if (sd < 30) sdStr = '<span class="text-blue-600 font-black">正常 (標準差 15~30)</span>，符合一般大地工程之變異容許範圍。';
+            else sdStr = '<span class="text-amber-600 font-black">偏高 (標準差 > 30)</span>，顯示近期配比不穩定或受環境干擾明顯。';
+            
+            // 檢查是否有全距異常
+            let highRangeCount = 0;
+            window.concreteData.forEach(d => { if(d.range > uclR) highRangeCount++; });
+            let rangeWarning = '';
+            if(highRangeCount > 0) {
+                rangeWarning = `<br><span class="text-red-600 bg-red-100 px-2 py-0.5 rounded text-sm ml-1 animate-pulse">⚠️ 警告：發現 ${highRangeCount} 組試體組內全距過大，可能有取樣或壓測瑕疵。</span>`;
+            }
+
+            reportHtml += `<p class="mb-3">1. <b>施工均勻度指標：</b> 本區間強度標準差為 <b>${sd.toFixed(1)}</b>，品質均勻度評估為 ${sdStr}${rangeWarning}</p>`;
+
+            // 2. 分析合格率與 ACI 214 規範
+            if (passRate == 100) {
+                reportHtml += `<p class="mb-3">2. <b>合格率檢核：</b> 區間內抗壓強度 <b class="text-emerald-600 bg-emerald-100 px-2 py-0.5 rounded">100% 達標</b>。平均強度達 <b>${avg.toFixed(1)}</b> kgf/cm²，超越設計要求。</p>`;
+                
+                if (sd < 20 && highRangeCount === 0) { 
+                    reportHtml += `<div class="mt-5 p-4 bg-emerald-50 border-l-4 border-emerald-500 text-emerald-900 rounded shadow-sm">
+                        <div class="font-black mb-1"><i class="fa-solid fa-check-circle"></i> 系統綜合建議：</div>
+                        「目前施工品質優良，骨材與砂漿拌合均勻，強度不僅全數過關且波動極小。建議現場維持現行之鑽掘參數與配比設計，無須調整。」
+                    </div>`; 
+                } else { 
+                    reportHtml += `<div class="mt-5 p-4 bg-blue-50 border-l-4 border-blue-500 text-blue-900 rounded shadow-sm">
+                        <div class="font-black mb-1"><i class="fa-solid fa-info-circle"></i> 系統綜合建議：</div>
+                        「結構強度全數達標，安全無虞。惟近期數值波動稍微明顯或存在試驗誤差，建議現場主任提醒實驗室注意養護與壓測標準程序，以追求極致品質。」
+                    </div>`; 
+                }
+            } else {
+                reportHtml += `<p class="mb-3">2. <b>合格率檢核：</b> 區間內合格率為 <b class="text-red-600 bg-red-100 px-2 py-0.5 rounded">${passRate}%</b>，出現低於設計標準之異常值 (最低 <b class="text-red-600">${min}</b> kgf/cm²)。</p>`;
+                
+                reportHtml += `<div class="mt-5 p-4 bg-red-50 border-l-4 border-red-500 text-red-900 rounded shadow-sm">
+                    <div class="font-black mb-1"><i class="fa-solid fa-triangle-exclamation animate-pulse"></i> 系統緊急建議 (警戒)：</div>
+                    「注意：部分強度已低於設計邊界！建議立即啟動二級品管機制，<b>加強現場斗仔體積防呆查核</b>，並要求拌合廠提出配比檢討報告。必要時請對該異常樁號區域進行鑽心取樣檢測。」
+                </div>`;
+            }
+
+            contentEl.innerHTML = reportHtml;
+        };
 
 // 正式環境初始化
 initFirebase();
