@@ -4,12 +4,13 @@ import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/f
 
 const firebaseConfig = { apiKey: "AIzaSyAp1ZVuW95Api3kaQUPgttESZ0RGTEi8H8", authDomain: "cdc-qc-system.firebaseapp.com", projectId: "cdc-qc-system", storageBucket: "cdc-qc-system.firebasestorage.app", messagingSenderId: "745920606237", appId: "1:745920606237:web:7fb9c22a84de208e6e56f4" };
 
-window.exceptionDates = []; window.extraWorkA = []; window.extraWorkB = []; 
+window.exceptionDates = []; window.exceptionA = []; window.exceptionB = [];
+window.extraWorkA = []; window.extraWorkB = []; 
 window.pileNumbers = {}; window.statusSample = {}; window.statusLab = {}; window.statusTest = {}; window.remarks = {}; window.contractorReports = {}; 
 
 const scheduleData = []; let currentFilter = 'ALL'; let currentView = 'table'; let currentCalDate = new Date(2026, 4, 1); 
 const TOTAL_PILES_LIMIT = 613; let isCloudEnabled = false; let db, auth;
-const A2 = 1.023; const D4 = 2.574; const D3 = 0;
+const A2 = 1.023; const D4 = 2.574; const D3 = 0; // ACI 統計常數
 
 const initFirebase = async () => {
     try {
@@ -19,9 +20,17 @@ const initFirebase = async () => {
                 onSnapshot(doc(db, 'scheduleData', 'mainState'), (snapshot) => {
                     if (snapshot.exists()) {
                         const data = snapshot.data();
-                        window.exceptionDates = data.exceptionDates || []; window.extraWorkA = data.extraWorkA || []; window.extraWorkB = data.extraWorkB || [];
-                        window.pileNumbers = data.pileNumbers || {}; window.statusSample = data.statusSample || {}; window.statusLab = data.statusLab || {};
-                        window.statusTest = data.statusTest || data.completionStatus || {}; window.remarks = data.remarks || {}; window.contractorReports = data.contractorReports || {};
+                        window.exceptionDates = data.exceptionDates || []; 
+                        window.exceptionA = data.exceptionA || []; 
+                        window.exceptionB = data.exceptionB || [];
+                        window.extraWorkA = data.extraWorkA || []; 
+                        window.extraWorkB = data.extraWorkB || [];
+                        window.pileNumbers = data.pileNumbers || {}; 
+                        window.statusSample = data.statusSample || {}; 
+                        window.statusLab = data.statusLab || {};
+                        window.statusTest = data.statusTest || data.completionStatus || {}; 
+                        window.remarks = data.remarks || {}; 
+                        window.contractorReports = data.contractorReports || {};
                     }
                     window.refreshAll();
                 });
@@ -31,10 +40,31 @@ const initFirebase = async () => {
                 });
             }
         });
-    } catch (e) { document.getElementById('sync-status').innerHTML = '<i class="fa-solid fa-triangle-exclamation text-red-500"></i> 連線異常'; }
+    } catch (e) { 
+        const statusEl = document.getElementById('sync-status');
+        if(statusEl) statusEl.innerHTML = '<i class="fa-solid fa-triangle-exclamation text-red-500"></i> 連線異常'; 
+    }
 };
 
-window.saveDataToCloud = async () => { if (isCloudEnabled && auth.currentUser) { try { await setDoc(doc(db, 'scheduleData', 'mainState'), { exceptionDates: window.exceptionDates, extraWorkA: window.extraWorkA, extraWorkB: window.extraWorkB, pileNumbers: window.pileNumbers, statusSample: window.statusSample, statusLab: window.statusLab, statusTest: window.statusTest, remarks: window.remarks, contractorReports: window.contractorReports }, { merge: true }); } catch (err) {} } };
+window.saveDataToCloud = async () => { 
+    if (isCloudEnabled && auth.currentUser) { 
+        try { 
+            await setDoc(doc(db, 'scheduleData', 'mainState'), { 
+                exceptionDates: window.exceptionDates, 
+                exceptionA: window.exceptionA, 
+                exceptionB: window.exceptionB,
+                extraWorkA: window.extraWorkA, 
+                extraWorkB: window.extraWorkB, 
+                pileNumbers: window.pileNumbers, 
+                statusSample: window.statusSample, 
+                statusLab: window.statusLab, 
+                statusTest: window.statusTest, 
+                remarks: window.remarks, 
+                contractorReports: window.contractorReports 
+            }, { merge: true }); 
+        } catch (err) {} 
+    } 
+};
 
 window.saveConcreteDataToCloud = async () => {
     if (isCloudEnabled && auth.currentUser) { await setDoc(doc(db, 'scheduleData', 'concreteState'), { records: window.concreteData }, { merge: true }); }
@@ -42,22 +72,36 @@ window.saveConcreteDataToCloud = async () => {
 
 window.toDateString = (d) => { const y=d.getFullYear(); const m=String(d.getMonth()+1).padStart(2,'0'); const dt=String(d.getDate()).padStart(2,'0'); return `${y}-${m}-${dt}`; };
 window.formatMinguo = (d) => { const y=d.getFullYear()-1911; const m=String(d.getMonth()+1).padStart(2,'0'); const dt=String(d.getDate()).padStart(2,'0'); const day=["日","一","二","三","四","五","六"][d.getDay()]; return `${y}/${m}/${dt}(${day})`; };
+window.formatMinguoRaw = (d) => { const y=d.getFullYear()-1911; const m=String(d.getMonth()+1).padStart(2,'0'); const dt=String(d.getDate()).padStart(2,'0'); return `${y}/${m}/${dt}`; };
 const addDays = (d, days) => { let r=new Date(d); r.setDate(r.getDate()+days); return r; };
 
-window.refreshAll = () => { window.generateSchedule(); window.renderTable(currentFilter); window.updateDashboard(); if (currentView === 'calendar') window.renderCalendar(); };
+window.refreshAll = () => { 
+    window.generateSchedule(); 
+    window.renderTable(currentFilter); 
+    window.updateDashboard(); 
+    if (currentView === 'calendar') window.renderCalendar(); 
+    window.updateExceptionUI();
+};
 
+// 🔥 修復點 1：徹底修復停工日邏輯 (A車、B車、全區 皆能獨立運算)
 window.generateSchedule = () => {
     scheduleData.length = 0; const startDateA = new Date(2026, 4, 5); const startDateB = new Date(2026, 4, 9); const endDate = new Date(2026, 6, 30); let cA = 1, cB = 1;
     for (let d = new Date(startDateA); d <= endDate; d.setDate(d.getDate() + 1)) {
-        const dStr = window.toDateString(d); const isSun = d.getDay() === 0; const isEx = window.exceptionDates.includes(dStr);
+        const dStr = window.toDateString(d); const isSun = d.getDay() === 0; 
+        
+        const isExAll = window.exceptionDates.includes(dStr);
+        const isExA = isExAll || window.exceptionA.includes(dStr);
+        const isExB = isExAll || window.exceptionB.includes(dStr);
+
         const makeR = (m, c, t) => {
             let dem = addDays(t, 1); if (dem.getDay() === 0) dem = addDays(dem, 1);
             let col = new Date(dem); while (col.getDay() !== 2 && col.getDay() !== 5) col = addDays(col, 1);
             let tes = addDays(t, 28); if (tes.getDay() === 6) tes = addDays(tes, 2); else if (tes.getDay() === 0) tes = addDays(tes, 1);
             return { id: `${m}${c}`, machine: m, sampleDate: new Date(t), demoldDate: dem, collectDate: col, testDate: tes };
         };
-        if (d >= startDateA) { if ((!isSun && !isEx) || window.extraWorkA.includes(dStr)) scheduleData.push(makeR('A', cA++, new Date(d))); }
-        if (d >= startDateB) { if ((!isSun && !isEx) || window.extraWorkB.includes(dStr)) scheduleData.push(makeR('B', cB++, new Date(d))); }
+
+        if (d >= startDateA) { if ((!isSun && !isExA) || window.extraWorkA.includes(dStr)) scheduleData.push(makeR('A', cA++, new Date(d))); }
+        if (d >= startDateB) { if ((!isSun && !isExB) || window.extraWorkB.includes(dStr)) scheduleData.push(makeR('B', cB++, new Date(d))); }
     }
 };
 
@@ -84,31 +128,41 @@ window.updateDashboard = () => {
     Object.entries(window.pileNumbers).forEach(([id, val]) => { const nums = (val.match(/\d+/g) || []).map(n => parseInt(n, 10)); if (nums.length > 0) { nums.forEach(n => { if (id.startsWith('A')) usedA.add(n); else if (id.startsWith('B')) usedB.add(n); }); const item = scheduleData.find(s => s.id === id); if (item) workedDates.add(window.toDateString(item.sampleDate)); } });
     const countA = usedA.size; const countB = usedB.size; const pilesCount = countA + countB; const workedDays = workedDates.size;
     
-    document.getElementById('prog-piles-ab').innerText = `A: ${countA} | B: ${countB}`;
-    document.getElementById('prog-piles-text').innerText = pilesCount;
-    document.getElementById('prog-piles-bar').style.width = `${(pilesCount/TOTAL_PILES_LIMIT)*100}%`;
+    const pilesAbEl = document.getElementById('prog-piles-ab'); if(pilesAbEl) pilesAbEl.innerText = `A: ${countA} | B: ${countB}`;
+    const pilesTextEl = document.getElementById('prog-piles-text'); if(pilesTextEl) pilesTextEl.innerText = pilesCount;
+    const pilesBarEl = document.getElementById('prog-piles-bar'); if(pilesBarEl) pilesBarEl.style.width = `${(pilesCount/TOTAL_PILES_LIMIT)*100}%`;
 
     if (pilesCount > 0 && workedDays > 0) {
         const avgRate = pilesCount / workedDays; const estDays = Math.ceil((TOTAL_PILES_LIMIT - pilesCount) / avgRate);
         let simDate = new Date(); let added = 0; while(added < estDays) { simDate.setDate(simDate.getDate() + 1); const dStr = window.toDateString(simDate); if (simDate.getDay() !== 0 && !window.exceptionDates.includes(dStr)) added++; }
-        document.getElementById('prediction-text').innerHTML = `近期產能：約 <span class="bg-white px-2 py-0.5 rounded text-slate-800 shadow-sm border border-orange-100">${avgRate.toFixed(1)} 支/日</span>。剩餘約需 <b class="text-amber-800">${estDays}</b> 工作天，推估 <span class="bg-white px-2 py-0.5 rounded text-[#B45309] shadow-sm border border-orange-100">${window.formatMinguo(simDate)}</span> 完工！`;
+        const preEl = document.getElementById('prediction-text');
+        if(preEl) preEl.innerHTML = `近期產能：約 <span class="bg-white px-2 py-0.5 rounded text-slate-800 shadow-sm border border-orange-100">${avgRate.toFixed(1)} 支/日</span>。剩餘約需 <b class="text-amber-800">${estDays}</b> 工作天，推估 <span class="bg-white px-2 py-0.5 rounded text-[#B45309] shadow-sm border border-orange-100">${window.formatMinguo(simDate)}</span> 完工！`;
     }
 
     let cS=0, cL=0, cT=0; scheduleData.forEach(i => { if(window.statusSample[i.id]) cS++; if(window.statusLab[i.id]) cL++; if(window.statusTest[i.id]) cT++; });
-    document.getElementById('prog-sample-text').innerText = cS; document.getElementById('prog-sample-total').innerText = `/ ${scheduleData.length}`; document.getElementById('prog-sample-bar').style.width = `${(cS/scheduleData.length)*100}%`;
-    document.getElementById('prog-lab-text').innerText = cL; document.getElementById('prog-lab-total').innerText = `/ ${scheduleData.length}`; document.getElementById('prog-lab-bar').style.width = `${(cL/scheduleData.length)*100}%`;
-    document.getElementById('prog-test-text').innerText = cT; document.getElementById('prog-test-total').innerText = `/ ${scheduleData.length}`; document.getElementById('prog-test-bar').style.width = `${(cT/scheduleData.length)*100}%`;
+    if(document.getElementById('prog-sample-text')) document.getElementById('prog-sample-text').innerText = cS; 
+    if(document.getElementById('prog-sample-total')) document.getElementById('prog-sample-total').innerText = `/ ${scheduleData.length}`; 
+    if(document.getElementById('prog-sample-bar')) document.getElementById('prog-sample-bar').style.width = `${(cS/scheduleData.length)*100}%`;
+    
+    if(document.getElementById('prog-lab-text')) document.getElementById('prog-lab-text').innerText = cL; 
+    if(document.getElementById('prog-lab-total')) document.getElementById('prog-lab-total').innerText = `/ ${scheduleData.length}`; 
+    if(document.getElementById('prog-lab-bar')) document.getElementById('prog-lab-bar').style.width = `${(cL/scheduleData.length)*100}%`;
+    
+    if(document.getElementById('prog-test-text')) document.getElementById('prog-test-text').innerText = cT; 
+    if(document.getElementById('prog-test-total')) document.getElementById('prog-test-total').innerText = `/ ${scheduleData.length}`; 
+    if(document.getElementById('prog-test-bar')) document.getElementById('prog-test-bar').style.width = `${(cT/scheduleData.length)*100}%`;
 };
 
 window.toggleStatus = (sampleId, type) => { if (type === 'sample') window.statusSample[sampleId] = !window.statusSample[sampleId]; if (type === 'lab') window.statusLab[sampleId] = !window.statusLab[sampleId]; if (type === 'test') window.statusTest[sampleId] = !window.statusTest[sampleId]; window.saveDataToCloud(); window.refreshAll(); };
-window.updatePile = (id, val) => { const v = val.trim(); if (!v) delete window.pileNumbers[id]; else window.pileNumbers[id] = v; window.saveDataToCloud(); window.updateDashboard(); if (!document.getElementById('matrix-modal').classList.contains('hidden')) window.renderMatrixGrid(); if (!document.getElementById('recon-modal').classList.contains('hidden')) window.renderReconTable(); };
+window.updatePile = (id, val) => { const v = val.trim(); if (!v) delete window.pileNumbers[id]; else window.pileNumbers[id] = v; window.saveDataToCloud(); window.updateDashboard(); if (document.getElementById('matrix-modal') && !document.getElementById('matrix-modal').classList.contains('hidden')) window.renderMatrixGrid(); if (document.getElementById('recon-modal') && !document.getElementById('recon-modal').classList.contains('hidden')) window.renderReconTable(); };
 window.updateRemark = (id, val) => { const v = val.trim(); if (!v) delete window.remarks[id]; else window.remarks[id] = v; window.saveDataToCloud(); };
 window.toggleView = (v) => { currentView = v; document.getElementById('table-view').classList.toggle('hidden', v !== 'table'); document.getElementById('calendar-view').classList.toggle('hidden', v !== 'calendar'); if(v === 'calendar') window.renderCalendar(); };
 window.changeMonth = (o) => { currentCalDate.setMonth(currentCalDate.getMonth() + o); window.renderCalendar(); };
 
 window.renderCalendar = () => { 
     const year = currentCalDate.getFullYear(), month = currentCalDate.getMonth();
-    document.getElementById('calendar-title').innerText = `民國 ${year-1911} 年 ${month+1} 月`;
+    const titleEl = document.getElementById('calendar-title');
+    if(titleEl) titleEl.innerText = `民國 ${year-1911} 年 ${month+1} 月`;
     const eventsMap = {};
     scheduleData.filter(i => currentFilter === 'ALL' || i.machine === currentFilter).forEach(item => {
         const p = window.pileNumbers[item.id] ? `${item.id}(${window.pileNumbers[item.id]})` : item.id;
@@ -119,33 +173,114 @@ window.renderCalendar = () => {
         addE(item.testDate, '壓測', p, 'tag-test');
     });
     const firstDay = new Date(year, month, 1).getDay(), daysInMonth = new Date(year, month + 1, 0).getDate();
-    const tbody = document.getElementById('calendar-body'); tbody.innerHTML = ''; let date = 1;
+    const tbody = document.getElementById('calendar-body'); 
+    if(!tbody) return;
+    tbody.innerHTML = ''; let date = 1;
     for (let i = 0; i < 6; i++) {
         const row = document.createElement('tr');
         for (let j = 0; j < 7; j++) {
             const cell = document.createElement('td'); cell.className = 'border-r border-b border-slate-200 p-2 align-top h-44 bg-white transition hover:bg-slate-50';
             if (j === 0 || j === 6) cell.classList.add('bg-slate-50/50');
             if (i === 0 && j < firstDay || date > daysInMonth) { cell.innerHTML = ''; } else {
+                const checkDateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(date).padStart(2,'0')}`;
+                const isExAll = window.exceptionDates.includes(checkDateStr);
+                const isExA = isExAll || window.exceptionA.includes(checkDateStr);
+                const isExB = isExAll || window.exceptionB.includes(checkDateStr);
+                
                 let isToday = new Date().getFullYear() === year && new Date().getMonth() === month && new Date().getDate() === date;
-                let cellHtml = `<div class="font-black text-xl mb-3 flex justify-between items-center"><span class="${isToday ? 'bg-slate-700 text-white rounded-lg px-2 py-1 shadow-md' : 'text-slate-500'}">${date}</span></div><div class="flex flex-col gap-1.5 overflow-y-auto max-h-32 calendar-scroll pr-1">`;
+                let dateClass = isToday ? 'bg-blue-800 text-white rounded-lg px-2 py-1 shadow-md' : 'text-slate-500';
+                
+                let exceptionHtml = '';
+                if(isExAll) exceptionHtml = `<span class="text-[10px] bg-red-600 text-white px-1.5 py-0.5 rounded shadow-sm font-black border border-red-700 whitespace-nowrap">全區停</span>`;
+                else {
+                    let stopped = [];
+                    if(window.exceptionA.includes(checkDateStr)) stopped.push('A');
+                    if(window.exceptionB.includes(checkDateStr)) stopped.push('B');
+                    if(stopped.length > 0) exceptionHtml = `<span class="text-[10px] bg-red-500 text-white px-1.5 py-0.5 rounded shadow-sm font-black border border-red-600 whitespace-nowrap">${stopped.join('/')}停</span>`;
+                }
+
+                let cellHtml = `<div class="font-black text-xl mb-3 flex justify-between items-center"><span class="${dateClass}">${date}</span> ${exceptionHtml}</div><div class="flex flex-col gap-1.5 overflow-y-auto max-h-32 calendar-scroll pr-1">`;
                 if (eventsMap[date]) {
                     eventsMap[date].forEach(e => { cellHtml += `<div class="cal-tag ${e.tagClass} break-all"><b>${e.type}:</b> ${e.label}</div>`; });
                 }
-                cellHtml += `</div>`; cell.innerHTML = cellHtml; date++;
+                cellHtml += `</div>`; 
+                if(isExAll) cell.classList.add('bg-red-50');
+                else if (isExA || isExB) cell.classList.add('bg-orange-50/50');
+                cell.innerHTML = cellHtml; date++;
             }
             row.appendChild(cell);
         }
         tbody.appendChild(row); if (date > daysInMonth) break;
     }
- };
+};
 
-// Modal Functions
+window.addExceptionDate = () => { 
+    // 防呆：如果沒有抓到下拉選單，預設就是 ALL 全區
+    const m = document.getElementById('exception-machine')?.value || 'ALL'; 
+    const val = document.getElementById('exception-date-input').value; 
+    if (val) { 
+        if (m === 'ALL' && !window.exceptionDates.includes(val)) { window.exceptionDates.push(val); window.exceptionDates.sort(); }
+        if (m === 'A' && !window.exceptionA.includes(val)) { window.exceptionA.push(val); window.exceptionA.sort(); }
+        if (m === 'B' && !window.exceptionB.includes(val)) { window.exceptionB.push(val); window.exceptionB.sort(); }
+        window.saveDataToCloud(); 
+        document.getElementById('exception-date-input').value = ""; 
+        window.refreshAll(); 
+    } 
+};
+
+window.removeExceptionDate = (m, val) => { 
+    if(m === 'ALL') window.exceptionDates = window.exceptionDates.filter(d => d !== val); 
+    if(m === 'A') window.exceptionA = window.exceptionA.filter(d => d !== val); 
+    if(m === 'B') window.exceptionB = window.exceptionB.filter(d => d !== val); 
+    window.saveDataToCloud(); window.refreshAll(); 
+};
+
+window.updateExceptionUI = () => {
+    const expGen = document.getElementById('exception-list');
+    const expAll = document.getElementById('exception-list-all'); 
+    const expA = document.getElementById('exception-list-a'); 
+    const expB = document.getElementById('exception-list-b');
+
+    const renderExTag = (container, m, val, label) => { 
+        if(!container) return;
+        const parts = val.split('-'); const tag = document.createElement('span'); 
+        tag.className = "bg-white text-red-700 px-2 py-0.5 rounded text-[11px] font-black border border-red-200 shadow-sm whitespace-nowrap flex items-center"; 
+        tag.innerHTML = `${label ? label+':' : ''}${parts[1]}/${parts[2]} <i class="fa-solid fa-xmark cursor-pointer ml-1 opacity-60 hover:opacity-100" onclick="removeExceptionDate('${m}', '${val}')"></i>`; 
+        container.appendChild(tag); 
+    };
+
+    // 智能判斷 HTML 的結構，自適應渲染標籤
+    if (expGen && !expAll) {
+        expGen.innerHTML = '';
+        window.exceptionDates.forEach(val => renderExTag(expGen, 'ALL', val, '全')); 
+        window.exceptionA.forEach(val => renderExTag(expGen, 'A', val, 'A')); 
+        window.exceptionB.forEach(val => renderExTag(expGen, 'B', val, 'B')); 
+    } else {
+        if(expAll) { expAll.innerHTML = '<span class="text-[10px] text-red-400 font-bold w-full">全區：</span>'; window.exceptionDates.forEach(val => renderExTag(expAll, 'ALL', val, '')); }
+        if(expA) { expA.innerHTML = '<span class="text-[10px] text-orange-400 font-bold w-full">A車：</span>'; window.exceptionA.forEach(val => renderExTag(expA, 'A', val, '')); }
+        if(expB) { expB.innerHTML = '<span class="text-[10px] text-amber-400 font-bold w-full">B車：</span>'; window.exceptionB.forEach(val => renderExTag(expB, 'B', val, '')); }
+    }
+};
+
+window.addExtraDate = () => { 
+    const m = document.getElementById('extra-machine')?.value || 'A'; 
+    const val = document.getElementById('extra-date-input').value; 
+    if (val) { 
+        if (m === 'A' && !window.extraWorkA.includes(val)) window.extraWorkA.push(val); 
+        if (m === 'B' && !window.extraWorkB.includes(val)) window.extraWorkB.push(val); 
+        window.saveDataToCloud(); document.getElementById('extra-date-input').value = ""; window.refreshAll(); 
+    } 
+};
+
+// ... Modals & CSV exports ...
 window.calculateMaterials = () => {
     const totalSandM3 = (parseFloat(document.getElementById('calc-sand-bucket').value)||0) * ((parseFloat(document.getElementById('calc-vol').value)||0)/1000) * (parseFloat(document.getElementById('calc-batches').value)||0);
     const totalCemTon = (parseFloat(document.getElementById('calc-cem-bucket').value)||0) * ((parseFloat(document.getElementById('calc-vol').value)||0)/1000) * (parseFloat(document.getElementById('calc-batches').value)||0) * 1.4;
     const resDiv = document.getElementById('calc-result');
-    resDiv.innerHTML = `<div class="flex justify-around items-center"><div class="text-center">理論砂用量<br><span class="text-2xl font-black text-slate-800">${totalSandM3.toFixed(2)} m³</span></div><div class="text-center">理論水泥用量<br><span class="text-2xl font-black text-slate-800">${totalCemTon.toFixed(2)} 噸</span></div></div><div class="text-center text-xs text-red-500 bg-red-50 p-2 rounded border border-red-100 font-bold mt-2">🚩請與施工組報表比對</div>`;
-    resDiv.classList.remove('hidden');
+    if(resDiv) {
+        resDiv.innerHTML = `<div class="flex justify-around items-center"><div class="text-center">理論砂用量<br><span class="text-2xl font-black text-slate-800">${totalSandM3.toFixed(2)} m³</span></div><div class="text-center">理論水泥用量<br><span class="text-2xl font-black text-slate-800">${totalCemTon.toFixed(2)} 噸</span></div></div><div class="text-center text-xs text-red-500 bg-red-50 p-2 rounded border border-red-100 font-bold mt-2">🚩請與施工組報表比對</div>`;
+        resDiv.classList.remove('hidden');
+    }
 };
 
 window.openMatrixModal = () => { window.renderMatrixGrid(); document.getElementById('matrix-modal').classList.remove('hidden'); };
@@ -153,7 +288,9 @@ window.closeMatrixModal = () => { document.getElementById('matrix-modal').classL
 window.renderMatrixGrid = () => {
     const counts = new Array(TOTAL_PILES_LIMIT + 1).fill(0);
     Object.values(window.pileNumbers).forEach(val => { const nums = (val.match(/\d+/g) || []).map(n => parseInt(n, 10)); nums.forEach(n => { if (n >= 1 && n <= TOTAL_PILES_LIMIT) counts[n]++; }); });
-    const container = document.getElementById('matrix-container'); container.innerHTML = '';
+    const container = document.getElementById('matrix-container'); 
+    if(!container) return;
+    container.innerHTML = '';
     let statMissing = 0, statOk = 0, statError = 0;
     for (let i = 1; i <= TOTAL_PILES_LIMIT; i++) {
         const box = document.createElement('div'); let statusClass = '';
@@ -177,7 +314,9 @@ window.renderReconTable = () => {
         }
     });
     const sortedDates = Object.keys(dailyStats).sort((a, b) => new Date(b) - new Date(a));
-    const tbody = document.getElementById('recon-body'); tbody.innerHTML = '';
+    const tbody = document.getElementById('recon-body'); 
+    if(!tbody) return;
+    tbody.innerHTML = '';
     if(sortedDates.length === 0) { tbody.innerHTML = '<tr><td colspan="6" class="p-6 text-center text-slate-400 font-bold">尚無資料。</td></tr>'; return; }
     sortedDates.forEach(dStr => {
         const stat = dailyStats[dStr]; const reportVal = window.contractorReports[dStr] !== undefined ? window.contractorReports[dStr] : '';
@@ -191,16 +330,27 @@ window.renderReconTable = () => {
     });
 };
 
-window.showModal = (title, msg, type) => { document.getElementById('custom-modal-header').innerText = title; document.getElementById('custom-modal-message').innerHTML = msg; document.getElementById('custom-modal').classList.remove('hidden'); };
-window.closeModal = () => document.getElementById('custom-modal').classList.add('hidden');
+window.showModal = (title, msg, type) => { const h = document.getElementById('custom-modal-header'); if(h) h.innerText = title; const m = document.getElementById('custom-modal-message'); if(m) m.innerHTML = msg; const modal = document.getElementById('custom-modal'); if(modal) modal.classList.remove('hidden'); };
+window.closeModal = () => { const modal = document.getElementById('custom-modal'); if(modal) modal.classList.add('hidden'); };
 window.filterData = (f) => { currentFilter = f; window.renderTable(f); if(currentView==='calendar') window.renderCalendar(); };
 
-window.addExceptionDate = () => { const val = document.getElementById('exception-date-input').value; if (val && !window.exceptionDates.includes(val)) { window.exceptionDates.push(val); window.exceptionDates.sort(); window.saveDataToCloud(); document.getElementById('exception-date-input').value = ""; } };
-window.addExtraDate = () => { const m = document.getElementById('extra-machine').value; const val = document.getElementById('extra-date-input').value; if (val) { if (m === 'A' && !window.extraWorkA.includes(val)) window.extraWorkA.push(val); if (m === 'B' && !window.extraWorkB.includes(val)) window.extraWorkB.push(val); window.saveDataToCloud(); document.getElementById('extra-date-input').value = ""; } };
-
+window.exportCSV = () => {
+    let csvContent = "\uFEFF取樣編號,打設樁號,取樣日期,拆模日期,實驗室收件,抗壓會驗,備註\n";
+    const filteredData = scheduleData.filter(item => currentFilter === 'ALL' || item.machine === currentFilter);
+    filteredData.forEach(item => {
+        const pileStr = window.pileNumbers[item.id] || "";
+        const row = [ item.id, pileStr, window.formatMinguoRaw(item.sampleDate), window.formatMinguoRaw(item.demoldDate), window.formatMinguoRaw(item.collectDate), window.formatMinguoRaw(item.testDate), item.remark ];
+        csvContent += row.join(",") + "\n";
+    });
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement("a"); const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url); link.setAttribute("download", `預壘樁試體管制排程_${currentFilter}.csv`);
+    link.style.visibility = 'hidden'; document.body.appendChild(link); link.click(); document.body.removeChild(link);
+};
 
 // ==========================================
-// ACI 214 強度統計分析與 AI 專家診斷
+// 🔥 修復點 2：ACI 214 強度統計分析與 AI 專家診斷 
+// 修正了 ReferenceError 並加入 Safe Access
 // ==========================================
 const zoneMap = {
     'A_NORMAL': 'A車 (一般區)', 'A_POND_BC': 'A車 (滯洪池BC)',
@@ -209,12 +359,12 @@ const zoneMap = {
 };
 
 window.addConcreteRecord = () => {
-    const dateStr = document.getElementById('concrete-date').value || window.toDateString(new Date());
-    const id = document.getElementById('concrete-id').value.trim() || `P-${Math.floor(Math.random()*1000)}`;
-    const s1 = parseFloat(document.getElementById('concrete-s1').value);
-    const s2 = parseFloat(document.getElementById('concrete-s2').value);
-    const s3 = parseFloat(document.getElementById('concrete-s3').value);
-    const zone = document.getElementById('concrete-zone-select').value; 
+    const dateStr = document.getElementById('concrete-date')?.value || window.toDateString(new Date());
+    const id = document.getElementById('concrete-id')?.value.trim() || `P-${Math.floor(Math.random()*1000)}`;
+    const s1 = parseFloat(document.getElementById('concrete-s1')?.value);
+    const s2 = parseFloat(document.getElementById('concrete-s2')?.value);
+    const s3 = parseFloat(document.getElementById('concrete-s3')?.value);
+    const zone = document.getElementById('concrete-zone-select')?.value || 'ALL'; 
 
     if(isNaN(s1) || isNaN(s2) || isNaN(s3)) { alert("請完整填寫 3 顆試體數值！"); return; }
     const max = Math.max(s1, s2, s3); const min = Math.min(s1, s2, s3);
@@ -223,7 +373,11 @@ window.addConcreteRecord = () => {
     window.concreteData.push({ timestamp: Date.now(), date: dateStr, id: id, zone: zone, s1: s1, s2: s2, s3: s3, avg: avg, range: range });
     window.concreteData.sort((a, b) => new Date(a.date) - new Date(b.date));
     
-    document.getElementById('concrete-s1').value = ''; document.getElementById('concrete-s2').value = ''; document.getElementById('concrete-s3').value = ''; document.getElementById('concrete-id').value = '';
+    if(document.getElementById('concrete-s1')) document.getElementById('concrete-s1').value = ''; 
+    if(document.getElementById('concrete-s2')) document.getElementById('concrete-s2').value = ''; 
+    if(document.getElementById('concrete-s3')) document.getElementById('concrete-s3').value = ''; 
+    if(document.getElementById('concrete-id')) document.getElementById('concrete-id').value = '';
+    
     window.saveConcreteDataToCloud();
     window.calculateConcreteStats();
 };
@@ -262,6 +416,7 @@ window.calculateConcreteStats = () => {
         const passRate = ((passCount / n) * 100).toFixed(1);
 
         renderConcreteUI(X_bar, X_bar + (A2 * R_bar), X_bar - (A2 * R_bar), R_bar, D4 * R_bar, targetFc, data);
+        // 🔥 關鍵修正：將 'filter' 作為 'scope' 參數傳入，解決 ReferenceError 崩潰
         generateAIReport(n, X_bar, targetFc, minAvg, passRate, sd, D4 * R_bar, filter);
     } else {
         renderConcreteUI(0, 0, 0, 0, 0, targetFc, []);
@@ -273,7 +428,7 @@ window.renderConcreteUI = (CL, UCL, LCL, R_CL, R_UCL, fcPrime, data) => {
     const tbody = document.getElementById('concrete-body'); 
     if(!tbody) return;
     tbody.innerHTML = '';
-    document.getElementById('concrete-count').innerText = `總計: ${data.length} 組`;
+    if(document.getElementById('concrete-count')) document.getElementById('concrete-count').innerText = `總計: ${data.length} 組`;
     
     if(data.length === 0) { tbody.innerHTML = `<tr><td colspan="8" class="p-8 text-center text-slate-500 font-bold">目前此區域尚無檢驗資料。</td></tr>`; }
     
@@ -294,10 +449,11 @@ window.renderConcreteUI = (CL, UCL, LCL, R_CL, R_UCL, fcPrime, data) => {
     });
 
     if(data.length > 0) {
-        document.getElementById('x-bar-stats').innerHTML = `UCL: <span class="text-blue-600">${UCL.toFixed(1)}</span> | CL: <span class="text-emerald-600">${CL.toFixed(1)}</span> | LCL: <span class="text-orange-600">${LCL.toFixed(1)}</span>`;
-        document.getElementById('r-chart-stats').innerHTML = `UCL: <span class="text-red-600">${R_UCL.toFixed(1)}</span> | CL: <span class="text-emerald-600">${R_CL.toFixed(1)}</span>`;
+        if(document.getElementById('x-bar-stats')) document.getElementById('x-bar-stats').innerHTML = `UCL: <span class="text-blue-600">${UCL.toFixed(1)}</span> | CL: <span class="text-emerald-600">${CL.toFixed(1)}</span> | LCL: <span class="text-orange-600">${LCL.toFixed(1)}</span>`;
+        if(document.getElementById('r-chart-stats')) document.getElementById('r-chart-stats').innerHTML = `UCL: <span class="text-red-600">${R_UCL.toFixed(1)}</span> | CL: <span class="text-emerald-600">${R_CL.toFixed(1)}</span>`;
     } else {
-        document.getElementById('x-bar-stats').innerHTML = "等待數據..."; document.getElementById('r-chart-stats').innerHTML = "等待數據...";
+        if(document.getElementById('x-bar-stats')) document.getElementById('x-bar-stats').innerHTML = "等待數據..."; 
+        if(document.getElementById('r-chart-stats')) document.getElementById('r-chart-stats').innerHTML = "等待數據...";
     }
 
     const labels = data.map(d => `${d.id}`);
@@ -306,7 +462,7 @@ window.renderConcreteUI = (CL, UCL, LCL, R_CL, R_UCL, fcPrime, data) => {
     const hasData = data.length > 0;
 
     const ctxX = document.getElementById('xBarChart');
-    if(ctxX) {
+    if(ctxX && window.Chart) {
         if(window.xBarChartInst) window.xBarChartInst.destroy();
         window.xBarChartInst = new Chart(ctxX.getContext('2d'), { type: 'line', data: { labels: labels, datasets: [
             { label: '平均強度 (X)', data: dataX, borderColor: '#2563EB', backgroundColor: 'rgba(37, 99, 235, 0.1)', pointBackgroundColor: '#1E3A8A', borderWidth: 3, pointRadius: 5, fill: true, tension: 0.2 },
@@ -318,7 +474,7 @@ window.renderConcreteUI = (CL, UCL, LCL, R_CL, R_UCL, fcPrime, data) => {
     }
 
     const ctxR = document.getElementById('rChart');
-    if(ctxR) {
+    if(ctxR && window.Chart) {
         if(window.rChartInst) window.rChartInst.destroy();
         window.rChartInst = new Chart(ctxR.getContext('2d'), { type: 'line', data: { labels: labels, datasets: [
             { label: '全距 (R)', data: dataR, borderColor: '#B45309', backgroundColor: 'rgba(180, 83, 9, 0.1)', pointBackgroundColor: '#78350F', borderWidth: 3, pointRadius: 5, fill: true, tension: 0.2 },
@@ -333,7 +489,6 @@ const generateAIReport = (total, avg, target, min, passRate, sd, uclR, scope) =>
     if(!reportContainer) return;
     
     const scopeLabel = zoneMap[scope] || scope;
-    
     let reportHtml = `
         <div class="col-span-1 xl:col-span-2 bg-gradient-to-r from-amber-50 to-orange-50 p-6 rounded-2xl border border-amber-200 shadow-sm mt-6 mb-8">
             <h3 class="text-lg font-black text-amber-900 mb-4 flex items-center gap-2">
@@ -355,7 +510,8 @@ const generateAIReport = (total, avg, target, min, passRate, sd, uclR, scope) =>
     else sdStr = '<span class="text-amber-600 font-black">偏高 (標準差 > 30)</span>，顯示該區段波動顯著，建議查核施工穩定度。';
     
     let highRangeCount = 0;
-    let currentData = filter === 'ALL' ? window.concreteData : 
+    // 🔥 使用傳入的 scope 來正確過濾需要告警的數據
+    let currentData = scope === 'ALL' ? window.concreteData : 
                       (scope === 'A_ALL' ? window.concreteData.filter(d=>d.zone && d.zone.startsWith('A_')) :
                       (scope === 'B_ALL' ? window.concreteData.filter(d=>d.zone && d.zone.startsWith('B_')) : 
                       window.concreteData.filter(d=>d.zone === scope)));
@@ -379,7 +535,7 @@ const generateAIReport = (total, avg, target, min, passRate, sd, uclR, scope) =>
 };
 
 // 開啟與關閉指南彈窗的函數
-window.openGuideModal = () => { document.getElementById('guide-modal').classList.remove('hidden'); };
-window.closeGuideModal = () => { document.getElementById('guide-modal').classList.add('hidden'); };
+window.openGuideModal = () => { const m = document.getElementById('guide-modal'); if(m) m.classList.remove('hidden'); };
+window.closeGuideModal = () => { const m = document.getElementById('guide-modal'); if(m) m.classList.add('hidden'); };
 
 initFirebase();
