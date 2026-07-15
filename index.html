@@ -3,19 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>衛生福利部防疫中心 - 試體管制系統 V8.8 修復版</title>
+    <title>衛生福利部防疫中心 - 試體管制系統 V9.5 (彈性里程碑版)</title>
     
-    <!-- 核心套件 -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/svg-pan-zoom@3.6.1/dist/svg-pan-zoom.min.js"></script>
-    <!-- 🔥 關鍵：必須載入 Chart.js 才能畫 ACI214 圖表 -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
         
-        /* 🎨 恢復 V8.2 商務旗艦配色 */
         :root {
             --bg-color: #F8FAFC;       
             --text-main: #111827;      
@@ -29,7 +26,7 @@
 
         .table-header th { font-size: 16px; font-weight: 900; padding: 16px 14px; background-color: #FFFFFF; color: #1F2937; border-bottom: 2px solid #CBD5E1; position: sticky; top: 0; z-index: 20; text-align: center; white-space: nowrap; }
         .modern-row td { padding: 14px 14px; font-size: 17px; line-height: 1.6; vertical-align: middle; border-bottom: 1px solid var(--border-color); text-align: center; font-weight: 700; }
-        .modern-row:hover:not(.completed-row) { background-color: #F8FAFC; transition: 0.1s; }
+        .modern-row:hover { background-color: #F8FAFC; transition: 0.1s; }
 
         .pile-input { border: 2px solid #CBD5E1; border-radius: 8px; padding: 10px 14px; width: 100%; min-width: 250px; font-size: 17px; font-weight: 700; color: var(--text-main); transition: all 0.2s; white-space: nowrap; overflow-x: auto; text-align: center; }
         .pile-input:focus { border-color: var(--color-blue-deep); outline: none; box-shadow: 0 0 0 4px rgba(30, 58, 138, 0.15); background-color: #FFFFFF; }
@@ -37,14 +34,18 @@
         
         .status-checkbox { width: 1.4rem; height: 1.4rem; cursor: pointer; border-radius: 4px; }
         .cb-sample { accent-color: var(--color-blue-deep); } .cb-lab { accent-color: var(--color-orange-deep); } .cb-test { accent-color: var(--color-green-deep); }
-        .completed-row { background-color: #FFFFFF !important; opacity: 0.45; filter: grayscale(70%); }
-        .completed-row * { pointer-events: none; }
+        
+        /* 視覺反灰，但不鎖定編輯 (無 pointer-events: none) */
+        .completed-row { background-color: #FFFFFF !important; opacity: 0.55; filter: grayscale(50%); }
 
         .cal-tag { font-size: 13px; font-weight: 700; padding: 6px 10px; border-radius: 6px; margin-bottom: 6px; border-left: 5px solid transparent; background-color: #FFFFFF; box-shadow: 0 1px 3px rgba(0,0,0,0.08); white-space: normal; word-wrap: break-word; line-height: 1.5; border: 1px solid #E2E8F0; }
         .tag-sample { background-color: #EFF6FF; border-left-color: var(--color-blue-deep); color: #1E40AF; }
         .tag-demold { background-color: #F3F4F6; border-left-color: #9CA3AF; color: #4B5563; }
         .tag-lab { background-color: #FFFBEB; border-left-color: var(--color-orange-deep); color: #92400E; }
         .tag-test { background-color: #ECFDF5; border-left-color: var(--color-green-deep); color: #065F46; }
+
+        .calendar-scroll::-webkit-scrollbar { width: 6px; }
+        .calendar-scroll::-webkit-scrollbar-thumb { background-color: #CBD5E1; border-radius: 10px; }
         
         .matrix-box { width: 42px; height: 42px; display: flex; align-items: center; justify-content: center; font-size: 0.9rem; font-weight: bold; border-radius: 6px; border: 1px solid #E2E8F0; }
         .box-missing { background-color: #F8FAFC; color: #94A3B8; } .box-ok { background-color: #F0F9FF; color: var(--color-blue-deep); border-color: var(--color-blue-deep); } .box-error { background-color: #FEF2F2; color: #DC2626; border-color: #F87171; }
@@ -52,7 +53,6 @@
         .nav-tab { padding: 12px 20px; font-weight: 900; cursor: pointer; transition: all 0.2s; border-bottom: 4px solid transparent; color: #64748B; display: flex; align-items: center; gap: 8px; font-size: 15px; }
         .nav-tab.active { border-bottom-color: #1E3A8A; color: #1E3A8A; background: #EFF6FF; border-radius: 12px 12px 0 0; }
 
-        /* 地圖區域設定 */
         #map-container { width: 100%; height: 500px; background-color: #F8FAFC; border-radius: 12px; overflow: hidden; position: relative; border: 1px solid #E2E8F0; box-shadow: inset 0 2px 10px rgba(0,0,0,0.03); cursor: grab; }
         .pile-circle { transition: all 0.2s ease; cursor: pointer; }
         .pile-circle:hover:not(.highlight-pile) { stroke: #111827 !important; stroke-width: 40 !important; }
@@ -67,7 +67,6 @@
     
     <div class="max-w-[1500px] mx-auto space-y-6">
         
-        <!-- Header -->
         <div class="bg-white rounded-2xl shadow-sm p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-6 border border-slate-200">
             <div>
                 <h1 class="text-2xl md:text-3xl font-black text-slate-800 flex items-center gap-4 tracking-tight">
@@ -75,7 +74,7 @@
                     衛生福利部防疫中心興建工程 QC 管制
                 </h1>
                 <p class="text-slate-500 mt-2 text-base font-medium flex items-center gap-3">
-                    預壘樁試體管制排程系統 <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded-md text-sm font-bold border border-blue-200">V8.8 清晰商務修復版</span>
+                    預壘樁試體管制排程系統 <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded-md text-sm font-bold border border-blue-200">V9.5 彈性里程碑升級版</span>
                 </p>
             </div>
             <div id="sync-status" class="flex items-center gap-2 px-5 py-2.5 bg-[#EFF6FF] rounded-xl text-sm font-bold text-blue-700 border border-blue-100 shadow-sm">
@@ -83,18 +82,16 @@
             </div>
         </div>
 
-        <!-- 導覽頁籤 -->
         <div class="flex border-b-2 border-slate-300 pl-4 no-print flex-wrap">
             <div id="tab-schedule" class="nav-tab active" onclick="switchView('schedule')"><i class="fa-solid fa-calendar-check text-lg"></i> 現場打設與排程表</div>
             <div id="tab-concrete" class="nav-tab" onclick="switchView('concrete')"><i class="fa-solid fa-flask text-lg"></i> 📊 ACI 214 強度統計分析</div>
         </div>
 
         <!-- ========================================== -->
-        <!-- 視圖 1：現場排程表 (Schedule) -->
+        <!-- 視圖 1：現場排程表 (含 CCP) -->
         <!-- ========================================== -->
         <div id="view-schedule" class="space-y-6">
             
-            <!-- 地圖戰情室 -->
             <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 relative">
                 <div class="flex flex-col xl:flex-row justify-between items-start xl:items-center mb-4 gap-4">
                     <h3 class="font-black text-slate-800 text-lg flex items-center gap-2"><i class="fa-solid fa-map-location-dot text-blue-800"></i> 全區進度戰情地圖</h3>
@@ -103,78 +100,102 @@
                             <input type="text" id="map-search-input" placeholder="搜尋樁號 (如: 613)" class="border-2 border-slate-200 rounded-lg px-3 py-1.5 shadow-sm outline-none text-sm font-bold w-full md:w-40 focus:border-blue-800">
                             <button onclick="searchMapPile()" class="bg-blue-700 text-white px-4 py-1.5 rounded-lg text-sm font-bold shadow hover:bg-blue-800 transition">定位</button>
                         </div>
-                        <div class="flex gap-3 text-xs font-bold text-slate-600 bg-slate-50 px-3 py-2 rounded-lg border border-slate-200 shadow-inner flex-wrap items-center">
-                            <div class="flex items-center gap-1.5"><span class="w-3.5 h-3.5 rounded-full bg-[#F8FAFC] border border-[#CBD5E1]"></span> 未排程</div>
-                            <div class="flex items-center gap-1.5"><span class="w-3.5 h-3.5 rounded-full bg-[#FFFFFF] border border-[#1E3A8A]"></span> 已排程</div>
-                            <div class="flex items-center gap-1.5"><span class="w-3.5 h-3.5 rounded-full bg-[#1E3A8A] border border-[#1E3A8A]"></span> 已取樣</div>
-                            <div class="flex items-center gap-1.5"><span class="w-3.5 h-3.5 rounded-full bg-[#B45309] border border-[#B45309]"></span> 已收件</div>
-                            <div class="flex items-center gap-1.5"><span class="w-3.5 h-3.5 rounded-full bg-[#166534] border border-[#166534]"></span> 壓測結案</div>
-                        </div>
                     </div>
                 </div>
-                <!-- 確保地圖容器存在 -->
                 <div id="map-container"><div class="text-center p-10 text-slate-400 font-bold flex flex-col items-center gap-3"><i class="fa-solid fa-spinner fa-spin text-4xl text-blue-400"></i><span>地圖繪製中...</span></div></div>
             </div>
 
-            <details class="bg-white rounded-2xl shadow-sm border border-slate-200 group" open>
-                <summary class="font-black text-slate-800 text-base p-5 cursor-pointer flex items-center gap-2 outline-none select-none hover:bg-slate-50 transition border-b border-slate-100">
-                    <i class="fa-solid fa-satellite-dish text-blue-600 animate-pulse"></i> 展開 / 收摺：安全監測樁 T-2 智慧預警陣列
-                    <i class="fa-solid fa-chevron-down ml-auto chevron transition-transform duration-300 text-slate-400"></i>
-                </summary>
-                <div class="p-5 bg-slate-50 rounded-b-2xl">
-                    <div id="special-pile-radar" class="flex flex-wrap gap-2.5 items-center">
-                        <div class="text-slate-400 text-sm font-bold">掃描中...</div>
-                    </div>
-                </div>
-            </details>
-
             <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-                <h3 class="font-black text-slate-700 text-lg flex items-center gap-2 mb-6"><i class="fa-solid fa-chart-line text-slate-400"></i> 全區 QC 進度看板</h3>
+                <h3 class="font-black text-slate-700 text-lg flex items-center gap-2 mb-6"><i class="fa-solid fa-chart-line text-slate-400"></i> 全區 QC 進度戰情室</h3>
+                
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
                     <div class="border-2 border-slate-200 rounded-xl p-5 bg-white shadow-sm flex flex-col justify-between">
-                        <div class="flex justify-between items-center mb-3"><span class="text-slate-600 font-bold text-sm tracking-wide">1. 打設總進度</span><span id="prog-piles-ab" class="text-xs font-bold text-slate-500 bg-slate-100 px-2 py-1 rounded border border-slate-200">A: 0 | B: 0</span></div>
-                        <div class="flex items-end gap-2 mb-3"><span id="prog-piles-text" class="text-4xl font-black text-slate-700">0</span><span class="text-slate-400 font-bold text-sm mb-1">/ 613 支 <span id="prog-piles-pct" class="ml-1 bg-slate-100 text-slate-700 px-2 py-0.5 rounded text-xs border border-slate-300 font-black">0.0%</span></span></div>
+                        <div class="flex justify-between items-center mb-3">
+                            <span class="text-slate-600 font-bold text-sm tracking-wide">1. 打設總進度</span>
+                            <span id="prog-piles-ab" class="text-xs font-bold text-slate-500 bg-slate-100 px-2 py-1 rounded border border-slate-200">A: 0 | B: 0 | CCP: 0</span>
+                        </div>
+                        <div class="flex items-end gap-2 mb-3">
+                            <span id="prog-piles-text" class="text-3xl font-black text-slate-700">0</span>
+                        </div>
                         <div class="w-full bg-slate-100 rounded-full h-2.5"><div id="prog-piles-bar" class="bg-slate-700 h-2.5 rounded-full transition-all duration-1000" style="width:0%"></div></div>
                     </div>
+
                     <div class="border-2 border-slate-200 rounded-xl p-5 bg-white shadow-sm flex flex-col justify-between">
                         <div class="text-blue-700 font-bold text-sm tracking-wide mb-3">2. 試體取樣率</div>
-                        <div class="flex items-end gap-2 mb-3"><span id="prog-sample-text" class="text-4xl font-black text-blue-700">0</span><span id="prog-sample-total" class="text-blue-400 font-bold text-sm mb-1">/ 0 組</span></div>
+                        <div class="flex items-end gap-2 mb-3">
+                            <span id="prog-sample-text" class="text-4xl font-black text-blue-700">0</span>
+                            <span id="prog-sample-total" class="text-blue-400 font-bold text-sm mb-1">/ 0 組</span>
+                        </div>
                         <div class="w-full bg-blue-50 rounded-full h-2.5"><div id="prog-sample-bar" class="bg-blue-600 h-2.5 rounded-full transition-all duration-1000" style="width:0%"></div></div>
                     </div>
+
                     <div class="border-2 border-slate-200 rounded-xl p-5 bg-white shadow-sm flex flex-col justify-between">
-                        <div class="text-[#B45309] font-bold text-sm tracking-wide mb-3">3. 實驗室收件進度</div>
-                        <div class="flex items-end gap-2 mb-3"><span id="prog-lab-text" class="text-4xl font-black text-[#B45309]">0</span><span id="prog-lab-total" class="text-orange-300 font-bold text-sm mb-1">/ 0 組</span></div>
+                        <div class="text-[#92400E] font-bold text-sm tracking-wide mb-3">3. 實驗室收件進度</div>
+                        <div class="flex items-end gap-2 mb-3">
+                            <span id="prog-lab-text" class="text-4xl font-black text-[#92400E]">0</span>
+                            <span id="prog-lab-total" class="text-orange-300 font-bold text-sm mb-1">/ 0 組</span>
+                        </div>
                         <div class="w-full bg-orange-50 rounded-full h-2.5"><div id="prog-lab-bar" class="bg-orange-600 h-2.5 rounded-full transition-all duration-1000" style="width:0%"></div></div>
                     </div>
-                    <div class="border-2 border-slate-200 rounded-xl p-5 bg-white shadow-sm flex flex-col justify-between relative">
-                        <div class="flex justify-between items-start mb-1 relative z-10"><div class="text-[#065F46] font-bold text-sm tracking-wide mt-1">4. 抗壓會驗結案率</div><div id="next-test-info" class="text-xs font-bold text-green-700 bg-green-100 px-2 py-1 rounded shadow-sm border border-green-200">無待壓測排程</div></div>
-                        <div class="flex items-end gap-2 mb-3 relative z-10"><span id="prog-test-text" class="text-4xl font-black text-[#065F46]">0</span><span id="prog-test-total" class="text-green-400 font-bold text-sm mb-1">/ 0 組</span></div>
-                        <div class="w-full bg-green-50 rounded-full h-2.5 relative z-10"><div id="prog-test-bar" class="bg-green-600 h-2.5 rounded-full transition-all duration-1000" style="width:0%"></div></div>
+
+                    <div class="border-2 border-slate-200 rounded-xl p-5 bg-white shadow-sm flex flex-col justify-between">
+                        <div class="text-[#065F46] font-bold text-sm tracking-wide mb-3">4. 抗壓會驗結案率</div>
+                        <div class="flex items-end gap-2 mb-3">
+                            <span id="prog-test-text" class="text-4xl font-black text-[#065F46]">0</span>
+                            <span id="prog-test-total" class="text-green-300 font-bold text-sm mb-1">/ 0 組</span>
+                        </div>
+                        <div class="w-full bg-green-50 rounded-full h-2.5"><div id="prog-test-bar" class="bg-green-600 h-2.5 rounded-full transition-all duration-1000" style="width:0%"></div></div>
                     </div>
                 </div>
             </div>
 
-            <!-- 🔥 已移除斗仔計算機，還原停工與加班為兩大區塊 -->
+            <!-- 🔥 里程碑彈性設定區塊 -->
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                <h3 class="font-bold text-slate-700 text-lg mb-4 flex items-center gap-2">
+                    <i class="fa-solid fa-route text-blue-500"></i> 工程階段切換與里程碑設定 <span class="bg-blue-100 text-blue-700 px-2 py-0.5 rounded text-xs ml-2 font-bold">彈性調整</span>
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-5 items-end">
+                    <div>
+                        <label class="block text-slate-600 font-bold mb-1 text-sm">預壘樁 A車 退場日</label>
+                        <input type="date" id="phase-end-a" class="border-2 border-slate-200 rounded-lg px-3 py-2 text-sm font-bold w-full outline-none focus:border-blue-500 text-slate-700">
+                    </div>
+                    <div>
+                        <label class="block text-slate-600 font-bold mb-1 text-sm">預壘樁 B車 退場日</label>
+                        <input type="date" id="phase-end-b" class="border-2 border-slate-200 rounded-lg px-3 py-2 text-sm font-bold w-full outline-none focus:border-blue-500 text-slate-700">
+                    </div>
+                    <div>
+                        <label class="block text-slate-600 font-bold mb-1 text-sm">CCP 攪拌樁 進場日</label>
+                        <input type="date" id="phase-start-ccp" class="border-2 border-slate-200 rounded-lg px-3 py-2 text-sm font-bold w-full outline-none focus:border-blue-500 text-slate-700">
+                    </div>
+                    <div>
+                        <button onclick="updatePhaseSettings()" class="bg-blue-600 hover:bg-blue-700 text-white w-full py-2.5 rounded-lg font-bold shadow-md transition">儲存並重繪排程</button>
+                    </div>
+                </div>
+                <p class="text-xs text-slate-500 mt-3"><i class="fa-solid fa-info-circle"></i> 系統將依據上述日期自動截斷預壘樁的排程，並無縫接軌 CCP 攪拌樁的排程生成。您可以隨工程現況自由調整。</p>
+            </div>
+
+            <!-- 例外設定區塊 -->
             <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
                 <h3 class="font-bold text-slate-700 text-lg mb-4 flex items-center gap-2"><i class="fa-solid fa-calendar-day text-slate-500"></i> 例外停工與加班設定</h3>
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     <div class="p-5 bg-slate-50 rounded-xl border border-slate-200 flex flex-col gap-3 shadow-sm">
                         <div class="flex flex-wrap items-center gap-3">
                             <span class="font-bold text-red-700 text-sm"><i class="fa-solid fa-stop-circle"></i> 停工：</span>
-                            <select id="exception-machine" class="border border-slate-300 rounded-lg px-2 py-1.5 text-sm font-bold bg-white"><option value="ALL">全區</option><option value="A">A 車</option><option value="B">B 車</option></select>
+                            <select id="exception-machine" class="border border-slate-300 rounded-lg px-2 py-1.5 text-sm font-bold bg-white"><option value="ALL">全區</option><option value="A">A 車</option><option value="B">B 車</option><option value="CCP">CCP 攪拌樁</option></select>
                             <input type="date" id="exception-date-input" class="border border-slate-300 rounded-lg px-2 py-1.5 text-sm outline-none">
                             <button onclick="addExceptionDate()" class="bg-red-600 text-white hover:bg-red-700 px-4 py-1.5 rounded-lg text-sm font-bold transition shadow-sm">新增</button>
                         </div>
-                        <div class="w-full mt-2 grid grid-cols-1 md:grid-cols-3 gap-2">
+                        <div class="w-full mt-2 grid grid-cols-1 md:grid-cols-4 gap-2">
                             <div id="exception-list-all" class="flex flex-wrap gap-1.5 empty:hidden bg-white p-2 rounded border border-red-100 min-h-[35px]"><span class="text-xs text-red-500 font-bold w-full">全區停工：</span></div>
                             <div id="exception-list-a" class="flex flex-wrap gap-1.5 empty:hidden bg-white p-2 rounded border border-orange-100 min-h-[35px]"><span class="text-xs text-orange-500 font-bold w-full">A車停工：</span></div>
                             <div id="exception-list-b" class="flex flex-wrap gap-1.5 empty:hidden bg-white p-2 rounded border border-amber-100 min-h-[35px]"><span class="text-xs text-amber-500 font-bold w-full">B車停工：</span></div>
+                            <div id="exception-list-ccp" class="flex flex-wrap gap-1.5 empty:hidden bg-white p-2 rounded border border-purple-100 min-h-[35px]"><span class="text-xs text-purple-500 font-bold w-full">CCP停工：</span></div>
                         </div>
                     </div>
                     <div class="p-5 bg-slate-50 rounded-xl border border-slate-200 flex flex-col gap-3 shadow-sm">
                         <div class="flex flex-wrap items-center gap-3">
                             <span class="font-bold text-blue-700 text-sm"><i class="fa-solid fa-play-circle"></i> 加班：</span>
-                            <select id="extra-machine" class="border border-slate-300 rounded-lg px-2 py-1.5 text-sm font-bold bg-white"><option value="A">A 車</option><option value="B">B 車</option></select>
+                            <select id="extra-machine" class="border border-slate-300 rounded-lg px-2 py-1.5 text-sm font-bold bg-white"><option value="A">A 車</option><option value="B">B 車</option><option value="CCP">CCP 攪拌樁</option></select>
                             <input type="date" id="extra-date-input" class="border border-slate-300 rounded-lg px-2 py-1.5 text-sm outline-none">
                             <button onclick="addExtraDate()" class="bg-blue-600 text-white hover:bg-blue-700 px-4 py-1.5 rounded-lg text-sm font-bold transition shadow-sm">新增</button>
                         </div>
@@ -191,9 +212,10 @@
                         <button onclick="toggleView('calendar')" id="btn-view-cal" class="px-5 py-2.5 rounded-lg text-base font-bold text-slate-500 hover:text-slate-800 transition"><i class="fa-solid fa-calendar-week mr-2"></i> 月曆看板</button>
                     </div>
                     <div class="flex gap-2">
-                        <button onclick="filterData('ALL')" id="btn-ALL" class="px-5 py-2 rounded-lg text-sm font-black bg-slate-800 text-white shadow-md border border-slate-700">全區樁號</button>
-                        <button onclick="filterData('A')" id="btn-A" class="px-5 py-2 rounded-lg text-sm font-black bg-white text-slate-600 border-2 border-slate-200 hover:bg-slate-50">A 車打設</button>
-                        <button onclick="filterData('B')" id="btn-B" class="px-5 py-2 rounded-lg text-sm font-black bg-white text-slate-600 border-2 border-slate-200 hover:bg-slate-50">B 車打設</button>
+                        <button onclick="filterData('ALL')" id="btn-ALL" class="px-4 py-2 rounded-lg text-sm font-black bg-slate-800 text-white shadow-md border border-slate-700">顯示全部</button>
+                        <button onclick="filterData('A')" id="btn-A" class="px-4 py-2 rounded-lg text-sm font-black bg-white text-slate-600 border-2 border-slate-200 hover:bg-slate-50">預壘樁 A 車</button>
+                        <button onclick="filterData('B')" id="btn-B" class="px-4 py-2 rounded-lg text-sm font-black bg-white text-slate-600 border-2 border-slate-200 hover:bg-slate-50">預壘樁 B 車</button>
+                        <button onclick="filterData('CCP')" id="btn-CCP" class="px-4 py-2 rounded-lg text-sm font-black bg-white text-purple-600 border-2 border-purple-200 hover:bg-purple-50">CCP 攪拌樁</button>
                     </div>
                 </div>
                 
@@ -250,7 +272,7 @@
         </div>
 
         <!-- ========================================== -->
-        <!-- 視圖 2：ACI 214 混凝土品質管制 -->
+        <!-- 視圖 2：ACI 214 混凝土品質管制 (🔥 完美專業排版版) -->
         <!-- ========================================== -->
         <div id="view-concrete" class="space-y-6 hidden">
             
@@ -320,23 +342,25 @@
             </div>
 
             <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
-                <!-- 歷史數據表格 -->
+                <!-- 歷史數據表格 (🔥 修復排版，拓寬且分欄) -->
                 <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 overflow-x-auto flex flex-col">
                     <h3 class="font-black text-slate-800 text-xl mb-4 flex justify-between items-center border-b border-slate-100 pb-3">
                         <span class="flex items-center gap-2"><i class="fa-solid fa-table text-slate-400"></i> 強度檢驗紀錄明細</span>
                         <span class="text-sm font-black bg-blue-50 text-blue-800 px-4 py-1.5 rounded-lg border border-blue-100" id="concrete-count">總計: 0 組</span>
                     </h3>
                     <div class="flex-1 overflow-y-auto pr-2" style="max-height: 550px;">
-                        <table class="w-full text-left border-collapse table-fixed min-w-[550px]">
+                        <table class="w-full text-left border-collapse table-fixed min-w-[900px]">
                             <thead class="bg-slate-50 sticky top-0 shadow-sm border-b-2 border-slate-200 z-10">
                                 <tr>
-                                    <th class="p-3 text-center text-slate-600 font-bold text-sm">日期</th>
-                                    <th class="p-3 text-center text-slate-600 font-bold text-sm">區域</th>
-                                    <th class="p-3 text-center text-slate-600 font-bold text-sm">識別號</th>
-                                    <th class="p-3 text-center text-slate-500 font-bold text-sm">#1 / #2 / #3</th>
-                                    <th class="p-3 text-center text-blue-800 bg-blue-100 font-black text-sm">平均 (X)</th>
-                                    <th class="p-3 text-center text-[#B45309] bg-orange-100 font-black text-sm">全距 (R)</th>
-                                    <th class="p-3 text-center text-slate-600 font-bold text-sm no-print">操作</th>
+                                    <th class="p-3 text-center text-slate-600 font-bold text-sm w-[12%]">日期</th>
+                                    <th class="p-3 text-center text-slate-600 font-bold text-sm w-[14%]">區域</th>
+                                    <th class="p-3 text-center text-slate-600 font-bold text-sm w-[14%]">識別號</th>
+                                    <th class="p-3 text-center text-slate-500 font-bold text-sm w-[8%]">#1</th>
+                                    <th class="p-3 text-center text-slate-500 font-bold text-sm w-[8%]">#2</th>
+                                    <th class="p-3 text-center text-slate-500 font-bold text-sm w-[8%]">#3</th>
+                                    <th class="p-3 text-center text-blue-800 bg-blue-100 font-black text-sm w-[12%]">平均(X)</th>
+                                    <th class="p-3 text-center text-[#B45309] bg-orange-100 font-black text-sm w-[10%]">全距(R)</th>
+                                    <th class="p-3 text-center text-slate-600 font-bold text-sm w-[14%] no-print">操作</th>
                                 </tr>
                             </thead>
                             <tbody id="concrete-body" class="bg-white divide-y divide-slate-100 text-base"></tbody>
@@ -346,7 +370,6 @@
 
                 <!-- 管制圖表 -->
                 <div class="space-y-6 flex flex-col">
-                    <!-- X-bar Chart -->
                     <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex-1 flex flex-col">
                         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 border-b border-slate-100 pb-3 gap-2">
                             <h3 class="font-black text-slate-800 text-lg flex items-center gap-2"><i class="fa-solid fa-chart-area text-blue-600"></i> X-bar 管制圖 (平均強度變異)</h3>
@@ -354,7 +377,6 @@
                         </div>
                         <div class="relative w-full flex-1 min-h-[220px]"><canvas id="xBarChart"></canvas></div>
                     </div>
-                    <!-- R Chart -->
                     <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex-1 flex flex-col">
                         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 border-b border-slate-100 pb-3 gap-2">
                             <h3 class="font-black text-slate-800 text-lg flex items-center gap-2"><i class="fa-solid fa-chart-line text-[#B45309]"></i> R 管制圖 (單組試體均勻度)</h3>
@@ -367,7 +389,6 @@
             
             <div id="ai-report-wrapper"></div>
         </div>
-
     </div>
 
     <!-- Modals 集合 -->
@@ -392,7 +413,8 @@
                             <th class="p-4 border-b text-slate-500 font-bold text-sm whitespace-nowrap">施工日期(取樣日)</th>
                             <th class="p-4 border-b text-blue-700 font-bold text-sm text-center">A車打設(系統)</th>
                             <th class="p-4 border-b text-blue-700 font-bold text-sm text-center">B車打設(系統)</th>
-                            <th class="p-4 border-b text-slate-800 font-black text-lg text-center bg-slate-50">系統總計</th>
+                            <th class="p-4 border-b text-purple-700 font-bold text-sm text-center">CCP(系統)</th>
+                            <th class="p-4 border-b text-slate-800 font-black text-lg text-center bg-slate-50">總計</th>
                             <th class="p-4 border-b text-[#92400E] font-black text-base text-center bg-[#FCF9F2]">施工組申報數量 <i class="fa-solid fa-pen text-xs ml-1 opacity-50"></i></th>
                             <th class="p-4 border-b text-center font-bold text-slate-500 text-sm">狀態</th>
                         </tr>
