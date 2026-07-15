@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>衛生福利部防疫中心 - 試體管制系統 V9.5 (彈性里程碑版)</title>
+    <title>衛生福利部防疫中心 - 試體管制系統 V9.6 (純淨排程版)</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
@@ -25,7 +25,7 @@
         body { font-family: 'Noto Sans TC', sans-serif; background-color: var(--bg-color); color: var(--text-main); letter-spacing: 0.01em; scroll-behavior: smooth; }
 
         .table-header th { font-size: 16px; font-weight: 900; padding: 16px 14px; background-color: #FFFFFF; color: #1F2937; border-bottom: 2px solid #CBD5E1; position: sticky; top: 0; z-index: 20; text-align: center; white-space: nowrap; }
-        .modern-row td { padding: 14px 14px; font-size: 17px; line-height: 1.6; vertical-align: middle; border-bottom: 1px solid var(--border-color); text-align: center; font-weight: 700; }
+        .modern-row td { padding: 14px 14px; font-size: 17px; line-height: 1.6; vertical-align: middle; border-bottom: 1px solid var(--border-color); text-align: center; font-weight: 700; white-space: nowrap; }
         .modern-row:hover { background-color: #F8FAFC; transition: 0.1s; }
 
         .pile-input { border: 2px solid #CBD5E1; border-radius: 8px; padding: 10px 14px; width: 100%; min-width: 250px; font-size: 17px; font-weight: 700; color: var(--text-main); transition: all 0.2s; white-space: nowrap; overflow-x: auto; text-align: center; }
@@ -74,7 +74,7 @@
                     衛生福利部防疫中心興建工程 QC 管制
                 </h1>
                 <p class="text-slate-500 mt-2 text-base font-medium flex items-center gap-3">
-                    預壘樁試體管制排程系統 <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded-md text-sm font-bold border border-blue-200">V9.5 彈性里程碑升級版</span>
+                    預壘樁試體管制排程系統 <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded-md text-sm font-bold border border-blue-200">V9.6 純淨排程版</span>
                 </p>
             </div>
             <div id="sync-status" class="flex items-center gap-2 px-5 py-2.5 bg-[#EFF6FF] rounded-xl text-sm font-bold text-blue-700 border border-blue-100 shadow-sm">
@@ -88,7 +88,7 @@
         </div>
 
         <!-- ========================================== -->
-        <!-- 視圖 1：現場排程表 (含 CCP) -->
+        <!-- 視圖 1：現場排程表 (純粹 A/B 機) -->
         <!-- ========================================== -->
         <div id="view-schedule" class="space-y-6">
             
@@ -112,7 +112,7 @@
                     <div class="border-2 border-slate-200 rounded-xl p-5 bg-white shadow-sm flex flex-col justify-between">
                         <div class="flex justify-between items-center mb-3">
                             <span class="text-slate-600 font-bold text-sm tracking-wide">1. 打設總進度</span>
-                            <span id="prog-piles-ab" class="text-xs font-bold text-slate-500 bg-slate-100 px-2 py-1 rounded border border-slate-200">A: 0 | B: 0 | CCP: 0</span>
+                            <span id="prog-piles-ab" class="text-xs font-bold text-slate-500 bg-slate-100 px-2 py-1 rounded border border-slate-200">A: 0 | B: 0</span>
                         </div>
                         <div class="flex items-end gap-2 mb-3">
                             <span id="prog-piles-text" class="text-3xl font-black text-slate-700">0</span>
@@ -149,12 +149,12 @@
                 </div>
             </div>
 
-            <!-- 🔥 里程碑彈性設定區塊 -->
+            <!-- 🔥 里程碑彈性設定區塊 (移除 CCP) -->
             <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
                 <h3 class="font-bold text-slate-700 text-lg mb-4 flex items-center gap-2">
                     <i class="fa-solid fa-route text-blue-500"></i> 工程階段切換與里程碑設定 <span class="bg-blue-100 text-blue-700 px-2 py-0.5 rounded text-xs ml-2 font-bold">彈性調整</span>
                 </h3>
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-5 items-end">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-5 items-end">
                     <div>
                         <label class="block text-slate-600 font-bold mb-1 text-sm">預壘樁 A車 退場日</label>
                         <input type="date" id="phase-end-a" class="border-2 border-slate-200 rounded-lg px-3 py-2 text-sm font-bold w-full outline-none focus:border-blue-500 text-slate-700">
@@ -164,38 +164,33 @@
                         <input type="date" id="phase-end-b" class="border-2 border-slate-200 rounded-lg px-3 py-2 text-sm font-bold w-full outline-none focus:border-blue-500 text-slate-700">
                     </div>
                     <div>
-                        <label class="block text-slate-600 font-bold mb-1 text-sm">CCP 攪拌樁 進場日</label>
-                        <input type="date" id="phase-start-ccp" class="border-2 border-slate-200 rounded-lg px-3 py-2 text-sm font-bold w-full outline-none focus:border-blue-500 text-slate-700">
-                    </div>
-                    <div>
                         <button onclick="updatePhaseSettings()" class="bg-blue-600 hover:bg-blue-700 text-white w-full py-2.5 rounded-lg font-bold shadow-md transition">儲存並重繪排程</button>
                     </div>
                 </div>
-                <p class="text-xs text-slate-500 mt-3"><i class="fa-solid fa-info-circle"></i> 系統將依據上述日期自動截斷預壘樁的排程，並無縫接軌 CCP 攪拌樁的排程生成。您可以隨工程現況自由調整。</p>
+                <p class="text-xs text-slate-500 mt-3"><i class="fa-solid fa-info-circle"></i> 系統將依據上述日期自動截斷預壘樁的排程。您可以隨工程現況自由調整。</p>
             </div>
 
-            <!-- 例外設定區塊 -->
+            <!-- 例外設定區塊 (移除 CCP) -->
             <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
                 <h3 class="font-bold text-slate-700 text-lg mb-4 flex items-center gap-2"><i class="fa-solid fa-calendar-day text-slate-500"></i> 例外停工與加班設定</h3>
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     <div class="p-5 bg-slate-50 rounded-xl border border-slate-200 flex flex-col gap-3 shadow-sm">
                         <div class="flex flex-wrap items-center gap-3">
                             <span class="font-bold text-red-700 text-sm"><i class="fa-solid fa-stop-circle"></i> 停工：</span>
-                            <select id="exception-machine" class="border border-slate-300 rounded-lg px-2 py-1.5 text-sm font-bold bg-white"><option value="ALL">全區</option><option value="A">A 車</option><option value="B">B 車</option><option value="CCP">CCP 攪拌樁</option></select>
+                            <select id="exception-machine" class="border border-slate-300 rounded-lg px-2 py-1.5 text-sm font-bold bg-white"><option value="ALL">全區</option><option value="A">A 車</option><option value="B">B 車</option></select>
                             <input type="date" id="exception-date-input" class="border border-slate-300 rounded-lg px-2 py-1.5 text-sm outline-none">
                             <button onclick="addExceptionDate()" class="bg-red-600 text-white hover:bg-red-700 px-4 py-1.5 rounded-lg text-sm font-bold transition shadow-sm">新增</button>
                         </div>
-                        <div class="w-full mt-2 grid grid-cols-1 md:grid-cols-4 gap-2">
+                        <div class="w-full mt-2 grid grid-cols-1 md:grid-cols-3 gap-2">
                             <div id="exception-list-all" class="flex flex-wrap gap-1.5 empty:hidden bg-white p-2 rounded border border-red-100 min-h-[35px]"><span class="text-xs text-red-500 font-bold w-full">全區停工：</span></div>
                             <div id="exception-list-a" class="flex flex-wrap gap-1.5 empty:hidden bg-white p-2 rounded border border-orange-100 min-h-[35px]"><span class="text-xs text-orange-500 font-bold w-full">A車停工：</span></div>
                             <div id="exception-list-b" class="flex flex-wrap gap-1.5 empty:hidden bg-white p-2 rounded border border-amber-100 min-h-[35px]"><span class="text-xs text-amber-500 font-bold w-full">B車停工：</span></div>
-                            <div id="exception-list-ccp" class="flex flex-wrap gap-1.5 empty:hidden bg-white p-2 rounded border border-purple-100 min-h-[35px]"><span class="text-xs text-purple-500 font-bold w-full">CCP停工：</span></div>
                         </div>
                     </div>
                     <div class="p-5 bg-slate-50 rounded-xl border border-slate-200 flex flex-col gap-3 shadow-sm">
                         <div class="flex flex-wrap items-center gap-3">
                             <span class="font-bold text-blue-700 text-sm"><i class="fa-solid fa-play-circle"></i> 加班：</span>
-                            <select id="extra-machine" class="border border-slate-300 rounded-lg px-2 py-1.5 text-sm font-bold bg-white"><option value="A">A 車</option><option value="B">B 車</option><option value="CCP">CCP 攪拌樁</option></select>
+                            <select id="extra-machine" class="border border-slate-300 rounded-lg px-2 py-1.5 text-sm font-bold bg-white"><option value="A">A 車</option><option value="B">B 車</option></select>
                             <input type="date" id="extra-date-input" class="border border-slate-300 rounded-lg px-2 py-1.5 text-sm outline-none">
                             <button onclick="addExtraDate()" class="bg-blue-600 text-white hover:bg-blue-700 px-4 py-1.5 rounded-lg text-sm font-bold transition shadow-sm">新增</button>
                         </div>
@@ -213,9 +208,8 @@
                     </div>
                     <div class="flex gap-2">
                         <button onclick="filterData('ALL')" id="btn-ALL" class="px-4 py-2 rounded-lg text-sm font-black bg-slate-800 text-white shadow-md border border-slate-700">顯示全部</button>
-                        <button onclick="filterData('A')" id="btn-A" class="px-4 py-2 rounded-lg text-sm font-black bg-white text-slate-600 border-2 border-slate-200 hover:bg-slate-50">預壘樁 A 車</button>
-                        <button onclick="filterData('B')" id="btn-B" class="px-4 py-2 rounded-lg text-sm font-black bg-white text-slate-600 border-2 border-slate-200 hover:bg-slate-50">預壘樁 B 車</button>
-                        <button onclick="filterData('CCP')" id="btn-CCP" class="px-4 py-2 rounded-lg text-sm font-black bg-white text-purple-600 border-2 border-purple-200 hover:bg-purple-50">CCP 攪拌樁</button>
+                        <button onclick="filterData('A')" id="btn-A" class="px-4 py-2 rounded-lg text-sm font-black bg-white text-slate-600 border-2 border-slate-200 hover:bg-slate-50">A 車</button>
+                        <button onclick="filterData('B')" id="btn-B" class="px-4 py-2 rounded-lg text-sm font-black bg-white text-slate-600 border-2 border-slate-200 hover:bg-slate-50">B 車</button>
                     </div>
                 </div>
                 
@@ -272,19 +266,18 @@
         </div>
 
         <!-- ========================================== -->
-        <!-- 視圖 2：ACI 214 混凝土品質管制 (🔥 完美專業排版版) -->
+        <!-- 視圖 2：混凝土抗壓強度 ACI 214 -->
         <!-- ========================================== -->
         <div id="view-concrete" class="space-y-6 hidden">
-            
             <div class="bg-[#EFF6FF] p-6 rounded-2xl shadow-sm border border-blue-200 no-print">
                 <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-5 border-b border-blue-200 pb-4 gap-4">
                     <h3 class="font-black text-blue-900 text-xl flex items-center gap-3">
-                        <i class="fa-solid fa-flask"></i> ACI 214 混凝土強度統計與 AI 診斷
-                        <button onclick="openGuideModal()" class="text-sm bg-blue-700 text-white px-3 py-1.5 rounded-lg shadow-sm hover:bg-blue-800 transition flex items-center gap-1.5 ml-2"><i class="fa-solid fa-circle-question"></i> ACI 214 判讀指南</button>
+                        <i class="fa-solid fa-pen-to-square"></i> 登錄 28 天抗壓試驗報告
+                        <button onclick="openGuideModal()" class="text-sm bg-blue-600 text-white px-3 py-1.5 rounded-lg shadow-sm hover:bg-blue-700 transition flex items-center gap-1.5 ml-2"><i class="fa-solid fa-circle-question"></i> ACI 214 判讀指南</button>
                     </h3>
                     <div class="flex flex-wrap items-center gap-3">
                         <div class="flex items-center gap-2 bg-white px-4 py-2 rounded-xl border border-blue-100 shadow-sm">
-                            <span class="text-sm font-black text-slate-600">分析範圍</span>
+                            <span class="text-sm font-black text-slate-600">圖表分析範圍</span>
                             <select id="concrete-zone-filter" onchange="calculateConcreteStats()" class="border-2 border-slate-200 rounded px-2 py-1 text-sm font-black bg-white outline-none cursor-pointer text-blue-800 focus:border-blue-500">
                                 <option value="ALL">全區整合統計</option>
                                 <option value="A_ALL">【A車總計】</option>
@@ -305,12 +298,12 @@
                 
                 <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-7 gap-5 items-end">
                     <div class="md:col-span-1">
-                        <label class="block text-slate-700 font-bold mb-1 text-sm">澆置區域</label>
+                        <label class="block text-slate-700 font-bold mb-1 text-sm">實際澆置區域</label>
                         <select id="concrete-zone-select" class="border-2 border-slate-300 rounded-xl px-3 py-2.5 text-base font-black bg-white outline-none cursor-pointer w-full text-blue-900 focus:border-blue-500 shadow-sm">
                             <option value="A_NORMAL">A車 (一般區)</option>
-                            <option value="A_POND_BC">A車 (池BC)</option>
+                            <option value="A_POND_BC">A車 (滯洪池BC)</option>
                             <option value="B_NORMAL">B車 (一般區)</option>
-                            <option value="B_POND_A">B車 (池A)</option>
+                            <option value="B_POND_A">B車 (滯洪池A)</option>
                         </select>
                     </div>
                     <div class="md:col-span-1">
@@ -318,7 +311,7 @@
                         <input type="date" id="concrete-date" class="border-2 border-slate-300 rounded-xl px-3 py-2.5 font-bold text-blue-900 w-full bg-white outline-none focus:border-blue-500 shadow-sm">
                     </div>
                     <div class="md:col-span-1">
-                        <label class="block text-slate-700 font-bold mb-1 text-sm">樁號識別</label>
+                        <label class="block text-slate-700 font-bold mb-1 text-sm">排程樁號</label>
                         <input type="text" id="concrete-id" placeholder="如: P101" class="border-2 border-slate-300 rounded-xl px-3 py-2.5 font-bold text-blue-900 w-full bg-white outline-none focus:border-blue-500 shadow-sm text-center">
                     </div>
                     <div class="md:col-span-1">
@@ -341,49 +334,51 @@
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
-                <!-- 歷史數據表格 (🔥 修復排版，拓寬且分欄) -->
-                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 overflow-x-auto flex flex-col">
-                    <h3 class="font-black text-slate-800 text-xl mb-4 flex justify-between items-center border-b border-slate-100 pb-3">
-                        <span class="flex items-center gap-2"><i class="fa-solid fa-table text-slate-400"></i> 強度檢驗紀錄明細</span>
-                        <span class="text-sm font-black bg-blue-50 text-blue-800 px-4 py-1.5 rounded-lg border border-blue-100" id="concrete-count">總計: 0 組</span>
-                    </h3>
-                    <div class="flex-1 overflow-y-auto pr-2" style="max-height: 550px;">
-                        <table class="w-full text-left border-collapse table-fixed min-w-[900px]">
-                            <thead class="bg-slate-50 sticky top-0 shadow-sm border-b-2 border-slate-200 z-10">
-                                <tr>
-                                    <th class="p-3 text-center text-slate-600 font-bold text-sm w-[12%]">日期</th>
-                                    <th class="p-3 text-center text-slate-600 font-bold text-sm w-[14%]">區域</th>
-                                    <th class="p-3 text-center text-slate-600 font-bold text-sm w-[14%]">識別號</th>
-                                    <th class="p-3 text-center text-slate-500 font-bold text-sm w-[8%]">#1</th>
-                                    <th class="p-3 text-center text-slate-500 font-bold text-sm w-[8%]">#2</th>
-                                    <th class="p-3 text-center text-slate-500 font-bold text-sm w-[8%]">#3</th>
-                                    <th class="p-3 text-center text-blue-800 bg-blue-100 font-black text-sm w-[12%]">平均(X)</th>
-                                    <th class="p-3 text-center text-[#B45309] bg-orange-100 font-black text-sm w-[10%]">全距(R)</th>
-                                    <th class="p-3 text-center text-slate-600 font-bold text-sm w-[14%] no-print">操作</th>
-                                </tr>
-                            </thead>
-                            <tbody id="concrete-body" class="bg-white divide-y divide-slate-100 text-base"></tbody>
-                        </table>
-                    </div>
+            <!-- 🔥 排版優化：全幅表格區塊 -->
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                <h3 class="font-black text-slate-800 text-xl mb-4 flex justify-between items-center border-b border-slate-100 pb-3">
+                    <span class="flex items-center gap-2"><i class="fa-solid fa-table text-slate-400"></i> 強度檢驗紀錄明細</span>
+                    <span class="text-sm font-black bg-blue-50 text-blue-800 px-4 py-1.5 rounded-lg border border-blue-100" id="concrete-count">總計: 0 組</span>
+                </h3>
+                
+                <!-- 移除 overflow-x-auto 讓表格能完全撐開 -->
+                <div class="w-full">
+                    <table class="w-full text-left border-collapse">
+                        <thead class="bg-slate-50 border-b-2 border-slate-200">
+                            <tr>
+                                <th class="p-3 text-center text-slate-600 font-bold text-sm w-[12%]">日期</th>
+                                <th class="p-3 text-center text-slate-600 font-bold text-sm w-[14%]">區域</th>
+                                <th class="p-3 text-center text-slate-600 font-bold text-sm w-[14%]">識別號</th>
+                                <th class="p-3 text-center text-slate-500 font-bold text-sm w-[8%]">#1</th>
+                                <th class="p-3 text-center text-slate-500 font-bold text-sm w-[8%]">#2</th>
+                                <th class="p-3 text-center text-slate-500 font-bold text-sm w-[8%]">#3</th>
+                                <th class="p-3 text-center text-blue-800 bg-blue-100 font-black text-sm w-[12%]">平均(X)</th>
+                                <th class="p-3 text-center text-[#B45309] bg-orange-100 font-black text-sm w-[10%]">全距(R)</th>
+                                <th class="p-3 text-center text-slate-600 font-bold text-sm w-[14%] no-print">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="concrete-body" class="bg-white divide-y divide-slate-100 text-base"></tbody>
+                    </table>
                 </div>
+            </div>
 
-                <!-- 管制圖表 -->
-                <div class="space-y-6 flex flex-col">
-                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex-1 flex flex-col">
-                        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 border-b border-slate-100 pb-3 gap-2">
-                            <h3 class="font-black text-slate-800 text-lg flex items-center gap-2"><i class="fa-solid fa-chart-area text-blue-600"></i> X-bar 管制圖 (平均強度變異)</h3>
-                            <div class="text-xs sm:text-sm font-mono font-black text-slate-600 bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-200" id="x-bar-stats">等待數據...</div>
-                        </div>
-                        <div class="relative w-full flex-1 min-h-[220px]"><canvas id="xBarChart"></canvas></div>
+            <!-- 🔥 排版優化：圖表移至表格下方 -->
+            <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
+                <!-- X-bar Chart -->
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex-1 flex flex-col">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 border-b border-slate-100 pb-3 gap-2">
+                        <h3 class="font-black text-slate-800 text-lg flex items-center gap-2"><i class="fa-solid fa-chart-area text-blue-600"></i> X-bar 管制圖 (平均強度變異)</h3>
+                        <div class="text-xs sm:text-sm font-mono font-black text-slate-600 bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-200" id="x-bar-stats">等待數據...</div>
                     </div>
-                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex-1 flex flex-col">
-                        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 border-b border-slate-100 pb-3 gap-2">
-                            <h3 class="font-black text-slate-800 text-lg flex items-center gap-2"><i class="fa-solid fa-chart-line text-[#B45309]"></i> R 管制圖 (單組試體均勻度)</h3>
-                            <div class="text-xs sm:text-sm font-mono font-black text-slate-600 bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-200" id="r-chart-stats">等待數據...</div>
-                        </div>
-                        <div class="relative w-full flex-1 min-h-[220px]"><canvas id="rChart"></canvas></div>
+                    <div class="relative w-full flex-1 min-h-[300px]"><canvas id="xBarChart"></canvas></div>
+                </div>
+                <!-- R Chart -->
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex-1 flex flex-col">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 border-b border-slate-100 pb-3 gap-2">
+                        <h3 class="font-black text-slate-800 text-lg flex items-center gap-2"><i class="fa-solid fa-chart-line text-[#B45309]"></i> R 管制圖 (單組試體均勻度)</h3>
+                        <div class="text-xs sm:text-sm font-mono font-black text-slate-600 bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-200" id="r-chart-stats">等待數據...</div>
                     </div>
+                    <div class="relative w-full flex-1 min-h-[300px]"><canvas id="rChart"></canvas></div>
                 </div>
             </div>
             
@@ -413,8 +408,7 @@
                             <th class="p-4 border-b text-slate-500 font-bold text-sm whitespace-nowrap">施工日期(取樣日)</th>
                             <th class="p-4 border-b text-blue-700 font-bold text-sm text-center">A車打設(系統)</th>
                             <th class="p-4 border-b text-blue-700 font-bold text-sm text-center">B車打設(系統)</th>
-                            <th class="p-4 border-b text-purple-700 font-bold text-sm text-center">CCP(系統)</th>
-                            <th class="p-4 border-b text-slate-800 font-black text-lg text-center bg-slate-50">總計</th>
+                            <th class="p-4 border-b text-slate-800 font-black text-lg text-center bg-slate-50">系統總計</th>
                             <th class="p-4 border-b text-[#92400E] font-black text-base text-center bg-[#FCF9F2]">施工組申報數量 <i class="fa-solid fa-pen text-xs ml-1 opacity-50"></i></th>
                             <th class="p-4 border-b text-center font-bold text-slate-500 text-sm">狀態</th>
                         </tr>
