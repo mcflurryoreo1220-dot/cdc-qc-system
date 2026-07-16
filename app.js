@@ -3,6 +3,7 @@ import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gsta
 import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
 const firebaseConfig = { apiKey: "AIzaSyAp1ZVuW95Api3kaQUPgttESZ0RGTEi8H8", authDomain: "cdc-qc-system.firebaseapp.com", projectId: "cdc-qc-system", storageBucket: "cdc-qc-system.firebasestorage.app", messagingSenderId: "745920606237", appId: "1:745920606237:web:7fb9c22a84de208e6e56f4" };
+const GAS_API_URL = "https://script.google.com/macros/s/AKfycbx1aCB8jyqFnPrekpu3QIAIWCaIpAeRIVjJOkDxTpzjOhw9oAk86NO4f1YhL6TkiZQedA/exec";
 
 window.exceptionDates = []; window.exceptionA = []; window.exceptionB = [];
 window.extraWorkA = []; window.extraWorkB = []; 
@@ -24,17 +25,10 @@ const initFirebase = async () => {
                 onSnapshot(doc(db, 'scheduleData', 'mainState'), (snapshot) => {
                     if (snapshot.exists()) {
                         const data = snapshot.data();
-                        window.exceptionDates = data.exceptionDates || []; 
-                        window.exceptionA = data.exceptionA || []; 
-                        window.exceptionB = data.exceptionB || []; 
-                        window.extraWorkA = data.extraWorkA || []; 
-                        window.extraWorkB = data.extraWorkB || []; 
-                        window.pileNumbers = data.pileNumbers || {}; 
-                        window.statusSample = data.statusSample || {}; 
-                        window.statusLab = data.statusLab || {}; 
-                        window.statusTest = data.statusTest || data.completionStatus || {}; 
-                        window.remarks = data.remarks || {}; 
-                        window.contractorReports = data.contractorReports || {};
+                        window.exceptionDates = data.exceptionDates || []; window.exceptionA = data.exceptionA || []; window.exceptionB = data.exceptionB || [];
+                        window.extraWorkA = data.extraWorkA || []; window.extraWorkB = data.extraWorkB || []; 
+                        window.pileNumbers = data.pileNumbers || {}; window.statusSample = data.statusSample || {}; window.statusLab = data.statusLab || {};
+                        window.statusTest = data.statusTest || data.completionStatus || {}; window.remarks = data.remarks || {}; window.contractorReports = data.contractorReports || {};
                         if(data.specialPilesDataStr) window.specialPilesData = JSON.parse(data.specialPilesDataStr);
                         if(data.phaseSettings) window.phaseSettings = data.phaseSettings;
                     }
@@ -127,60 +121,94 @@ window.renderTable = (filter) => {
     const tbody = document.getElementById('schedule-body'); 
     if(!tbody) return;
     tbody.innerHTML = '';
-    scheduleData.filter(i => filter === 'ALL' || i.machine === filter).forEach(item => {
+    const searchTerm = (document.getElementById('search-input')?.value || '').trim().toLowerCase();
+    
+    let filteredData = scheduleData.filter(i => filter === 'ALL' || i.machine === filter);
+    const todayDate = new Date(); todayDate.setHours(0,0,0,0);
+    
+    filteredData.forEach(item => {
         const isS = window.statusSample[item.id], isL = window.statusLab[item.id], isT = window.statusTest[item.id];
         const pNum = window.pileNumbers[item.id] || '';
-        const tr = document.createElement('tr'); 
-        tr.className = `modern-row row-hover border-b divide-slate-100 ${isT ? 'completed-row' : ''}`;
+        const pileCount = (String(pNum).match(/\d+/g) || []).length;
+        const countBadge = pileCount > 0 ? `<div class="bg-blue-100 text-blue-800 font-black px-2 py-0.5 rounded text-center text-sm shadow-sm border border-blue-200">${pileCount}</div>` : `<div class="text-slate-300 font-black text-center">-</div>`;
+
+        if (window.currentSmartFilter === 'FIELD' && isL) return; 
+        if (window.currentSmartFilter === 'TEST' && (!isL || isT)) return; 
+        if (searchTerm && !item.id.toLowerCase().includes(searchTerm) && !String(pNum).includes(searchTerm)) return;
         
+        const tr = document.createElement('tr'); 
+        tr.id = `row-${item.id}`; 
+        tr.className = `modern-row row-hover divide-slate-200 divide-x-0 ${isT ? 'completed-row' : ''}`;
+        
+        let testBadge = '';
+        if (!isT && isL) { 
+            const diffTime = item.testDate - todayDate; const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            if (diffDays === 0) testBadge = `<span class="ml-1 bg-red-600 text-white px-2 py-0.5 rounded text-[11px] font-black animate-pulse shadow-sm border border-red-700 whitespace-nowrap">今日壓測</span>`;
+            else if (diffDays > 0 && diffDays <= 3) testBadge = `<span class="ml-1 bg-amber-500 text-white px-2 py-0.5 rounded text-[11px] font-black shadow-sm border border-amber-600 whitespace-nowrap">剩${diffDays}天</span>`;
+            else if (diffDays < 0) testBadge = `<span class="ml-1 bg-slate-600 text-white px-2 py-0.5 rounded text-[11px] font-black shadow-sm border border-slate-700 whitespace-nowrap">逾期${Math.abs(diffDays)}天</span>`;
+        }
+
         tr.innerHTML = `
-            <td class="font-black text-slate-700 text-center">${item.id}</td>
-            <td><input type="text" class="pile-input" onchange="updatePile('${item.id}', this.value)" placeholder="輸入樁號 (例如: 12, 13)" value="${pNum}"></td>
-            <td class="bg-blue-50/50"><label class="flex items-center gap-2.5 cursor-pointer justify-center w-full h-full"><input type="checkbox" class="status-checkbox cb-sample" ${isS?'checked':''} onclick="toggleStatus('${item.id}', 'sample')"><span class="font-bold ${isS?'text-gray-400 line-through':'text-[#1E3A8A]'}">${window.formatMinguo(item.sampleDate)}</span></label></td>
-            <td class="font-medium text-slate-500 bg-slate-50/50">${window.formatMinguo(item.demoldDate)}</td>
-            <td class="bg-orange-50/50"><label class="flex items-center gap-2.5 cursor-pointer justify-center w-full h-full"><input type="checkbox" class="status-checkbox cb-lab" ${isL?'checked':''} onclick="toggleStatus('${item.id}', 'lab')"><span class="font-bold ${isL?'text-gray-400 line-through':'text-[#B45309]'}">${window.formatMinguo(item.collectDate)}</span></label></td>
-            <td class="bg-green-50/50"><label class="flex items-center gap-2.5 cursor-pointer justify-center w-full h-full"><input type="checkbox" class="status-checkbox cb-test" ${isT?'checked':''} onclick="toggleStatus('${item.id}', 'test')"><span class="font-black ${isT?'text-gray-400 line-through':'text-[#166534]'}">${window.formatMinguo(item.testDate)}</span></label></td>
-            <td><input type="text" class="remark-input" onchange="updateRemark('${item.id}', this.value)" placeholder="點擊填寫..." value="${window.remarks[item.id]||''}"></td>
+            <td class="font-black text-slate-800">${item.id}</td>
+            <td>${countBadge}</td>
+            <td class="pl-3 pr-3"><input type="text" class="pile-input" onchange="updatePile('${item.id}', this.value)" placeholder="輸入對應樁號..." value="${pNum}"></td>
+            <td class="bg-blue-50/70"><label class="flex justify-center items-center gap-1.5 cursor-pointer w-full h-full"><input type="checkbox" class="status-checkbox cb-sample" ${isS?'checked':''} onclick="toggleStatus('${item.id}', 'sample')"><span class="font-black whitespace-nowrap text-[15px] ${isS?'text-slate-400 line-through':'text-[#1E3A8A]'}">${window.formatMinguo(item.sampleDate).split('(')[0]}</span></label></td>
+            <td class="font-bold text-slate-600 whitespace-nowrap text-[15px]">${window.formatMinguo(item.demoldDate).split('(')[0]}</td>
+            <td class="bg-orange-50/70"><label class="flex justify-center items-center gap-1.5 cursor-pointer w-full h-full"><input type="checkbox" class="status-checkbox cb-lab" ${isL?'checked':''} onclick="toggleStatus('${item.id}', 'lab')"><span class="font-black whitespace-nowrap text-[15px] ${isL?'text-slate-400 line-through':'text-[#B45309]'}">${window.formatMinguo(item.collectDate).split('(')[0]}</span></label></td>
+            <td class="bg-green-50/70"><label class="flex justify-center items-center gap-1.5 cursor-pointer w-full h-full"><input type="checkbox" class="status-checkbox cb-test" ${isT?'checked':''} onclick="toggleStatus('${item.id}', 'test')"><span class="font-black whitespace-nowrap flex flex-col justify-center items-center text-[15px] ${isT?'text-slate-400 line-through':'text-[#166534]'}"><span>${window.formatMinguo(item.testDate).split('(')[0]}</span>${testBadge}</span></label></td>
+            <td class="pl-3 pr-3"><input type="text" class="remark-input" onchange="updateRemark('${item.id}', this.value)" placeholder="點擊輸入備註..." value="${window.remarks[item.id]||''}"></td>
         `;
         tbody.appendChild(tr);
     });
 };
 
 window.updateDashboard = () => {
-    const usedA = new Set(); const usedB = new Set(); 
+    const usedA = new Set(); const usedB = new Set(); const workedDates = new Set(); const donePilesList = [];
     Object.entries(window.pileNumbers).forEach(([id, val]) => { 
         const nums = (val.match(/\d+/g) || []).map(n => parseInt(n, 10)); 
         if (nums.length > 0) { 
-            nums.forEach(n => { 
-                if (id.startsWith('A')) usedA.add(n); 
-                else if (id.startsWith('B')) usedB.add(n); 
-            }); 
+            nums.forEach(n => { donePilesList.push(n); if (id.startsWith('A')) usedA.add(n); else if (id.startsWith('B')) usedB.add(n); }); 
+            const item = scheduleData.find(s => s.id === id); if (item) workedDates.add(window.toDateString(item.sampleDate)); 
         } 
     });
-    const countA = usedA.size; const countB = usedB.size; 
-    const pilesCount = countA + countB; 
+    const countA = usedA.size; const countB = usedB.size; const pilesCount = countA + countB; const workedDays = workedDates.size;
     
-    const pilesAbEl = document.getElementById('prog-piles-ab'); 
-    if(pilesAbEl) pilesAbEl.innerText = `A: ${countA} | B: ${countB}`;
-    
-    const pilesTextEl = document.getElementById('prog-piles-text'); 
-    if(pilesTextEl) pilesTextEl.innerHTML = `<span class="text-4xl text-blue-700">${countA+countB}</span> <span class="text-sm text-slate-500">/613(總數)</span>`;
-    
-    const pilesBarEl = document.getElementById('prog-piles-bar'); 
-    if(pilesBarEl) pilesBarEl.style.width = `${((countA+countB)/TOTAL_PILES_LIMIT)*100}%`;
+    const pilesAbEl = document.getElementById('prog-piles-ab'); if(pilesAbEl) pilesAbEl.innerText = `A: ${countA} | B: ${countB}`;
+    const pilesTextEl = document.getElementById('prog-piles-text'); if(pilesTextEl) pilesTextEl.innerText = pilesCount;
+    const pilesBarEl = document.getElementById('prog-piles-bar'); if(pilesBarEl) pilesBarEl.style.width = `${(pilesCount/TOTAL_PILES_LIMIT)*100}%`;
+
+    if (pilesCount > 0 && workedDays > 0) {
+        const avgRate = pilesCount / workedDays; const estDays = Math.ceil((TOTAL_PILES_LIMIT - pilesCount) / avgRate);
+        let simDate = new Date(); let added = 0; while(added < estDays) { simDate.setDate(simDate.getDate() + 1); const dStr = window.toDateString(simDate); if (simDate.getDay() !== 0 && !window.exceptionDates.includes(dStr)) added++; }
+        const preEl = document.getElementById('prediction-text');
+        if(preEl) preEl.innerHTML = `近期產能：約 <span class="bg-white px-2 py-0.5 rounded text-slate-800 shadow-sm border border-orange-100">${avgRate.toFixed(1)} 支/日</span>。剩餘約需 <b class="text-amber-800">${estDays}</b> 工作天，推估 <span class="bg-white px-2 py-0.5 rounded text-[#B45309] shadow-sm border border-orange-100">${window.formatMinguo(simDate).split(' ')[0]}</span> 完工！`;
+    }
 
     let cS=0, cL=0, cT=0; scheduleData.forEach(i => { if(window.statusSample[i.id]) cS++; if(window.statusLab[i.id]) cL++; if(window.statusTest[i.id]) cT++; });
     if(document.getElementById('prog-sample-text')) document.getElementById('prog-sample-text').innerText = cS; 
-    if(document.getElementById('prog-sample-total')) document.getElementById('prog-sample-total').innerText = `/ ${scheduleData.length} 組`; 
+    if(document.getElementById('prog-sample-total')) document.getElementById('prog-sample-total').innerText = `/ ${scheduleData.length}`; 
     if(document.getElementById('prog-sample-bar')) document.getElementById('prog-sample-bar').style.width = `${(cS/scheduleData.length)*100}%`;
     
     if(document.getElementById('prog-lab-text')) document.getElementById('prog-lab-text').innerText = cL; 
-    if(document.getElementById('prog-lab-total')) document.getElementById('prog-lab-total').innerText = `/ ${scheduleData.length} 組`; 
+    if(document.getElementById('prog-lab-total')) document.getElementById('prog-lab-total').innerText = `/ ${scheduleData.length}`; 
     if(document.getElementById('prog-lab-bar')) document.getElementById('prog-lab-bar').style.width = `${(cL/scheduleData.length)*100}%`;
     
     if(document.getElementById('prog-test-text')) document.getElementById('prog-test-text').innerText = cT; 
-    if(document.getElementById('prog-test-total')) document.getElementById('prog-test-total').innerText = `/ ${scheduleData.length} 組`; 
+    if(document.getElementById('prog-test-total')) document.getElementById('prog-test-total').innerText = `/ ${scheduleData.length}`; 
     if(document.getElementById('prog-test-bar')) document.getElementById('prog-test-bar').style.width = `${(cT/scheduleData.length)*100}%`;
+
+    const radarContainer = document.getElementById('special-pile-radar'); let radarHtml = '';
+    Object.entries(window.specialPilesData).sort((a,b)=> Number(a[0]) - Number(b[0])).forEach(([pId, type]) => {
+        if (!pId || pId === 'NaN' || pId === '0') return; 
+        const idNum = Number(pId);
+        const typeIcon = type === 'FULL' ? '<i class="fa-solid fa-layer-group" title="傾度/應力/完整性試驗"></i>' : '<i class="fa-solid fa-ruler-combined" title="傾度/應力計"></i>';
+        let sClass = 'bg-slate-100 border-slate-300 text-slate-600', sText = '待命中', tagColor = 'bg-slate-700 text-white';
+        if (donePilesList.includes(idNum)) { sClass = 'bg-emerald-50 border-emerald-200 text-emerald-700 opacity-60'; sText = '已完成'; tagColor = 'bg-emerald-600 text-white'; } 
+        else if (donePilesList.includes(idNum - 1) || donePilesList.includes(idNum + 1) || donePilesList.includes(idNum - 2) || donePilesList.includes(idNum + 2)) { sClass = 'bg-red-50 border-red-400 text-red-700 ring-1 ring-red-400/50 animate-pulse'; sText = '🚨 鄰樁開鑽'; tagColor = 'bg-red-600 text-white shadow-sm'; } 
+        else if (Math.max(...donePilesList, 0) > 0 && Math.max(...donePilesList, 0) >= idNum - 15 && Math.max(...donePilesList, 0) < idNum) { sClass = 'bg-amber-50 border-amber-300 text-amber-800'; sText = '⚠️ 逼近中'; tagColor = 'bg-amber-500 text-white shadow-sm'; }
+        radarHtml += `<div class="inline-flex items-center border rounded-full shadow-sm pl-1 pr-2 py-1 transition hover:-translate-y-0.5 ${sClass}"><span class="${tagColor} text-xs font-black px-2 py-1 rounded-full mr-1.5 flex items-center gap-1">${typeIcon} P${idNum}</span><span class="text-xs font-bold whitespace-nowrap">${sText}</span><button onclick="editSpecialPile('${pId}')" class="ml-1 w-5 h-5 flex items-center justify-center rounded-full bg-white/50 hover:bg-white text-slate-400 hover:text-blue-600 transition"><i class="fa-solid fa-pen text-[9px]"></i></button></div>`;
+    });
+    if(radarContainer) radarContainer.innerHTML = radarHtml;
 };
 
 window.renderMap = () => {
@@ -279,6 +307,12 @@ window.showTooltip = (evt, pile, sDate, lDate, tDate, status) => {
 };
 window.hideTooltip = () => { const tooltip = document.getElementById('map-tooltip'); if(tooltip) tooltip.style.display = 'none'; };
 window.searchMapPile = () => { const val = document.getElementById('map-search-input').value.trim(); if (!val) return; const num = val.replace(/\D/g, ''); const circle = document.getElementById('map-pile-' + num); if (circle) { document.querySelectorAll('.pile-circle').forEach(c => c.classList.remove('highlight-pile')); circle.classList.add('highlight-pile'); } else { window.showModal("搜尋失敗", `找不到樁號 P${num} 的座標紀錄。`, "error"); } };
+window.editSpecialPile = (oldId) => {
+    const currentType = window.specialPilesData[oldId]; const newId = prompt(`安全監測樁 P${oldId}：請輸入平移後的新樁號：`, oldId);
+    if (newId === null) return; const cleanNewId = newId.trim().replace(/\D/g, '');
+    if (cleanNewId === '') { if (confirm(`刪除監測樁 P${oldId}？`)) { delete window.specialPilesData[oldId]; window.saveDataToCloud(); window.refreshAll(); } } 
+    else if (cleanNewId !== oldId) { delete window.specialPilesData[oldId]; window.specialPilesData[cleanNewId] = currentType; window.saveDataToCloud(); window.refreshAll(); window.showModal("換樁成功", `✅ 移至 P${cleanNewId}`, "success"); }
+};
 
 window.toggleStatus = (sampleId, type) => { if (type === 'sample') window.statusSample[sampleId] = !window.statusSample[sampleId]; if (type === 'lab') window.statusLab[sampleId] = !window.statusLab[sampleId]; if (type === 'test') window.statusTest[sampleId] = !window.statusTest[sampleId]; window.saveDataToCloud(); window.refreshAll(); };
 window.updatePile = (id, val) => { const v = val.trim(); if (!v) delete window.pileNumbers[id]; else window.pileNumbers[id] = v; window.saveDataToCloud(); window.updateDashboard(); if (document.getElementById('matrix-modal') && !document.getElementById('matrix-modal').classList.contains('hidden')) window.renderMatrixGrid(); if (document.getElementById('recon-modal') && !document.getElementById('recon-modal').classList.contains('hidden')) window.renderReconTable(); };
@@ -291,6 +325,7 @@ window.switchView = (viewId) => {
     document.getElementById(`tab-${viewId}`).classList.add('active'); document.getElementById(`view-${viewId}`).classList.remove('hidden');
     if(viewId === 'concrete') { setTimeout(() => window.calculateConcreteStats(), 50); }
 };
+
 window.filterData = (f) => { 
     currentFilter = f; 
     ['btn-ALL', 'btn-A', 'btn-B'].forEach(id => {
@@ -300,6 +335,34 @@ window.filterData = (f) => {
     const activeBtn = document.getElementById('btn-' + f);
     if(activeBtn) activeBtn.className = "px-5 py-2 rounded-lg text-sm font-black bg-slate-800 text-white shadow-md border border-slate-700 transition";
     if(currentView === 'calendar') { window.renderCalendar(); } else { window.renderTable(f); }
+};
+
+window.setSmartFilter = (type) => {
+    window.currentSmartFilter = type;
+    const btnAll = document.getElementById('filter-smart-all'), btnField = document.getElementById('filter-smart-field'), btnTest = document.getElementById('filter-smart-test');
+    [btnAll, btnField, btnTest].forEach(b => b.className = "px-3 py-1.5 rounded-md text-sm font-bold text-slate-500 hover:text-slate-800 transition");
+    if(type === 'ALL') btnAll.className = "px-3 py-1.5 rounded-md text-sm font-black bg-white text-slate-800 shadow-sm border border-slate-200";
+    if(type === 'FIELD') btnField.className = "px-3 py-1.5 rounded-md text-sm font-black bg-[#1E3A8A] text-white shadow-sm";
+    if(type === 'TEST') btnTest.className = "px-3 py-1.5 rounded-md text-sm font-black bg-[#166534] text-white shadow-sm";
+    window.renderTable(window.currentFilter);
+};
+
+window.scrollToTodo = () => {
+    window.setSmartFilter('ALL'); 
+    setTimeout(() => {
+        const today = new Date(); today.setHours(0,0,0,0); let targetId = null;
+        for (let item of scheduleData) {
+            const isS = window.statusSample[item.id], isL = window.statusLab[item.id], isT = window.statusTest[item.id];
+            if (!isS && item.sampleDate <= today) { targetId = item.id; break; }
+            if (!isL && item.collectDate <= today) { targetId = item.id; break; }
+            if (!isT && item.testDate <= today) { targetId = item.id; break; }
+        }
+        if (!targetId) { for (let item of scheduleData) { if (!window.statusSample[item.id] || !window.statusLab[item.id] || !window.statusTest[item.id]) { targetId = item.id; break; } } }
+        if (targetId) {
+            const row = document.getElementById(`row-${targetId}`);
+            if (row) { row.scrollIntoView({behavior: 'smooth', block: 'center'}); row.classList.add('bg-amber-100', 'ring-4', 'ring-amber-400', 'transition-all', 'duration-500'); setTimeout(() => row.classList.remove('bg-amber-100', 'ring-4', 'ring-amber-400'), 3000); }
+        } else { window.showModal("任務皆已完成", "所有表單中的排程皆已結案！", "success"); }
+    }, 100);
 };
 
 window.renderCalendar = () => { 
@@ -388,9 +451,9 @@ window.updateExceptionUI = () => {
         container.appendChild(tag); 
     };
 
-    if(expAll) { expAll.innerHTML = '<span class="text-[10px] text-red-400 font-bold w-full">全區停工：</span>'; window.exceptionDates.forEach(val => renderExTag(expAll, 'ALL', val, '')); }
-    if(expA) { expA.innerHTML = '<span class="text-[10px] text-orange-400 font-bold w-full">A車停工：</span>'; window.exceptionA.forEach(val => renderExTag(expA, 'A', val, '')); }
-    if(expB) { expB.innerHTML = '<span class="text-[10px] text-amber-400 font-bold w-full">B車停工：</span>'; window.exceptionB.forEach(val => renderExTag(expB, 'B', val, '')); }
+    if(expAll) { expAll.innerHTML = '<span class="text-[11px] text-red-500 font-bold w-full">全區停工：</span>'; window.exceptionDates.forEach(val => renderExTag(expAll, 'ALL', val, '')); }
+    if(expA) { expA.innerHTML = '<span class="text-[11px] text-orange-500 font-bold w-full">A車停工：</span>'; window.exceptionA.forEach(val => renderExTag(expA, 'A', val, '')); }
+    if(expB) { expB.innerHTML = '<span class="text-[11px] text-amber-500 font-bold w-full">B車停工：</span>'; window.exceptionB.forEach(val => renderExTag(expB, 'B', val, '')); }
 };
 
 window.addExtraDate = () => { 
@@ -401,6 +464,21 @@ window.addExtraDate = () => {
         if (m === 'B' && !window.extraWorkB.includes(val)) window.extraWorkB.push(val); 
         window.saveDataToCloud(); document.getElementById('extra-date-input').value = ""; window.refreshAll(); 
     } 
+};
+window.removeExtraDate = (m, val) => { 
+    if (m === 'A') window.extraWorkA = window.extraWorkA.filter(d => d !== val); 
+    if (m === 'B') window.extraWorkB = window.extraWorkB.filter(d => d !== val); 
+    window.saveDataToCloud(); window.refreshAll(); 
+};
+
+window.calculateMaterials = () => {
+    const totalSandM3 = (parseFloat(document.getElementById('calc-sand-bucket').value)||0) * ((parseFloat(document.getElementById('calc-vol').value)||0)/1000) * (parseFloat(document.getElementById('calc-batches').value)||0);
+    const totalCemTon = (parseFloat(document.getElementById('calc-cem-bucket').value)||0) * ((parseFloat(document.getElementById('calc-vol').value)||0)/1000) * (parseFloat(document.getElementById('calc-batches').value)||0) * 1.4;
+    const resDiv = document.getElementById('calc-result');
+    if(resDiv) {
+        resDiv.innerHTML = `<div class="flex justify-around items-center"><div class="text-center">理論砂用量<br><span class="text-2xl font-black text-slate-800">${totalSandM3.toFixed(2)} m³</span></div><div class="text-center">理論水泥用量<br><span class="text-2xl font-black text-slate-800">${totalCemTon.toFixed(2)} 噸</span></div></div><div class="text-center text-xs text-red-500 bg-red-50 p-2 rounded border border-red-100 font-bold mt-2">🚩請與施工組日報比對</div>`;
+        resDiv.classList.remove('hidden');
+    }
 };
 
 window.openMatrixModal = () => { window.renderMatrixGrid(); document.getElementById('matrix-modal').classList.remove('hidden'); };
@@ -446,7 +524,7 @@ window.renderReconTable = () => {
             if (rNum === stat.total) statusHtml = '<span class="bg-[#F2F7F4] text-[#84A98C] px-3 py-1.5 rounded-lg border border-[#84A98C]/30 font-bold"><i class="fa-solid fa-check"></i> 數量申報吻合</span>';
             else statusHtml = `<span class="bg-[#FEF2F2] text-[#DC2626] px-3 py-1.5 rounded-lg border border-[#F87171]/50 font-bold animate-pulse"><i class="fa-solid fa-xmark"></i> 誤差 ${Math.abs(rNum - stat.total)} 支</span>`;
         }
-        tbody.innerHTML += `<tr class="border-b border-slate-100 hover:bg-slate-50 transition"><td class="p-4 font-bold text-slate-600">${window.formatMinguo(stat.dateObj)}</td><td class="p-4 text-center font-bold text-slate-500">${stat.A||'-'}</td><td class="p-4 text-center font-bold text-slate-500">${stat.B||'-'}</td><td class="p-4 font-black text-lg text-slate-800 text-center">${stat.total}</td><td class="p-4 text-center bg-[#FCF9F2]"><input type="number" class="border border-[#C2A878] rounded-md px-3 py-1.5 w-24 text-center font-bold text-[#C2A878] outline-none" value="${reportVal}" onchange="updateContractorReport('${dStr}', this.value)"></td><td class="p-4 text-center">${statusHtml}</td></tr>`;
+        tbody.innerHTML += `<tr class="border-b border-slate-100 hover:bg-slate-50 transition"><td class="p-4 font-bold text-slate-600 text-center">${window.formatMinguo(stat.dateObj).split('(')[0]}</td><td class="p-4 text-center font-black text-[#1E3A8A]">${stat.A||'-'}</td><td class="p-4 text-center font-black text-[#1E3A8A]">${stat.B||'-'}</td><td class="p-4 font-black text-xl text-slate-800 text-center bg-slate-50">${stat.total}</td><td class="p-4 text-center bg-[#FCF9F2]"><input type="number" class="border border-[#C2A878] rounded-md px-3 py-1.5 w-24 text-center font-bold text-[#C2A878] outline-none" value="${reportVal}" onchange="updateContractorReport('${dStr}', this.value)"></td><td class="p-4 text-center">${statusHtml}</td></tr>`;
     });
 };
 
@@ -454,21 +532,44 @@ window.showModal = (title, msg, type) => { const h = document.getElementById('cu
 window.closeModal = () => { const modal = document.getElementById('custom-modal'); if(modal) modal.classList.add('hidden'); };
 
 window.exportCSV = () => {
-    let csvContent = "\uFEFF取樣編號,打設樁號,取樣日期,拆模日期,實驗室收件,抗壓會驗,備註\n";
+    let csvContent = "\uFEFF排程編號,打設樁號,取樣日期,拆模日期,實驗室收件,抗壓會驗,備註\n";
     const filteredData = scheduleData.filter(item => currentFilter === 'ALL' || item.machine === currentFilter);
     filteredData.forEach(item => {
         const pileStr = window.pileNumbers[item.id] || "";
-        const row = [ item.id, pileStr, window.formatMinguoRaw(item.sampleDate), window.formatMinguoRaw(item.demoldDate), window.formatMinguoRaw(item.collectDate), window.formatMinguoRaw(item.testDate), item.remark ];
+        const row = [ item.id, pileStr, window.formatMinguoRaw(item.sampleDate), window.formatMinguoRaw(item.demoldDate), window.formatMinguoRaw(item.collectDate), window.formatMinguoRaw(item.testDate), window.remarks[item.id] || "" ];
         csvContent += row.join(",") + "\n";
     });
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement("a"); const url = URL.createObjectURL(blob);
-    link.setAttribute("href", url); link.setAttribute("download", `預壘樁試體管制排程_${currentFilter}.csv`);
+    link.setAttribute("href", url); link.setAttribute("download", `預壘樁管制排程_${currentFilter}.csv`);
     link.style.visibility = 'hidden'; document.body.appendChild(link); link.click(); document.body.removeChild(link);
 };
 
+window.syncFromContractor = async () => {
+    const btn = document.getElementById('btn-sync-api'); const originalHtml = btn.innerHTML;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-sm opacity-80"></i> 同步中...'; btn.disabled = true;
+    try {
+        const response = await fetch(GAS_API_URL); if (!response.ok) throw new Error("API 回應異常");
+        const dataMatrix = await response.json(); const groupedData = {};
+        for (let i = 1; i < dataMatrix.length; i++) {
+            const cols = dataMatrix[i]; if (cols.length < 6) continue;
+            const rawPile = String(cols[0] || '').trim(); const dateStr = String(cols[1] || '').trim().replace(/\//g, '-'); const machine = String(cols[2] || '').trim();
+            const pileNum = rawPile.replace(/\D/g, ''); const machLetter = machine.includes('A') ? 'A' : (machine.includes('B') ? 'B' : '');
+            if (pileNum && dateStr && machLetter) { const key = `${dateStr}_${machLetter}`; if (!groupedData[key]) groupedData[key] = []; groupedData[key].push(pileNum); }
+        }
+        let updatedCount = 0;
+        scheduleData.forEach(item => {
+            const itemDateStr = window.toDateString(item.sampleDate); const key = `${itemDateStr}_${item.machine}`;
+            if (groupedData[key]) { const newPileStr = groupedData[key].join('、'); if (!window.statusTest[item.id] && window.pileNumbers[item.id] !== newPileStr) { window.pileNumbers[item.id] = newPileStr; updatedCount++; } }
+        });
+        window.saveDataToCloud(); window.refreshAll(); 
+        if (updatedCount > 0) window.showModal("同步成功！", `自動更新了 <b class="text-blue-600">${updatedCount}</b> 筆排程！`, "success"); 
+        else window.showModal("進度載入完成", "目前進度已是最新狀態。", "success"); 
+    } catch (error) { window.showModal("API 同步失敗", error.message, "error"); } finally { btn.innerHTML = originalHtml; btn.disabled = false; }
+};
+
 // ==========================================
-// ACI 214 強度統計分析與 AI 專家診斷
+// ACI 214 強度統計分析與 AI 專家診斷 (確保圖表渲染)
 // ==========================================
 const zoneMap = {
     'A_NORMAL': 'A車 (一般區)', 'A_POND_BC': 'A車 (滯洪池BC)',
@@ -509,8 +610,10 @@ window.deleteConcreteRecord = (ts) => {
 };
 
 window.calculateConcreteStats = () => {
+    // 確保 Chart.js 載入後才畫圖
     if (typeof Chart === 'undefined') {
-        console.warn("Chart.js 尚未載入完成");
+        console.warn("等待 Chart.js 載入...");
+        setTimeout(window.calculateConcreteStats, 500);
         return;
     }
 
@@ -594,7 +697,7 @@ window.renderConcreteUI = (CL, UCL, LCL, R_CL, R_UCL, fcPrime, data) => {
             { label: `上限 (UCL)`, data: hasData ? dataX.map(()=>UCL) : [], borderColor: '#F59E0B', borderWidth: 2, pointRadius: 0 },
             { label: `下限 (LCL)`, data: hasData ? dataX.map(()=>LCL) : [], borderColor: '#F59E0B', borderWidth: 2, pointRadius: 0 },
             { label: `設計強度 (${fcPrime})`, data: hasData ? dataX.map(()=>fcPrime) : [], borderColor: '#EF4444', borderWidth: 3, pointRadius: 0, borderDash: [6,6] }
-        ]}, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top' } } }});
+        ]}, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top' } }, animation: { duration: 0 } }});
     }
 
     const ctxR = document.getElementById('rChart');
@@ -604,7 +707,7 @@ window.renderConcreteUI = (CL, UCL, LCL, R_CL, R_UCL, fcPrime, data) => {
             { label: '全距 (R)', data: dataR, borderColor: '#B45309', backgroundColor: 'rgba(180, 83, 9, 0.1)', pointBackgroundColor: '#78350F', borderWidth: 3, pointRadius: 5, fill: true, tension: 0.2 },
             { label: `全距平均 (CL)`, data: hasData ? dataR.map(()=>R_CL) : [], borderColor: '#10B981', borderWidth: 2, pointRadius: 0, borderDash: [5,5] },
             { label: `上限 (UCL)`, data: hasData ? dataR.map(()=>R_UCL) : [], borderColor: '#EF4444', borderWidth: 2, pointRadius: 0 }
-        ]}, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top' } } }});
+        ]}, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top' } }, animation: { duration: 0 } }});
     }
 };
 
@@ -614,11 +717,11 @@ const generateAIReport = (total, avg, target, min, passRate, sd, uclR, scope) =>
     
     const scopeLabel = zoneMap[scope] || scope;
     let reportHtml = `
-        <div class="bg-gradient-to-r from-amber-50 to-orange-50 p-6 rounded-2xl border border-amber-200 shadow-sm">
-            <h3 class="text-lg font-black text-amber-900 mb-4 flex items-center gap-2">
-                <i class="fa-solid fa-robot text-amber-600 text-xl"></i> AI 專家系統品質診斷報告 (ACI 214) - ${scopeLabel}
+        <div class="col-span-1 xl:col-span-2 bg-gradient-to-r from-blue-50 to-indigo-50 p-6 rounded-2xl border border-blue-200 shadow-sm mt-6 mb-8">
+            <h3 class="text-lg font-black text-blue-900 mb-4 flex items-center gap-2">
+                <i class="fa-solid fa-robot text-blue-600 text-xl"></i> AI 專家系統品質診斷報告 (ACI 214) - ${scopeLabel}
             </h3>
-            <div id="ai-report-content" class="text-[15px] text-slate-800 font-bold leading-relaxed bg-white/80 p-5 rounded-xl border border-amber-300 shadow-inner">
+            <div id="ai-report-content" class="text-[15px] text-slate-800 font-bold leading-relaxed bg-white/80 p-5 rounded-xl border border-blue-300 shadow-inner">
     `;
 
     if(total === 0) {
