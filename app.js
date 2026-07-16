@@ -5,9 +5,6 @@ import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/f
 const firebaseConfig = { apiKey: "AIzaSyAp1ZVuW95Api3kaQUPgttESZ0RGTEi8H8", authDomain: "cdc-qc-system.firebaseapp.com", projectId: "cdc-qc-system", storageBucket: "cdc-qc-system.firebasestorage.app", messagingSenderId: "745920606237", appId: "1:745920606237:web:7fb9c22a84de208e6e56f4" };
 const GAS_API_URL = "https://script.google.com/macros/s/AKfycbx1aCB8jyqFnPrekpu3QIAIWCaIpAeRIVjJOkDxTpzjOhw9oAk86NO4f1YhL6TkiZQedA/exec";
 
-// ==========================================
-// 全域變數初始化 (純粹 A、B車)
-// ==========================================
 window.exceptionDates = []; window.exceptionA = []; window.exceptionB = [];
 window.extraWorkA = []; window.extraWorkB = []; 
 window.pileNumbers = {}; window.statusSample = {}; window.statusLab = {}; window.statusTest = {}; window.remarks = {}; window.contractorReports = {}; 
@@ -15,9 +12,10 @@ window.specialPilesData = { '23': 'FULL', '54': 'PARTIAL', '100': 'FULL', '135':
 
 const scheduleData = []; let currentFilter = 'ALL'; let currentView = 'table'; let currentCalDate = new Date(2026, 4, 1); 
 window.concreteData = [];
+window.phaseSettings = { endA: '2026-07-15', endB: '2026-07-15' };
 
 const TOTAL_PILES_LIMIT = 613; let isCloudEnabled = false; let db, auth;
-const A2 = 1.023; const D4 = 2.574; const D3 = 0; // ACI 統計常數
+const A2 = 1.023; const D4 = 2.574; const D3 = 0; 
 
 const initFirebase = async () => {
     try {
@@ -32,7 +30,9 @@ const initFirebase = async () => {
                         window.pileNumbers = data.pileNumbers || {}; window.statusSample = data.statusSample || {}; window.statusLab = data.statusLab || {};
                         window.statusTest = data.statusTest || data.completionStatus || {}; window.remarks = data.remarks || {}; window.contractorReports = data.contractorReports || {};
                         if(data.specialPilesDataStr) window.specialPilesData = JSON.parse(data.specialPilesDataStr);
+                        if(data.phaseSettings) window.phaseSettings = data.phaseSettings;
                     }
+                    window.syncPhaseUI();
                     window.refreshAll();
                 });
                 onSnapshot(doc(db, 'scheduleData', 'concreteState'), (snapshot) => {
@@ -54,7 +54,8 @@ window.saveDataToCloud = async () => {
                 exceptionDates: window.exceptionDates, exceptionA: window.exceptionA, exceptionB: window.exceptionB, 
                 extraWorkA: window.extraWorkA, extraWorkB: window.extraWorkB, 
                 pileNumbers: window.pileNumbers, statusSample: window.statusSample, statusLab: window.statusLab, statusTest: window.statusTest, remarks: window.remarks, contractorReports: window.contractorReports,
-                specialPilesDataStr: JSON.stringify(window.specialPilesData)
+                specialPilesDataStr: JSON.stringify(window.specialPilesData),
+                phaseSettings: window.phaseSettings
             }, { merge: true }); 
         } catch (err) {} 
     } 
@@ -69,6 +70,19 @@ window.formatMinguo = (d) => { const y=d.getFullYear()-1911; const m=String(d.ge
 window.formatMinguoRaw = (d) => { const y=d.getFullYear()-1911; const m=String(d.getMonth()+1).padStart(2,'0'); const dt=String(d.getDate()).padStart(2,'0'); return `${y}/${m}/${dt}`; };
 const addDays = (d, days) => { let r=new Date(d); r.setDate(r.getDate()+days); return r; };
 
+window.updatePhaseSettings = () => {
+    window.phaseSettings.endA = document.getElementById('phase-end-a').value || '2026-12-31';
+    window.phaseSettings.endB = document.getElementById('phase-end-b').value || '2026-12-31';
+    window.saveDataToCloud();
+    window.refreshAll();
+    window.showModal("設定成功", "已更新工程退場日期，排程已重新推算完成！", "success");
+};
+
+window.syncPhaseUI = () => {
+    if(document.getElementById('phase-end-a')) document.getElementById('phase-end-a').value = window.phaseSettings.endA;
+    if(document.getElementById('phase-end-b')) document.getElementById('phase-end-b').value = window.phaseSettings.endB;
+};
+
 window.refreshAll = () => { 
     window.generateSchedule(); 
     window.renderTable(currentFilter); 
@@ -82,10 +96,10 @@ window.generateSchedule = () => {
     scheduleData.length = 0; 
     const startDateA = new Date(2026, 4, 5); 
     const startDateB = new Date(2026, 4, 9); 
-    const endDate = new Date(2026, 6, 30); 
+    const endDate = new Date(2026, 11, 31); 
     let cA = 1, cB = 1;
 
-    for (let d = new Date(startDateA); d <= endDate; d.setDate(d.getDate() + 1)) {
+    for (let d = new Date(2026, 4, 5); d <= endDate; d.setDate(d.getDate() + 1)) {
         const dStr = window.toDateString(d); const isSun = d.getDay() === 0; 
         const isExAll = window.exceptionDates.includes(dStr);
         const isExA = isExAll || window.exceptionA.includes(dStr);
@@ -98,8 +112,8 @@ window.generateSchedule = () => {
             return { id: `${m}${c}`, machine: m, sampleDate: new Date(t), demoldDate: dem, collectDate: col, testDate: tes };
         };
 
-        if (d >= startDateA) { if ((!isSun && !isExA) || window.extraWorkA.includes(dStr)) scheduleData.push(makeR('A', cA++, new Date(d))); }
-        if (d >= startDateB) { if ((!isSun && !isExB) || window.extraWorkB.includes(dStr)) scheduleData.push(makeR('B', cB++, new Date(d))); }
+        if (d >= startDateA && dStr <= window.phaseSettings.endA) { if ((!isSun && !isExA) || window.extraWorkA.includes(dStr)) scheduleData.push(makeR('A', cA++, new Date(d))); }
+        if (d >= startDateB && dStr <= window.phaseSettings.endB) { if ((!isSun && !isExB) || window.extraWorkB.includes(dStr)) scheduleData.push(makeR('B', cB++, new Date(d))); }
     }
 };
 
@@ -197,7 +211,7 @@ window.updateDashboard = () => {
 };
 
 // ==========================================
-// 地圖模組 (主排程 Map)
+// 地圖模組 (Map)
 // ==========================================
 window.renderMap = () => {
     const container = document.getElementById('map-container');
@@ -348,8 +362,8 @@ window.renderCalendar = () => {
     for (let i = 0; i < 6; i++) {
         const row = document.createElement('tr');
         for (let j = 0; j < 7; j++) {
-            const cell = document.createElement('td'); cell.className = 'border-r border-b border-slate-300 p-2 align-top h-44 bg-white transition hover:bg-slate-100';
-            if (j === 0 || j === 6) cell.classList.add('bg-slate-100/50');
+            const cell = document.createElement('td'); cell.className = 'border-r border-b border-slate-200 p-2 align-top h-44 bg-white transition hover:bg-slate-50';
+            if (j === 0 || j === 6) cell.classList.add('bg-slate-50/50');
             if (i === 0 && j < firstDay || date > daysInMonth) { cell.innerHTML = ''; } else {
                 const checkDateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(date).padStart(2,'0')}`;
                 const isExAll = window.exceptionDates.includes(checkDateStr);
@@ -357,7 +371,7 @@ window.renderCalendar = () => {
                 const isExB = isExAll || window.exceptionB.includes(checkDateStr);
                 
                 let isToday = new Date().getFullYear() === year && new Date().getMonth() === month && new Date().getDate() === date;
-                let dateClass = isToday ? 'bg-slate-800 text-white rounded px-2.5 py-1 shadow-sm' : 'text-slate-600';
+                let dateClass = isToday ? 'bg-blue-800 text-white rounded-lg px-2 py-1 shadow-md' : 'text-slate-500';
                 
                 let exceptionHtml = '';
                 if(isExAll) exceptionHtml = `<span class="text-[10px] bg-red-600 text-white px-1.5 py-0.5 rounded shadow-sm font-black border border-red-700 whitespace-nowrap">全區停</span>`;
@@ -368,7 +382,7 @@ window.renderCalendar = () => {
                     if(stopped.length > 0) exceptionHtml = `<span class="text-[10px] bg-red-500 text-white px-1.5 py-0.5 rounded shadow-sm font-black border border-red-600 whitespace-nowrap">${stopped.join('/')}停</span>`;
                 }
 
-                let cellHtml = `<div class="font-black text-lg mb-1 flex justify-between items-center"><span class="${dateClass}">${date}</span> ${exceptionHtml}</div><div class="flex flex-col gap-1 overflow-y-auto max-h-24 calendar-scroll pr-1">`;
+                let cellHtml = `<div class="font-black text-xl mb-3 flex justify-between items-center"><span class="${dateClass}">${date}</span> ${exceptionHtml}</div><div class="flex flex-col gap-1.5 overflow-y-auto max-h-32 calendar-scroll pr-1">`;
                 if (eventsMap[date]) {
                     eventsMap[date].forEach(e => { cellHtml += `<div class="cal-tag ${e.tagClass} break-all"><b>${e.type}:</b> ${e.label}</div>`; });
                 }
@@ -414,9 +428,9 @@ window.updateExceptionUI = () => {
         container.appendChild(tag); 
     };
 
-    if(expAll) { expAll.innerHTML = '<span class="text-[11px] text-red-500 font-bold w-full">全區停機：</span>'; window.exceptionDates.forEach(val => renderExTag(expAll, 'ALL', val, '')); }
-    if(expA) { expA.innerHTML = '<span class="text-[11px] text-orange-500 font-bold w-full">A車停機：</span>'; window.exceptionA.forEach(val => renderExTag(expA, 'A', val, '')); }
-    if(expB) { expB.innerHTML = '<span class="text-[11px] text-amber-500 font-bold w-full">B車停機：</span>'; window.exceptionB.forEach(val => renderExTag(expB, 'B', val, '')); }
+    if(expAll) { expAll.innerHTML = '<span class="text-[11px] text-red-500 font-bold w-full">全區停工：</span>'; window.exceptionDates.forEach(val => renderExTag(expAll, 'ALL', val, '')); }
+    if(expA) { expA.innerHTML = '<span class="text-[11px] text-orange-500 font-bold w-full">A車停工：</span>'; window.exceptionA.forEach(val => renderExTag(expA, 'A', val, '')); }
+    if(expB) { expB.innerHTML = '<span class="text-[11px] text-amber-500 font-bold w-full">B車停工：</span>'; window.exceptionB.forEach(val => renderExTag(expB, 'B', val, '')); }
 };
 
 window.addExtraDate = () => { 
@@ -427,6 +441,12 @@ window.addExtraDate = () => {
         if (m === 'B' && !window.extraWorkB.includes(val)) window.extraWorkB.push(val); 
         window.saveDataToCloud(); document.getElementById('extra-date-input').value = ""; window.refreshAll(); 
     } 
+};
+
+window.removeExtraDate = (m, val) => { 
+    if (m === 'A') window.extraWorkA = window.extraWorkA.filter(d => d !== val); 
+    if (m === 'B') window.extraWorkB = window.extraWorkB.filter(d => d !== val); 
+    window.saveDataToCloud(); window.refreshAll(); 
 };
 
 window.calculateMaterials = () => {
@@ -527,15 +547,35 @@ window.syncFromContractor = async () => {
 };
 
 // ==========================================
-// ACI 214 強度統計分析與風險戰情地圖
+// 🔥 ACI 214 強度統計分析與風險戰情地圖
 // ==========================================
 const zoneMap = {
     'A_NORMAL': 'A車 (一般區)', 'A_POND_BC': 'A車 (滯洪池BC)',
     'B_NORMAL': 'B車 (一般區)', 'B_POND_A': 'B車 (滯洪池A)',
     'A_ALL': '【A車總體品質】', 'B_ALL': '【B車總體品質】', 'ALL': '全區 (A+B)'
 };
-
 const weatherMap = { 'SUNNY': '☀️ 晴天', 'CLOUDY': '☁️ 陰天', 'RAINY': '🌧️ 雨天', 'COLD': '❄️ 寒流' };
+
+// 🔥 自動抓取排程資訊
+window.fetchPileInfo = () => {
+    const idInput = document.getElementById('concrete-id');
+    if(!idInput) return;
+    const sid = idInput.value.trim().toUpperCase();
+    idInput.value = sid; // 轉大寫回填
+    if(sid) {
+        const sched = scheduleData.find(s => s.id === sid);
+        if(sched) {
+            const dateInput = document.getElementById('concrete-date');
+            if(dateInput && sched.sampleDate) dateInput.value = window.toDateString(sched.sampleDate);
+            
+            const zoneInput = document.getElementById('concrete-zone-select');
+            if(zoneInput) {
+                if(sid.startsWith('A')) zoneInput.value = 'A_NORMAL';
+                else if(sid.startsWith('B')) zoneInput.value = 'B_NORMAL';
+            }
+        }
+    }
+};
 
 window.addConcreteRecord = () => {
     const dateStr = document.getElementById('concrete-date')?.value || window.toDateString(new Date());
@@ -544,13 +584,12 @@ window.addConcreteRecord = () => {
     const s2 = parseFloat(document.getElementById('concrete-s2')?.value);
     const s3 = parseFloat(document.getElementById('concrete-s3')?.value);
     const zone = document.getElementById('concrete-zone-select')?.value || 'ALL'; 
-    const weather = document.getElementById('concrete-weather')?.value || 'SUNNY';
 
     if(isNaN(s1) || isNaN(s2) || isNaN(s3)) { alert("請完整填寫 3 顆試體數值！"); return; }
     const max = Math.max(s1, s2, s3); const min = Math.min(s1, s2, s3);
     const avg = (s1 + s2 + s3) / 3; const range = max - min;
 
-    window.concreteData.push({ timestamp: Date.now(), date: dateStr, id: id, zone: zone, weather: weather, s1: s1, s2: s2, s3: s3, avg: avg, range: range });
+    window.concreteData.push({ timestamp: Date.now(), date: dateStr, id: id, zone: zone, weather: 'SUNNY', s1: s1, s2: s2, s3: s3, avg: avg, range: range });
     window.concreteData.sort((a, b) => new Date(a.date) - new Date(b.date));
     
     if(document.getElementById('concrete-s1')) document.getElementById('concrete-s1').value = ''; 
@@ -565,6 +604,16 @@ window.addConcreteRecord = () => {
 window.deleteConcreteRecord = (ts) => {
     if(confirm("確定刪除此筆強度試驗資料？")) {
         window.concreteData = window.concreteData.filter(d => d.timestamp !== ts);
+        window.saveConcreteDataToCloud();
+        window.calculateConcreteStats();
+    }
+};
+
+// 🔥 處理天氣變更
+window.updateConcreteWeather = (ts, val) => {
+    const record = window.concreteData.find(d => d.timestamp === ts);
+    if(record) {
+        record.weather = val;
         window.saveConcreteDataToCloud();
         window.calculateConcreteStats();
     }
@@ -623,13 +672,23 @@ window.renderConcreteUI = (CL, UCL, LCL, R_CL, R_UCL, fcPrime, data) => {
         const isFail = d.avg < fcPrime;
         const avgClass = isFail ? 'text-red-600 bg-red-50 border border-red-200 rounded px-2 py-1' : 'text-blue-700';
         const zLabel = zoneMap[d.zone] || d.zone || '未歸類';
-        const wLabel = weatherMap[d.weather] || '☀️ 晴天';
+        
+        // 🔥 動態抓取實際樁號
+        const actualPiles = window.pileNumbers[d.id] || '<span class="text-slate-300">-</span>';
         
         tbody.innerHTML += `<tr class="modern-row border-b divide-slate-100">
             <td class="font-black text-slate-600">${d.date.replace(/^\d{4}-/, '')}</td>
-            <td class="text-slate-600 font-bold">${wLabel}</td>
+            <td class="text-slate-600 font-bold px-1">
+                <select onchange="updateConcreteWeather(${d.timestamp}, this.value)" class="border border-slate-300 rounded px-1 py-1 text-xs font-bold bg-white text-slate-700 outline-none cursor-pointer focus:border-blue-500 shadow-sm w-full">
+                    <option value="SUNNY" ${d.weather==='SUNNY'?'selected':''}>☀️ 晴</option>
+                    <option value="CLOUDY" ${d.weather==='CLOUDY'?'selected':''}>☁️ 陰</option>
+                    <option value="RAINY" ${d.weather==='RAINY'?'selected':''}>🌧️ 雨</option>
+                    <option value="COLD" ${d.weather==='COLD'?'selected':''}>❄️ 寒</option>
+                </select>
+            </td>
             <td class="font-black text-indigo-700">${zLabel}</td>
-            <td class="text-slate-800 font-black">${d.id}</td>
+            <td class="text-slate-800 font-black text-center bg-slate-50">${d.id}</td>
+            <td class="text-blue-800 font-black text-center">${actualPiles}</td>
             <td class="text-slate-500 font-bold">${d.s1}</td>
             <td class="text-slate-500 font-bold">${d.s2}</td>
             <td class="text-slate-500 font-bold">${d.s3}</td>
@@ -687,14 +746,16 @@ window.renderConcreteMap = (filteredData, targetFc) => {
 
     const pileResultMap = {};
     filteredData.forEach(d => {
-        const nums = (String(d.id).match(/\d+/g) || []);
+        // 從 scheduleData 中找到這筆排程填寫的實際樁號
+        const actualPilesStr = window.pileNumbers[d.id] || '';
+        const nums = (String(actualPilesStr).match(/\d+/g) || []);
         let color = '#166534'; let stroke = '#14532D'; let z = 3; let alert = false;
         
         if (d.avg < targetFc) { color = '#DC2626'; stroke = '#991B1B'; z = 5; alert = true; } 
         else if (d.avg < targetFc + 30) { color = '#B45309'; stroke = '#78350F'; z = 4; }
 
         nums.forEach(n => {
-            pileResultMap[n] = { fill: color, stroke: stroke, z: z, alert: alert, avg: d.avg, date: d.date };
+            pileResultMap[n] = { fill: color, stroke: stroke, z: z, alert: alert, avg: d.avg, date: d.date, sid: d.id };
         });
     });
 
@@ -702,7 +763,7 @@ window.renderConcreteMap = (filteredData, targetFc) => {
     const mappedPoints = window.baseCoordinates.map(arr => {
         const id = arr[0], x = arr[1], y = -arr[2]; 
         if (x < minX) minX = x; if (x > maxX) maxX = x; if (y < minY) minY = y; if (y > maxY) maxY = y;
-        const res = pileResultMap[id] || { fill: '#F8FAFC', stroke: '#CBD5E1', z: 1, alert: false, avg: '-', date: '-' }; 
+        const res = pileResultMap[id] || { fill: '#F8FAFC', stroke: '#CBD5E1', z: 1, alert: false, avg: '-', date: '-', sid: '-' }; 
         return { id, x, y, ...res }; 
     }).sort((a, b) => a.z - b.z);
     
@@ -712,19 +773,20 @@ window.renderConcreteMap = (filteredData, targetFc) => {
     let circlesHtml = '';
     mappedPoints.forEach(p => { 
         let classes = p.alert ? 'pile-circle highlight-pile' : 'pile-circle';
-        circlesHtml += `<circle id="cmap-pile-${p.id}" class="${classes}" cx="${p.x}" cy="${p.y}" r="60" fill="${p.fill}" stroke="${p.stroke}" stroke-width="15" onmouseover="showConcreteTooltip(event, '${p.id}', '${p.avg}', '${p.date}')" onmouseout="hideConcreteTooltip()"></circle>`; 
+        circlesHtml += `<circle id="cmap-pile-${p.id}" class="${classes}" cx="${p.x}" cy="${p.y}" r="60" fill="${p.fill}" stroke="${p.stroke}" stroke-width="15" onmouseover="showConcreteTooltip(event, '${p.id}', '${p.avg}', '${p.date}', '${p.sid}')" onmouseout="hideConcreteTooltip()"></circle>`; 
     });
     
     container.innerHTML = `<svg id="interactive-cmap" width="100%" height="100%" viewBox="${viewBoxStr}" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet"><g id="cmap-group">${circlesHtml}</g></svg>`;
     attachMapEvents(document.getElementById('interactive-cmap'), viewBoxStr);
 };
 
-window.showConcreteTooltip = (evt, pile, avg, date) => {
+window.showConcreteTooltip = (evt, pile, avg, date, sid) => {
     const tooltip = document.getElementById('concrete-map-tooltip');
     if(!tooltip) return;
     tooltip.style.display = 'block'; tooltip.style.left = (evt.pageX + 15) + 'px'; tooltip.style.top = (evt.pageY + 15) + 'px';
     let strHtml = avg !== '-' ? `<span class="${avg<280?'text-red-400':'text-green-400'}">${parseFloat(avg).toFixed(1)} kgf/cm²</span>` : '無測試資料';
-    tooltip.innerHTML = `<div class="font-black text-base mb-1 border-b border-slate-500 pb-1 text-blue-100">現場樁號: P${pile}</div><div class="text-[13px] text-slate-300 mt-2">澆置日期: ${date}</div><div class="text-[13px] text-slate-300">28天強度: ${strHtml}</div>`;
+    let sidHtml = sid !== '-' ? `<span class="text-blue-300"> (${sid})</span>` : '';
+    tooltip.innerHTML = `<div class="font-black text-base mb-1 border-b border-slate-500 pb-1 text-blue-100">現場樁號: P${pile}${sidHtml}</div><div class="text-[13px] text-slate-300 mt-2">澆置日期: ${date}</div><div class="text-[13px] text-slate-300">28天強度: ${strHtml}</div>`;
 };
 window.hideConcreteTooltip = () => { const tooltip = document.getElementById('concrete-map-tooltip'); if(tooltip) tooltip.style.display = 'none'; };
 
@@ -734,8 +796,8 @@ const generateAIReport = (total, avg, target, min, passRate, sd, uclR, scope, cu
     
     const scopeLabel = zoneMap[scope] || scope;
     let reportHtml = `
-        <div class="bg-gradient-to-r from-[#EFF6FF] to-blue-50 p-6 rounded-2xl border border-blue-200 shadow-sm h-full">
-            <h3 class="text-lg font-black text-[#1E3A8A] mb-4 flex items-center gap-2">
+        <div class="bg-gradient-to-r from-blue-50 to-indigo-50 p-6 rounded-2xl border border-blue-200 shadow-sm h-full">
+            <h3 class="text-lg font-black text-blue-900 mb-4 flex items-center gap-2">
                 <i class="fa-solid fa-robot text-blue-600 text-xl"></i> AI 專家系統品質診斷報告 (ACI 214) - ${scopeLabel}
             </h3>
             <div id="ai-report-content" class="text-[15px] text-slate-800 font-bold leading-relaxed bg-white/80 p-5 rounded-xl border border-blue-300 shadow-inner h-[calc(100%-3rem)] overflow-y-auto">
@@ -772,9 +834,9 @@ const generateAIReport = (total, avg, target, min, passRate, sd, uclR, scope, cu
         reportHtml += `<p class="mb-3">2. <b>合格率檢核：</b> 區間內抗壓強度 <b class="text-emerald-600 bg-emerald-100 px-2 py-0.5 rounded">100% 達標</b>。平均強度達 <b>${avg.toFixed(1)}</b> kgf/cm²。</p>`;
         reportHtml += `<div class="mt-4 p-4 bg-[#F0FDF4] border-l-4 border-[#166534] text-[#166534] rounded shadow-sm"><div class="font-black mb-1"><i class="fa-solid fa-check-circle"></i> AI 綜合判定：</div>「${scopeLabel} 品質表現正常且安全達標，可繼續維持當前配比與澆置作業。」</div>`;
     } else {
-        const failingPiles = currentData.filter(d => d.avg < target).map(d => d.id).join(', ');
+        const failingPiles = currentData.filter(d => d.avg < target).map(d => window.pileNumbers[d.id] || d.id).join(', ');
         reportHtml += `<p class="mb-3">2. <b>合格率檢核：</b> ${scopeLabel} 合格率為 <b class="text-red-600 bg-red-100 px-2 py-0.5 rounded">${passRate}%</b>，出現低於標準之異常值 (最低 <b class="text-red-600">${min}</b> kgf/cm²)。</p>`;
-        reportHtml += `<div class="mt-4 p-4 bg-red-50 border-l-4 border-red-600 text-red-900 rounded shadow-sm"><div class="font-black mb-1"><i class="fa-solid fa-triangle-exclamation animate-pulse"></i> 🚨 風險定位預警：</div>「樁號 [<b>${failingPiles}</b>] 強度未達標！請對照左側戰情地圖之<span class="text-red-600 font-black">紅色閃爍區塊</span>，務必於開挖至該區塊前加強支撐評估，必要時進行鑽心取樣檢測。」</div>`;
+        reportHtml += `<div class="mt-4 p-4 bg-red-50 border-l-4 border-red-600 text-red-900 rounded shadow-sm"><div class="font-black mb-1"><i class="fa-solid fa-triangle-exclamation animate-pulse"></i> 🚨 風險定位預警：</div>「實際樁號 [<b>${failingPiles}</b>] 強度未達標！請對照左側戰情地圖之<span class="text-red-600 font-black">紅色閃爍區塊</span>，務必於開挖至該區塊前加強支撐評估，必要時進行鑽心取樣檢測。」</div>`;
     }
 
     reportHtml += `</div></div>`;
