@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>衛生福利部防疫中心 - 試體管制系統 V9.9 完美整合版</title>
+    <title>衛生福利部防疫中心 - 試體管制系統 V9.9 空間風險分析版</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
@@ -13,7 +13,6 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
         
-        /* 🎨 恢復 V17 原始高對比清晰配色 */
         :root {
             --bg-color: #F8FAFC;       
             --text-main: #0F172A;      
@@ -29,14 +28,13 @@
         .modern-row td { padding: 8px 6px; font-size: 15px; line-height: 1.5; vertical-align: middle; border-bottom: 1px solid var(--border-color); text-align: center; font-weight: 700; white-space: nowrap; }
         .modern-row:hover { background-color: #F1F5F9; box-shadow: inset 4px 0 0 0 var(--color-blue-deep); }
 
-        .pile-input { border: 2px solid #94A3B8; border-radius: 6px; padding: 0 10px; width: 100%; min-width: 200px; font-size: 15px; font-weight: 900; color: var(--color-blue-deep); transition: all 0.2s; background: #FFFFFF; height: 38px; text-align: left; font-family: 'JetBrains Mono', monospace; text-align: center;}
+        .pile-input { border: 2px solid #94A3B8; border-radius: 6px; padding: 0 10px; width: 100%; min-width: 200px; font-size: 15px; font-weight: 900; color: var(--color-blue-deep); transition: all 0.2s; background: #FFFFFF; height: 38px; text-align: center; font-family: 'JetBrains Mono', monospace;}
         .pile-input:focus { border-color: var(--color-blue-deep); outline: none; box-shadow: 0 0 0 4px rgba(30, 58, 138, 0.15); }
         .remark-input { border: 1px solid #94A3B8; border-radius: 6px; padding: 0 10px; width: 100%; min-width: 150px; font-size: 14px; background: #F8FAFC; color: #334155; font-weight: 700; height: 38px; text-align: center;}
         
         .status-checkbox { width: 1.4rem; height: 1.4rem; cursor: pointer; border-radius: 4px; }
         .cb-sample { accent-color: var(--color-blue-deep); } .cb-lab { accent-color: var(--color-orange-deep); } .cb-test { accent-color: var(--color-green-deep); }
         
-        /* 視覺反灰，但不鎖定編輯 */
         .completed-row { background-color: #F8FAFC !important; opacity: 0.6; filter: grayscale(30%); }
 
         .cal-tag { font-size: 13px; font-weight: 900; padding: 4px 8px; border-radius: 4px; margin-bottom: 4px; border-left: 4px solid transparent; background-color: #FFFFFF; box-shadow: 0 1px 2px rgba(0,0,0,0.1); white-space: normal; word-wrap: break-word; line-height: 1.4; border: 1px solid #CBD5E1; }
@@ -56,12 +54,13 @@
         .nav-tab { padding: 12px 20px; font-weight: 900; cursor: pointer; transition: all 0.2s; border-bottom: 4px solid transparent; color: #64748B; display: flex; align-items: center; gap: 8px; font-size: 15px; }
         .nav-tab.active { border-bottom-color: #2563EB; color: #2563EB; background: #EFF6FF; border-radius: 12px 12px 0 0; }
 
-        #map-container { width: 100%; height: 500px; background-color: #F8FAFC; border-radius: 12px; overflow: hidden; position: relative; border: 2px solid #CBD5E1; box-shadow: inset 0 2px 10px rgba(0,0,0,0.05); cursor: grab; max-width: 100%; }
+        /* 地圖共用樣式 */
+        .map-container-style { width: 100%; height: 450px; background-color: #F8FAFC; border-radius: 12px; overflow: hidden; position: relative; border: 2px solid #CBD5E1; box-shadow: inset 0 2px 10px rgba(0,0,0,0.05); cursor: grab; max-width: 100%; }
         .pile-circle { transition: all 0.2s ease; cursor: pointer; }
         .pile-circle:hover:not(.highlight-pile) { stroke: #111827 !important; stroke-width: 40 !important; }
         .highlight-pile { stroke: #EF4444 !important; fill: #FCA5A5 !important; stroke-width: 80 !important; animation: map-pulse 1s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
         @keyframes map-pulse { 0%, 100% { opacity: 1; } 50% { opacity: .6; } }
-        #map-tooltip { position: absolute; pointer-events: none; background: rgba(15, 23, 42, 0.95); color: white; padding: 14px 18px; border-radius: 8px; font-size: 14px; font-weight: 700; z-index: 9999; display: none; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3); border: 1px solid #334155; line-height: 1.5; }
+        .map-tooltip-style { position: absolute; pointer-events: none; background: rgba(15, 23, 42, 0.95); color: white; padding: 14px 18px; border-radius: 8px; font-size: 14px; font-weight: 700; z-index: 9999; display: none; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3); border: 1px solid #334155; line-height: 1.5; }
 
         details > summary { list-style: none; }
         details > summary::-webkit-details-marker { display: none; }
@@ -71,7 +70,9 @@
 </head>
 <body class="p-3 md:p-6 relative">
 
-    <div id="map-tooltip"></div>
+    <div id="map-tooltip" class="map-tooltip-style"></div>
+    <div id="concrete-map-tooltip" class="map-tooltip-style"></div>
+
     <div class="fixed bottom-6 right-6 flex flex-col gap-3 no-print z-[90]">
         <button onclick="window.scrollTo({top: 0, behavior: 'smooth'})" class="w-12 h-12 bg-slate-800 text-white border-2 border-slate-600 rounded-full flex items-center justify-center text-xl shadow-lg hover:bg-blue-600 transition" title="回到頂部"><i class="fa-solid fa-chevron-up"></i></button>
         <button onclick="window.scrollTo({top: document.body.scrollHeight, behavior: 'smooth'})" class="w-12 h-12 bg-slate-800 text-white border-2 border-slate-600 rounded-full flex items-center justify-center text-xl shadow-lg hover:bg-blue-600 transition" title="捲到底部"><i class="fa-solid fa-chevron-down"></i></button>
@@ -86,7 +87,7 @@
                     防疫中心興建工程 QC 管制
                 </h1>
                 <p class="text-slate-600 mt-2 text-sm md:text-base font-bold flex items-center gap-2">
-                    預壘樁試體管制排程系統 <span class="bg-emerald-100 text-emerald-800 px-3 py-1 rounded-md text-xs font-black border border-emerald-300 shadow-sm"><i class="fa-solid fa-circle-check"></i> V9.9 完美整合版</span>
+                    預壘樁試體管制排程系統 <span class="bg-emerald-100 text-emerald-800 px-3 py-1 rounded-md text-xs font-black border border-emerald-300 shadow-sm"><i class="fa-solid fa-circle-check"></i> V9.9 空間風險分析版</span>
                 </p>
             </div>
             <div id="sync-status" class="flex items-center gap-2 px-4 py-2.5 bg-[#EFF6FF] rounded-xl text-sm font-black text-blue-800 border border-blue-200 shadow-sm">
@@ -118,7 +119,7 @@
                         </div>
                     </div>
                 </div>
-                <div id="map-container"><div class="text-center p-10 text-slate-400 font-bold flex flex-col items-center gap-3"><i class="fa-solid fa-spinner fa-spin text-4xl text-blue-400"></i><span>地圖繪製中...</span></div></div>
+                <div id="map-container" class="map-container-style"><div class="text-center p-10 text-slate-400 font-bold flex flex-col items-center gap-3"><i class="fa-solid fa-spinner fa-spin text-4xl text-blue-400"></i><span>地圖繪製中...</span></div></div>
             </div>
 
             <details class="bg-white rounded-2xl shadow-sm border border-slate-300 group" open>
@@ -222,15 +223,6 @@
                     </div>
                 </div>
             </details>
-
-            <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-300">
-                <h3 class="font-black text-slate-700 text-base mb-4 flex items-center gap-2"><i class="fa-solid fa-route text-blue-500"></i> 預壘樁機台退場日設定 <span class="bg-blue-100 text-blue-700 px-2 py-0.5 rounded text-xs ml-2 font-black border border-blue-200">彈性排程</span></h3>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-5 items-end">
-                    <div><label class="block text-slate-600 font-bold mb-1 text-sm">A車 退場日</label><input type="date" id="phase-end-a" class="border-2 border-slate-300 rounded-lg px-3 py-2 text-sm font-bold w-full outline-none focus:border-blue-600 text-slate-700"></div>
-                    <div><label class="block text-slate-600 font-bold mb-1 text-sm">B車 退場日</label><input type="date" id="phase-end-b" class="border-2 border-slate-300 rounded-lg px-3 py-2 text-sm font-bold w-full outline-none focus:border-blue-600 text-slate-700"></div>
-                    <div><button onclick="updatePhaseSettings()" class="bg-slate-800 hover:bg-black text-white w-full py-2.5 rounded-lg font-black shadow-md transition">儲存並重繪排程</button></div>
-                </div>
-            </div>
 
             <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-300 space-y-4">
                 <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
@@ -342,7 +334,7 @@
                     </div>
                 </div>
                 
-                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-7 gap-4 items-end">
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-8 gap-4 items-end">
                     <div class="md:col-span-1">
                         <label class="block text-slate-700 font-bold mb-1 text-sm">澆置區域</label>
                         <select id="concrete-zone-select" class="border-2 border-slate-300 rounded-lg px-2 py-2 text-sm font-black bg-white outline-none cursor-pointer w-full text-blue-900 focus:border-blue-500 shadow-sm">
@@ -353,12 +345,21 @@
                         </select>
                     </div>
                     <div class="md:col-span-1">
+                        <label class="block text-slate-700 font-bold mb-1 text-sm">天氣</label>
+                        <select id="concrete-weather" class="border-2 border-slate-300 rounded-lg px-2 py-2 text-sm font-bold bg-white outline-none cursor-pointer w-full text-blue-900 focus:border-blue-500 shadow-sm">
+                            <option value="SUNNY">☀️ 晴天</option>
+                            <option value="CLOUDY">☁️ 陰天</option>
+                            <option value="RAINY">🌧️ 雨天</option>
+                            <option value="COLD">❄️ 寒流</option>
+                        </select>
+                    </div>
+                    <div class="md:col-span-1">
                         <label class="block text-slate-700 font-bold mb-1 text-sm">澆置日期</label>
                         <input type="date" id="concrete-date" class="border-2 border-slate-300 rounded-lg px-2 py-2 font-bold text-blue-900 w-full bg-white outline-none focus:border-blue-500 shadow-sm">
                     </div>
                     <div class="md:col-span-1">
-                        <label class="block text-slate-700 font-bold mb-1 text-sm">樁號識別</label>
-                        <input type="text" id="concrete-id" placeholder="如: P101" class="border-2 border-slate-300 rounded-lg px-2 py-2 font-bold text-blue-900 w-full bg-white outline-none focus:border-blue-500 shadow-sm text-center">
+                        <label class="block text-slate-700 font-bold mb-1 text-sm">實際樁號</label>
+                        <input type="text" id="concrete-id" placeholder="如: 101, 102" class="border-2 border-slate-300 rounded-lg px-2 py-2 font-bold text-blue-900 w-full bg-white outline-none focus:border-blue-500 shadow-sm text-center">
                     </div>
                     <div class="md:col-span-1">
                         <label class="block text-slate-700 font-bold mb-1 text-sm">試體 #1</label>
@@ -374,9 +375,29 @@
                     </div>
                     <div class="md:col-span-1">
                         <button onclick="addConcreteRecord()" class="bg-blue-600 hover:bg-blue-700 text-white w-full py-2.5 rounded-lg font-black shadow-md transition flex items-center justify-center gap-2">
-                            <i class="fa-solid fa-plus"></i> 新增數據
+                            <i class="fa-solid fa-plus"></i> 新增
                         </button>
                     </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 xl:grid-cols-5 gap-6">
+                <div class="xl:col-span-3 bg-white p-5 rounded-2xl shadow-sm border border-slate-300 flex flex-col">
+                    <h3 class="font-black text-slate-800 text-lg mb-4 flex items-center gap-2 border-b border-slate-100 pb-3">
+                        <i class="fa-solid fa-map-location-dot text-[#1E3A8A]"></i> ACI 214 品質風險戰情地圖
+                    </h3>
+                    <div class="flex gap-3 text-xs font-bold text-slate-600 bg-slate-50 px-3 py-2 rounded-lg border border-slate-200 shadow-inner flex-wrap items-center mb-3">
+                        <div class="flex items-center gap-1.5"><span class="w-3.5 h-3.5 rounded-full bg-[#166534] border border-[#14532D]"></span> 強度優良</div>
+                        <div class="flex items-center gap-1.5"><span class="w-3.5 h-3.5 rounded-full bg-[#B45309] border border-[#78350F]"></span> 邊緣警告</div>
+                        <div class="flex items-center gap-1.5"><span class="w-3.5 h-3.5 rounded-full bg-[#DC2626] border border-[#991B1B] animate-pulse"></span> 結構低於設計值</div>
+                    </div>
+                    <div id="concrete-map-container" class="map-container-style flex-1 min-h-[350px]">
+                        <div class="text-center p-10 text-slate-400 font-bold flex flex-col items-center gap-3"><i class="fa-solid fa-spinner fa-spin text-4xl text-blue-400"></i><span>載入地圖中...</span></div>
+                    </div>
+                </div>
+                
+                <div class="xl:col-span-2 flex flex-col">
+                    <div id="ai-report-wrapper" class="flex-1"></div>
                 </div>
             </div>
 
@@ -387,18 +408,19 @@
                 </h3>
                 
                 <div class="w-full overflow-x-auto">
-                    <table class="w-full text-left border-collapse min-w-[900px]">
+                    <table class="w-full text-left border-collapse min-w-[1000px]">
                         <thead class="bg-slate-50 border-b-2 border-slate-300">
                             <tr>
-                                <th class="p-3 text-center text-slate-600 font-black text-sm w-[12%]">日期</th>
+                                <th class="p-3 text-center text-slate-600 font-black text-sm w-[10%]">日期</th>
+                                <th class="p-3 text-center text-slate-600 font-black text-sm w-[8%]">天氣</th>
                                 <th class="p-3 text-center text-slate-600 font-black text-sm w-[14%]">區域</th>
-                                <th class="p-3 text-center text-slate-600 font-black text-sm w-[14%]">識別號</th>
+                                <th class="p-3 text-center text-slate-600 font-black text-sm w-[14%]">實際樁號</th>
                                 <th class="p-3 text-center text-slate-500 font-black text-sm w-[8%]">#1</th>
                                 <th class="p-3 text-center text-slate-500 font-black text-sm w-[8%]">#2</th>
                                 <th class="p-3 text-center text-slate-500 font-black text-sm w-[8%]">#3</th>
-                                <th class="p-3 text-center text-[#1E3A8A] bg-[#EFF6FF] font-black text-sm w-[12%]">平均(X)</th>
+                                <th class="p-3 text-center text-[#1E3A8A] bg-[#EFF6FF] font-black text-sm w-[10%]">平均(X)</th>
                                 <th class="p-3 text-center text-[#B45309] bg-[#FFF7ED] font-black text-sm w-[10%]">全距(R)</th>
-                                <th class="p-3 text-center text-slate-600 font-black text-sm w-[14%] no-print">操作</th>
+                                <th class="p-3 text-center text-slate-600 font-black text-sm w-[10%] no-print">操作</th>
                             </tr>
                         </thead>
                         <tbody id="concrete-body" class="bg-white divide-y divide-slate-100 text-base"></tbody>
@@ -423,7 +445,6 @@
                 </div>
             </div>
             
-            <div id="ai-report-wrapper"></div>
         </div>
     </div>
 
