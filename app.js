@@ -9,16 +9,17 @@ window.exceptionDates = []; window.exceptionA = []; window.exceptionB = [];
 window.extraWorkA = []; window.extraWorkB = []; 
 window.pileNumbers = {}; window.statusSample = {}; window.statusLab = {}; window.statusTest = {}; window.remarks = {}; window.contractorReports = {}; 
 
-// 🔥 預設特殊樁資料：加入 P55, P133 為 INTEGRITY (完整性試驗)
+// 🔥 新增 P408 無法施作，預設加入 55, 133 為完整性
 window.specialPilesData = { 
     '23': 'BOTH', '54': 'INCLINOMETER', '55': 'INTEGRITY', '100': 'BOTH', 
     '133': 'INTEGRITY', '135': 'INCLINOMETER', '174': 'BOTH', '201': 'INCLINOMETER', 
     '251': 'INCLINOMETER', '283': 'BOTH', '339': 'BOTH', '377': 'BOTH', 
-    '432': 'BOTH', '476': 'BOTH' 
+    '408': 'CANNOT_TEST', '432': 'BOTH', '476': 'BOTH' 
 }; 
 
 const scheduleData = []; let currentFilter = 'ALL'; let currentView = 'table'; let currentCalDate = new Date(2026, 4, 1); 
 window.concreteData = [];
+window.phaseSettings = { endA: '2026-12-31', endB: '2026-12-31' };
 
 const TOTAL_PILES_LIMIT = 613; let isCloudEnabled = false; let db, auth;
 const A2 = 1.023; const D4 = 2.574; const D3 = 0; 
@@ -36,17 +37,17 @@ const initFirebase = async () => {
                         window.pileNumbers = data.pileNumbers || {}; window.statusSample = data.statusSample || {}; window.statusLab = data.statusLab || {};
                         window.statusTest = data.statusTest || data.completionStatus || {}; window.remarks = data.remarks || {}; window.contractorReports = data.contractorReports || {};
                         
-                        // 讀取特殊樁設定，若無則使用預設值
                         if(data.specialPilesDataStr) {
                             let parsed = JSON.parse(data.specialPilesDataStr);
-                            // 舊版相容轉換
                             Object.keys(parsed).forEach(k => {
                                 if(parsed[k] === 'FULL') parsed[k] = 'BOTH';
                                 if(parsed[k] === 'PARTIAL') parsed[k] = 'INCLINOMETER';
                             });
                             window.specialPilesData = parsed;
                         }
+                        if(data.phaseSettings) window.phaseSettings = data.phaseSettings;
                     }
+                    window.syncPhaseUI();
                     window.refreshAll();
                 });
                 onSnapshot(doc(db, 'scheduleData', 'concreteState'), (snapshot) => {
@@ -68,7 +69,8 @@ window.saveDataToCloud = async () => {
                 exceptionDates: window.exceptionDates, exceptionA: window.exceptionA, exceptionB: window.exceptionB, 
                 extraWorkA: window.extraWorkA, extraWorkB: window.extraWorkB, 
                 pileNumbers: window.pileNumbers, statusSample: window.statusSample, statusLab: window.statusLab, statusTest: window.statusTest, remarks: window.remarks, contractorReports: window.contractorReports,
-                specialPilesDataStr: JSON.stringify(window.specialPilesData)
+                specialPilesDataStr: JSON.stringify(window.specialPilesData),
+                phaseSettings: window.phaseSettings
             }, { merge: true }); 
         } catch (err) {} 
     } 
@@ -83,6 +85,19 @@ window.formatMinguo = (d) => { const y=d.getFullYear()-1911; const m=String(d.ge
 window.formatMinguoRaw = (d) => { const y=d.getFullYear()-1911; const m=String(d.getMonth()+1).padStart(2,'0'); const dt=String(d.getDate()).padStart(2,'0'); return `${y}/${m}/${dt}`; };
 const addDays = (d, days) => { let r=new Date(d); r.setDate(r.getDate()+days); return r; };
 
+window.updatePhaseSettings = () => {
+    window.phaseSettings.endA = document.getElementById('phase-end-a').value || '2026-12-31';
+    window.phaseSettings.endB = document.getElementById('phase-end-b').value || '2026-12-31';
+    window.saveDataToCloud();
+    window.refreshAll();
+    window.showModal("設定成功", "已更新工程退場日期，排程已重新推算完成！", "success");
+};
+
+window.syncPhaseUI = () => {
+    if(document.getElementById('phase-end-a')) document.getElementById('phase-end-a').value = window.phaseSettings.endA;
+    if(document.getElementById('phase-end-b')) document.getElementById('phase-end-b').value = window.phaseSettings.endB;
+};
+
 window.refreshAll = () => { 
     window.generateSchedule(); 
     window.renderTable(currentFilter); 
@@ -92,9 +107,6 @@ window.refreshAll = () => {
     window.updateExceptionUI();
 };
 
-// ==========================================
-// 核心排程生成 (A車與B車)
-// ==========================================
 window.generateSchedule = () => {
     scheduleData.length = 0; const startDateA = new Date(2026, 4, 5); const startDateB = new Date(2026, 4, 9); const endDate = new Date(2026, 6, 30); let cA = 1, cB = 1;
     for (let d = new Date(startDateA); d <= endDate; d.setDate(d.getDate() + 1)) {
@@ -110,8 +122,8 @@ window.generateSchedule = () => {
             return { id: `${m}${c}`, machine: m, sampleDate: new Date(t), demoldDate: dem, collectDate: col, testDate: tes };
         };
 
-        if (d >= startDateA) { if ((!isSun && !isExA) || window.extraWorkA.includes(dStr)) scheduleData.push(makeR('A', cA++, new Date(d))); }
-        if (d >= startDateB) { if ((!isSun && !isExB) || window.extraWorkB.includes(dStr)) scheduleData.push(makeR('B', cB++, new Date(d))); }
+        if (d >= startDateA && dStr <= window.phaseSettings.endA) { if ((!isSun && !isExA) || window.extraWorkA.includes(dStr)) scheduleData.push(makeR('A', cA++, new Date(d))); }
+        if (d >= startDateB && dStr <= window.phaseSettings.endB) { if ((!isSun && !isExB) || window.extraWorkB.includes(dStr)) scheduleData.push(makeR('B', cB++, new Date(d))); }
     }
 };
 
@@ -174,6 +186,13 @@ window.updateDashboard = () => {
     const pilesTextEl = document.getElementById('prog-piles-text'); if(pilesTextEl) pilesTextEl.innerText = pilesCount;
     const pilesBarEl = document.getElementById('prog-piles-bar'); if(pilesBarEl) pilesBarEl.style.width = `${(pilesCount/TOTAL_PILES_LIMIT)*100}%`;
 
+    if (pilesCount > 0 && workedDays > 0) {
+        const avgRate = pilesCount / workedDays; const estDays = Math.ceil((TOTAL_PILES_LIMIT - pilesCount) / avgRate);
+        let simDate = new Date(); let added = 0; while(added < estDays) { simDate.setDate(simDate.getDate() + 1); const dStr = window.toDateString(simDate); if (simDate.getDay() !== 0 && !window.exceptionDates.includes(dStr)) added++; }
+        const preEl = document.getElementById('prediction-text');
+        if(preEl) preEl.innerHTML = `近期產能：約 <span class="bg-white px-2 py-0.5 rounded text-slate-800 shadow-sm border border-orange-100">${avgRate.toFixed(1)} 支/日</span>。剩餘約需 <b class="text-amber-800">${estDays}</b> 工作天，推估 <span class="bg-white px-2 py-0.5 rounded text-[#B45309] shadow-sm border border-orange-100">${window.formatMinguo(simDate).split(' ')[0]}</span> 完工！`;
+    }
+
     let cS=0, cL=0, cT=0; scheduleData.forEach(i => { if(window.statusSample[i.id]) cS++; if(window.statusLab[i.id]) cL++; if(window.statusTest[i.id]) cT++; });
     if(document.getElementById('prog-sample-text')) document.getElementById('prog-sample-text').innerText = cS; 
     if(document.getElementById('prog-sample-total')) document.getElementById('prog-sample-total').innerText = `/ ${scheduleData.length}`; 
@@ -187,7 +206,6 @@ window.updateDashboard = () => {
     if(document.getElementById('prog-test-total')) document.getElementById('prog-test-total').innerText = `/ ${scheduleData.length}`; 
     if(document.getElementById('prog-test-bar')) document.getElementById('prog-test-bar').style.width = `${(cT/scheduleData.length)*100}%`;
 
-    // 儀器樁預警雷達渲染
     const radarContainer = document.getElementById('special-pile-radar'); let radarHtml = '';
     Object.entries(window.specialPilesData).sort((a,b)=> Number(a[0]) - Number(b[0])).forEach(([pId, type]) => {
         if (!pId || pId === 'NaN' || pId === '0') return; 
@@ -197,11 +215,18 @@ window.updateDashboard = () => {
         if (type === 'BOTH') { typeIcon = '<i class="fa-solid fa-layer-group" title="傾度/應力/完整性試驗"></i>'; typeLabel = '傾度+完整性'; tagColor = 'bg-blue-600 text-white'; }
         else if (type === 'INCLINOMETER') { typeIcon = '<i class="fa-solid fa-ruler-combined" title="傾度/應力計"></i>'; typeLabel = '傾度/應力'; tagColor = 'bg-amber-500 text-white'; }
         else if (type === 'INTEGRITY') { typeIcon = '<i class="fa-solid fa-wave-square" title="完整性試驗"></i>'; typeLabel = '完整性'; tagColor = 'bg-purple-600 text-white'; }
+        else if (type === 'CANNOT_TEST') { typeIcon = '<i class="fa-solid fa-ban" title="無法施作"></i>'; typeLabel = '無法施作'; tagColor = 'bg-slate-500 text-white'; }
 
         let sClass = 'bg-slate-100 border-slate-300 text-slate-600', sText = '待命中';
-        if (donePilesList.includes(idNum)) { sClass = 'bg-emerald-50 border-emerald-200 text-emerald-700 opacity-60'; sText = '已完成'; tagColor = 'bg-emerald-600 text-white'; } 
-        else if (donePilesList.includes(idNum - 1) || donePilesList.includes(idNum + 1) || donePilesList.includes(idNum - 2) || donePilesList.includes(idNum + 2)) { sClass = 'bg-red-50 border-red-400 text-red-700 ring-1 ring-red-400/50 animate-pulse'; sText = '🚨 鄰樁開鑽'; tagColor = 'bg-red-600 text-white shadow-sm'; } 
-        else if (Math.max(...donePilesList, 0) > 0 && Math.max(...donePilesList, 0) >= idNum - 15 && Math.max(...donePilesList, 0) < idNum) { sClass = 'bg-amber-50 border-amber-300 text-amber-800'; sText = '⚠️ 逼近中'; tagColor = 'bg-amber-500 text-white shadow-sm'; }
+        if (type === 'CANNOT_TEST') {
+            sClass = 'bg-slate-200 border-slate-400 text-slate-500 opacity-80'; sText = '塞管/異常';
+        } else if (donePilesList.includes(idNum)) { 
+            sClass = 'bg-emerald-50 border-emerald-200 text-emerald-700 opacity-60'; sText = '已完成'; tagColor = 'bg-emerald-600 text-white'; 
+        } else if (donePilesList.includes(idNum - 1) || donePilesList.includes(idNum + 1) || donePilesList.includes(idNum - 2) || donePilesList.includes(idNum + 2)) { 
+            sClass = 'bg-red-50 border-red-400 text-red-700 ring-1 ring-red-400/50 animate-pulse'; sText = '🚨 鄰樁開鑽'; tagColor = 'bg-red-600 text-white shadow-sm'; 
+        } else if (Math.max(...donePilesList, 0) > 0 && Math.max(...donePilesList, 0) >= idNum - 15 && Math.max(...donePilesList, 0) < idNum) { 
+            sClass = 'bg-amber-50 border-amber-300 text-amber-800'; sText = '⚠️ 逼近中'; tagColor = 'bg-amber-500 text-white shadow-sm'; 
+        }
         
         radarHtml += `<div class="inline-flex items-center border rounded-full shadow-sm pl-1 pr-2 py-1 transition hover:-translate-y-0.5 ${sClass}">
             <span class="${tagColor} text-xs font-black px-2 py-1 rounded-full mr-1.5 flex items-center gap-1">${typeIcon} P${idNum}</span>
@@ -213,7 +238,7 @@ window.updateDashboard = () => {
 };
 
 // ==========================================
-// 地圖模組 (主排程 Map)
+// 地圖模組 (Map)
 // ==========================================
 window.renderMap = () => {
     const container = document.getElementById('map-container');
@@ -262,6 +287,8 @@ window.renderMap = () => {
             let strokeColor = '#3B82F6'; // BOTH
             if (sType === 'INCLINOMETER') strokeColor = '#F59E0B'; // 橘
             if (sType === 'INTEGRITY') strokeColor = '#8B5CF6'; // 紫
+            if (sType === 'CANNOT_TEST') strokeColor = '#94A3B8'; // 灰
+            
             specialDeco = `<circle cx="${p.x}" cy="${p.y}" r="110" fill="none" stroke="${strokeColor}" stroke-width="25" stroke-dasharray="40,20" class="animate-[spin_10s_linear_infinite]" style="transform-origin: ${p.x}px ${p.y}px"></circle><text x="${p.x}" y="${p.y-120}" font-size="80" fill="${strokeColor}" text-anchor="middle" font-weight="bold">★</text>`;
         }
         circlesHtml += `${specialDeco}<circle id="map-pile-${p.id}" class="pile-circle" cx="${p.x}" cy="${p.y}" r="60" fill="${p.fill}" stroke="${p.stroke}" stroke-width="15" onmouseover="showTooltip(event, '${p.id}', '${p.sDate}', '${p.lDate}', '${p.tDate}', '${p.textStatus}')" onmouseout="hideTooltip()"></circle>`; 
@@ -281,6 +308,7 @@ window.showTooltip = (evt, pile, sDate, lDate, tDate, status) => {
         if (sType === 'BOTH') { tName = '傾度管+完整性'; tColor = 'text-blue-400'; }
         else if (sType === 'INCLINOMETER') { tName = '傾度/應力管'; tColor = 'text-amber-400'; }
         else if (sType === 'INTEGRITY') { tName = '完整性試驗'; tColor = 'text-purple-400'; }
+        else if (sType === 'CANNOT_TEST') { tName = '無法施作 (如塞管)'; tColor = 'text-slate-400'; }
         spAlert = `<div class="${tColor} text-[12px] mb-1 font-black"><i class="fa-solid fa-star"></i> ${tName}</div>`;
     }
     tooltip.innerHTML = `${spAlert}<div class="font-black text-base mb-1 border-b border-slate-500 pb-1 text-blue-100">樁號: P${pile}</div><div class="text-sm my-1 text-amber-300">狀態: ${status}</div><div class="text-[13px] text-slate-300 mt-2">取樣日: ${sDate}</div><div class="text-[13px] text-slate-300">收件日: ${lDate}</div><div class="text-[13px] text-slate-300">壓測日: ${tDate}</div>`;
@@ -288,7 +316,6 @@ window.showTooltip = (evt, pile, sDate, lDate, tDate, status) => {
 window.hideTooltip = () => { const tooltip = document.getElementById('map-tooltip'); if(tooltip) tooltip.style.display = 'none'; };
 window.searchMapPile = () => { const val = document.getElementById('map-search-input').value.trim(); if (!val) return; const num = val.replace(/\D/g, ''); const circle = document.getElementById('map-pile-' + num); if (circle) { document.querySelectorAll('.pile-circle').forEach(c => c.classList.remove('highlight-pile')); circle.classList.add('highlight-pile'); circle.scrollIntoView({behavior: "smooth", block: "center"}); } else { window.showModal("搜尋失敗", `找不到樁號 P${num} 的座標紀錄。`, "error"); } };
 
-// 🔥 自定義檢測樁介面邏輯
 window.openSpecialPileModal = () => { window.renderSpecialPileList(); document.getElementById('special-pile-modal').classList.remove('hidden'); };
 window.closeSpecialPileModal = () => { document.getElementById('special-pile-modal').classList.add('hidden'); };
 window.renderSpecialPileList = () => {
@@ -300,6 +327,7 @@ window.renderSpecialPileList = () => {
         if (type === 'BOTH') typeHtml = '<span class="bg-blue-100 text-blue-800 px-2 py-0.5 rounded font-black text-xs">傾度+完整性</span>';
         else if (type === 'INCLINOMETER') typeHtml = '<span class="bg-amber-100 text-amber-800 px-2 py-0.5 rounded font-black text-xs">傾度/應力</span>';
         else if (type === 'INTEGRITY') typeHtml = '<span class="bg-purple-100 text-purple-800 px-2 py-0.5 rounded font-black text-xs">完整性試驗</span>';
+        else if (type === 'CANNOT_TEST') typeHtml = '<span class="bg-slate-200 text-slate-700 px-2 py-0.5 rounded font-black text-xs">無法施作</span>';
         
         tbody.innerHTML += `
             <tr class="hover:bg-slate-50 border-b border-slate-100">
@@ -329,9 +357,6 @@ window.removeSpecialPileFromUI = (id) => {
     }
 };
 
-// ==========================================
-// 互動操作、月曆與 Modals
-// ==========================================
 window.toggleStatus = (sampleId, type) => { if (type === 'sample') window.statusSample[sampleId] = !window.statusSample[sampleId]; if (type === 'lab') window.statusLab[sampleId] = !window.statusLab[sampleId]; if (type === 'test') window.statusTest[sampleId] = !window.statusTest[sampleId]; window.saveDataToCloud(); window.refreshAll(); };
 window.updatePile = (id, val) => { const v = val.trim(); if (!v) delete window.pileNumbers[id]; else window.pileNumbers[id] = v; window.saveDataToCloud(); window.updateDashboard(); if (document.getElementById('matrix-modal') && !document.getElementById('matrix-modal').classList.contains('hidden')) window.renderMatrixGrid(); if (document.getElementById('recon-modal') && !document.getElementById('recon-modal').classList.contains('hidden')) window.renderReconTable(); };
 window.updateRemark = (id, val) => { const v = val.trim(); if (!v) delete window.remarks[id]; else window.remarks[id] = v; window.saveDataToCloud(); };
@@ -403,8 +428,8 @@ window.renderCalendar = () => {
     for (let i = 0; i < 6; i++) {
         const row = document.createElement('tr');
         for (let j = 0; j < 7; j++) {
-            const cell = document.createElement('td'); cell.className = 'border-r border-b border-slate-200 p-2 align-top h-44 bg-white transition hover:bg-slate-100';
-            if (j === 0 || j === 6) cell.classList.add('bg-slate-100/50');
+            const cell = document.createElement('td'); cell.className = 'border-r border-b border-slate-200 p-2 align-top h-44 bg-white transition hover:bg-slate-50';
+            if (j === 0 || j === 6) cell.classList.add('bg-slate-50/50');
             if (i === 0 && j < firstDay || date > daysInMonth) { cell.innerHTML = ''; } else {
                 const checkDateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(date).padStart(2,'0')}`;
                 const isExAll = window.exceptionDates.includes(checkDateStr);
@@ -558,29 +583,6 @@ window.exportCSV = () => {
     link.style.visibility = 'hidden'; document.body.appendChild(link); link.click(); document.body.removeChild(link);
 };
 
-window.syncFromContractor = async () => {
-    const btn = document.getElementById('btn-sync-api'); const originalHtml = btn.innerHTML;
-    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-sm opacity-80"></i> 同步中...'; btn.disabled = true;
-    try {
-        const response = await fetch(GAS_API_URL); if (!response.ok) throw new Error("API 回應異常");
-        const dataMatrix = await response.json(); const groupedData = {};
-        for (let i = 1; i < dataMatrix.length; i++) {
-            const cols = dataMatrix[i]; if (cols.length < 6) continue;
-            const rawPile = String(cols[0] || '').trim(); const dateStr = String(cols[1] || '').trim().replace(/\//g, '-'); const machine = String(cols[2] || '').trim();
-            const pileNum = rawPile.replace(/\D/g, ''); const machLetter = machine.includes('A') ? 'A' : (machine.includes('B') ? 'B' : '');
-            if (pileNum && dateStr && machLetter) { const key = `${dateStr}_${machLetter}`; if (!groupedData[key]) groupedData[key] = []; groupedData[key].push(pileNum); }
-        }
-        let updatedCount = 0;
-        scheduleData.forEach(item => {
-            const itemDateStr = window.toDateString(item.sampleDate); const key = `${itemDateStr}_${item.machine}`;
-            if (groupedData[key]) { const newPileStr = groupedData[key].join('、'); if (!window.statusTest[item.id] && window.pileNumbers[item.id] !== newPileStr) { window.pileNumbers[item.id] = newPileStr; updatedCount++; } }
-        });
-        window.saveDataToCloud(); window.refreshAll(); 
-        if (updatedCount > 0) window.showModal("同步成功！", `自動更新了 <b class="text-blue-600">${updatedCount}</b> 筆排程！`, "success"); 
-        else window.showModal("進度載入完成", "目前進度已是最新狀態。", "success"); 
-    } catch (error) { window.showModal("API 同步失敗", error.message, "error"); } finally { btn.innerHTML = originalHtml; btn.disabled = false; }
-};
-
 // ==========================================
 // 🔥 ACI 214 強度統計分析與風險戰情地圖
 // ==========================================
@@ -708,7 +710,7 @@ window.renderConcreteUI = (CL, UCL, LCL, R_CL, R_UCL, fcPrime, data) => {
         const avgClass = isFail ? 'text-red-600 bg-red-50 border border-red-200 rounded px-2 py-1' : 'text-blue-700';
         const zLabel = zoneMap[d.zone] || d.zone || '未歸類';
         
-        // 抓取打設排程中的實際樁號
+        // 🔥 動態抓取實際樁號
         const actualPiles = window.pileNumbers[d.id] || '<span class="text-slate-300">-</span>';
         
         tbody.innerHTML += `<tr class="modern-row border-b divide-slate-100">
@@ -812,6 +814,7 @@ window.renderConcreteMap = (filteredData, targetFc) => {
             let strokeColor = '#3B82F6'; 
             if (sType === 'INCLINOMETER') strokeColor = '#F59E0B';
             if (sType === 'INTEGRITY') strokeColor = '#8B5CF6'; 
+            if (sType === 'CANNOT_TEST') strokeColor = '#94A3B8'; // 灰
             specialDeco = `<circle cx="${p.x}" cy="${p.y}" r="110" fill="none" stroke="${strokeColor}" stroke-width="25" stroke-dasharray="40,20" class="animate-[spin_10s_linear_infinite]" style="transform-origin: ${p.x}px ${p.y}px"></circle><text x="${p.x}" y="${p.y-120}" font-size="80" fill="${strokeColor}" text-anchor="middle" font-weight="bold">★</text>`;
         }
         let classes = p.alert ? 'pile-circle highlight-pile' : 'pile-circle';
@@ -832,6 +835,7 @@ window.showConcreteTooltip = (evt, pile, avg, date, sid) => {
 };
 window.hideConcreteTooltip = () => { const tooltip = document.getElementById('concrete-map-tooltip'); if(tooltip) tooltip.style.display = 'none'; };
 
+// 🔥 AI 專家診斷引擎深度進化 (包含異常定位解析與趨勢分析)
 const generateAIReport = (total, avg, target, min, passRate, sd, uclR, scope, currentData) => {
     let reportContainer = document.getElementById('ai-report-wrapper');
     if(!reportContainer) return;
@@ -857,28 +861,60 @@ const generateAIReport = (total, avg, target, min, passRate, sd, uclR, scope, cu
     else if (sd < 30) sdStr = '<span class="text-blue-600 font-black">正常 (標準差 15~30)</span>，變異度符合一般施工規範要求。';
     else sdStr = '<span class="text-amber-600 font-black">偏高 (標準差 > 30)</span>，顯示該區段波動顯著，建議查核施工穩定度。';
     
-    let highRangeCount = 0;
-    currentData.forEach(d => { if(d.range > uclR) highRangeCount++; });
+    // 1. 均勻度指標與 R 管制圖分析 (🔥 精準異常定位)
+    const rOutliers = currentData.filter(d => d.range > uclR);
     let rangeWarning = '';
-    if(highRangeCount > 0) rangeWarning = `<br><span class="text-red-600 bg-red-100 px-2 py-0.5 rounded text-sm ml-1 animate-pulse">⚠️ 警告：發現 ${highRangeCount} 組試體組內全距超越 R-UCL，試驗離散度偏高。</span>`;
+    if(rOutliers.length > 0) {
+        const outlierDetails = rOutliers.map(d => `<b>${d.id}</b> (樁號 ${window.pileNumbers[d.id]||'未填'})`).join('、');
+        rangeWarning = `<div class="mt-3 p-4 bg-red-50 border-l-4 border-red-500 rounded shadow-sm text-red-900 text-[14px]">
+            <div class="font-black mb-1 flex items-center gap-2"><i class="fa-solid fa-triangle-exclamation animate-pulse"></i> R 管制圖異常定位分析：</div>
+            發現 <b>${outlierDetails}</b> 的組內全距超越管制上限 (UCL = ${uclR.toFixed(1)})。<br>
+            <span class="font-bold text-red-700">工程意義：</span> 這代表這幾組試體的 3 顆圓柱體強度落差極大！強烈暗示<b>現場搗實極度不均勻、試驗取樣過程有瑕疵</b>，或是<b>實驗室壓測時受力偏心</b>。請務必針對該車次/該批人員加強抽查與教育訓練！
+        </div>`;
+    }
 
-    reportHtml += `<p class="mb-3">1. <b>均勻度變異指標：</b> ${scopeLabel} 強度標準差為 <b>${sd.toFixed(1)}</b>，評估為 ${sdStr}${rangeWarning}</p>`;
+    reportHtml += `<p class="mb-3">1. <b>均勻度變異指標：</b> ${scopeLabel} 強度標準差為 <b>${sd.toFixed(1)}</b>，整體評估為 ${sdStr}${rangeWarning}</p>`;
 
+    // 2. 天氣變因分析
     const rainyRecords = currentData.filter(d => d.weather === 'RAINY');
     const rainyFail = rainyRecords.filter(d => d.avg < target);
     if (rainyRecords.length > 0 && rainyFail.length > 0) {
-        reportHtml += `<p class="mb-3 p-3 bg-red-50 border border-red-200 rounded-lg">🌧️ <b>天氣變因警示：</b> 發現有 ${rainyFail.length} 組於「雨天」澆置之強度未達標。極易造成表面水灰比改變或泥水流入，請嚴格執行雨天防護標準。</p>`;
+        reportHtml += `<p class="mb-3 p-3 bg-orange-50 border border-orange-200 rounded text-orange-900 text-[14px]">🌧️ <b>天氣變因警示：</b> 發現有 ${rainyFail.length} 組於「雨天」澆置之強度未達標。極易造成表面水灰比改變或泥水流入，請嚴格執行雨天防護標準。</p>`;
     } else if (rainyRecords.length > 0) {
-        reportHtml += `<p class="mb-3 text-[#1E3A8A]">🌧️ <b>天氣變因分析：</b> 雨天澆置共 ${rainyRecords.length} 組，強度皆有達標，現場雨天防護措施執行確實。</p>`;
+        reportHtml += `<p class="mb-3 text-[#1E3A8A] text-[14px]">🌧️ <b>天氣變因分析：</b> 雨天澆置共 ${rainyRecords.length} 組，強度皆有達標，現場雨天防護措施執行確實。</p>`;
     }
 
+    // 3. X-bar 管制圖分析 (🔥 預拌廠穩定度分析)
+    const X_bar_bar = avg;
+    const UCL_X = X_bar_bar + (A2 * (uclR / D4));
+    const LCL_X = X_bar_bar - (A2 * (uclR / D4));
+    
+    const xHighOutliers = currentData.filter(d => d.avg > UCL_X);
+    const xLowOutliers = currentData.filter(d => d.avg < LCL_X && d.avg >= target); // 低於下限但仍及格
+    
+    let xBarAnalysis = `<div class="mb-3 mt-4 border-t border-blue-200 pt-3"><p class="mb-2">3. <b>X-bar 平均強度趨勢分析 (預拌廠穩定度)：</b></p><ul class="list-disc list-inside ml-2 space-y-2 text-[14px] text-slate-700">`;
+    if (xHighOutliers.length > 0) {
+        const details = xHighOutliers.map(d => `<b>${d.id}</b>`).join(', ');
+        xBarAnalysis += `<li><span class="text-blue-700 font-bold">強度溢出 (高於 UCL)：</span> 包含 ${details}。雖無安全疑慮，但代表<b>水泥用量可能過多、配比過於保守</b>，顯示拌合廠投料可能有系統性偏誤。</li>`;
+    }
+    if (xLowOutliers.length > 0) {
+        const details = xLowOutliers.map(d => `<b>${d.id}</b>`).join(', ');
+        xBarAnalysis += `<li><span class="text-orange-600 font-bold">強度偏低警訊 (低於 LCL)：</span> 包含 ${details}。雖然目前仍大於設計強度，但已跌破統計安全下限，這是<b>品質劣化（如水灰比跑掉、現場偷加水）的早期警訊</b>！請提早介入調查。</li>`;
+    }
+    if (xHighOutliers.length === 0 && xLowOutliers.length === 0) {
+         xBarAnalysis += `<li><span class="text-emerald-700 font-bold">趨勢穩定：</span> 所有數據皆穩定落在管制上下限 (UCL ~ LCL) 內，無特殊異常點，預拌廠配比與現場施工品質高度穩定。</li>`;
+    }
+    xBarAnalysis += `</ul></div>`;
+    reportHtml += xBarAnalysis;
+
+    // 4. 合格率總結
     if (passRate == 100) {
-        reportHtml += `<p class="mb-3">2. <b>合格率檢核：</b> 區間內抗壓強度 <b class="text-emerald-600 bg-emerald-100 px-2 py-0.5 rounded">100% 達標</b>。平均強度達 <b>${avg.toFixed(1)}</b> kgf/cm²。</p>`;
+        reportHtml += `<p class="mb-3 border-t border-blue-200 pt-3">4. <b>合格率檢核：</b> 區間內抗壓強度 <b class="text-emerald-600 bg-emerald-100 px-2 py-0.5 rounded">100% 達標</b>。平均強度達 <b>${avg.toFixed(1)}</b> kgf/cm²。</p>`;
         reportHtml += `<div class="mt-4 p-4 bg-[#F0FDF4] border-l-4 border-[#166534] text-[#166534] rounded shadow-sm"><div class="font-black mb-1"><i class="fa-solid fa-check-circle"></i> AI 綜合判定：</div>「${scopeLabel} 品質表現正常且安全達標，可繼續維持當前配比與澆置作業。」</div>`;
     } else {
-        const failingPiles = currentData.filter(d => d.avg < target).map(d => window.pileNumbers[d.id] || d.id).join(', ');
-        reportHtml += `<p class="mb-3">2. <b>合格率檢核：</b> ${scopeLabel} 合格率為 <b class="text-red-600 bg-red-100 px-2 py-0.5 rounded">${passRate}%</b>，出現低於標準之異常值 (最低 <b class="text-red-600">${min}</b> kgf/cm²)。</p>`;
-        reportHtml += `<div class="mt-4 p-4 bg-red-50 border-l-4 border-red-600 text-red-900 rounded shadow-sm"><div class="font-black mb-1"><i class="fa-solid fa-triangle-exclamation animate-pulse"></i> 🚨 風險定位預警：</div>「實際樁號 [<b>${failingPiles}</b>] 強度未達標！請對照左側戰情地圖之<span class="text-red-600 font-black">紅色閃爍區塊</span>，務必於開挖至該區塊前加強支撐評估，必要時進行鑽心取樣檢測。」</div>`;
+        const failingPiles = currentData.filter(d => d.avg < target).map(d => `${d.id}(樁號 ${window.pileNumbers[d.id]||'未填'})`).join(', ');
+        reportHtml += `<p class="mb-3 border-t border-blue-200 pt-3">4. <b>合格率檢核：</b> ${scopeLabel} 合格率為 <b class="text-red-600 bg-red-100 px-2 py-0.5 rounded">${passRate}%</b>，出現低於標準之異常值 (最低 <b class="text-red-600">${min}</b> kgf/cm²)。</p>`;
+        reportHtml += `<div class="mt-4 p-4 bg-red-50 border-l-4 border-red-600 text-red-900 rounded shadow-sm"><div class="font-black mb-1"><i class="fa-solid fa-triangle-exclamation animate-pulse"></i> 🚨 風險定位預警：</div>「排程 <b>${failingPiles}</b> 強度未達標！請對照左側戰情地圖之<span class="text-red-600 font-black">紅色閃爍區塊</span>，務必於開挖至該區塊前加強支撐評估，必要時進行鑽心取樣檢測。」</div>`;
     }
 
     reportHtml += `</div></div>`;
