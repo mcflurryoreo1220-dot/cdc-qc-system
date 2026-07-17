@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>衛生福利部防疫中心 - 試體管制系統 V10.5 大地監測擴充版</title>
+    <title>衛生福利部防疫中心 - 試體管制系統 V11.1 (版面修復版)</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
@@ -86,7 +86,7 @@
                     防疫中心興建工程 QC 管制
                 </h1>
                 <p class="text-slate-600 mt-2 text-sm md:text-base font-bold flex items-center gap-2">
-                    預壘樁試體管制排程系統 <span class="bg-emerald-100 text-emerald-800 px-3 py-1 rounded-md text-xs font-black border border-emerald-300 shadow-sm"><i class="fa-solid fa-circle-check"></i> V10.5 大地監測擴充版</span>
+                    預壘樁試體管制排程系統 <span class="bg-emerald-100 text-emerald-800 px-3 py-1 rounded-md text-xs font-black border border-emerald-300 shadow-sm"><i class="fa-solid fa-circle-check"></i> V11.1 版面修復版</span>
                 </p>
             </div>
             <div id="sync-status" class="flex items-center gap-2 px-4 py-2.5 bg-[#EFF6FF] rounded-xl text-sm font-black text-blue-800 border border-blue-200 shadow-sm">
@@ -112,13 +112,6 @@
                             <input type="text" id="map-search-input" placeholder="搜尋樁號 (如: 613)" class="border-2 border-slate-300 rounded-lg px-3 py-1.5 shadow-sm outline-none text-sm font-bold w-full md:w-40 focus:border-[#1E3A8A]">
                             <button onclick="searchMapPile()" class="bg-blue-600 text-white px-4 py-1.5 rounded-lg text-sm font-black shadow hover:bg-blue-700 transition">定位</button>
                         </div>
-                        <div class="flex gap-3 text-xs font-black text-slate-600 bg-slate-50 px-3 py-2 rounded-lg border border-slate-200 shadow-inner flex-wrap items-center">
-                            <div class="flex items-center gap-1.5"><span class="w-3.5 h-3.5 rounded-full bg-[#F1F5F9] border-2 border-[#CBD5E1]"></span> 未排程</div>
-                            <div class="flex items-center gap-1.5"><span class="w-3.5 h-3.5 rounded-full bg-[#FFFFFF] border-2 border-[#1E3A8A]"></span> 已排程</div>
-                            <div class="flex items-center gap-1.5"><span class="w-3.5 h-3.5 rounded-full bg-[#1E3A8A] border-2 border-[#172554]"></span> 已取樣</div>
-                            <div class="flex items-center gap-1.5"><span class="w-3.5 h-3.5 rounded-full bg-[#B45309] border-2 border-[#78350F]"></span> 已收件</div>
-                            <div class="flex items-center gap-1.5"><span class="w-3.5 h-3.5 rounded-full bg-[#166534] border-2 border-[#14532D]"></span> 壓測結案</div>
-                        </div>
                     </div>
                 </div>
                 <div id="map-container" class="map-container-style"><div class="text-center p-10 text-slate-400 font-bold flex flex-col items-center gap-3"><i class="fa-solid fa-spinner fa-spin text-4xl text-blue-400"></i><span>地圖繪製中...</span></div></div>
@@ -130,7 +123,6 @@
                         <i class="fa-solid fa-satellite-dish text-blue-600 animate-pulse"></i> 展開 / 收摺：安全監測樁 T-2 智慧預警陣列
                     </div>
                     <div class="flex items-center gap-4">
-                        <!-- 🔥 新增：自定義檢測樁按鈕 -->
                         <button onclick="openSpecialPileModal(); event.stopPropagation();" class="text-sm bg-slate-800 text-white px-3 py-1 rounded-lg hover:bg-black transition shadow flex items-center gap-1.5">
                             <i class="fa-solid fa-gear"></i> 設定檢測樁
                         </button>
@@ -197,26 +189,41 @@
                 </div>
             </div>
 
-            <div class="bg-white p-5 rounded-2xl border border-slate-300 shadow-sm">
-                <div class="flex items-center gap-2 mb-4">
-                    <i class="fa-solid fa-calculator text-slate-500"></i>
-                    <h4 class="font-bold text-slate-700 text-base">現場斗仔體積防呆計算機 <span class="bg-slate-100 text-slate-500 px-2 py-0.5 rounded text-xs ml-2 font-bold">申報輔助</span></h4>
+            <!-- 停工與加班設定 -->
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-300">
+                <h3 class="font-bold text-slate-700 text-lg mb-4 flex items-center gap-2"><i class="fa-solid fa-calendar-day text-slate-500"></i> 例外停工與加班設定</h3>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="p-5 bg-slate-50 rounded-xl border border-slate-200 flex flex-col gap-3 shadow-sm">
+                        <div class="flex flex-wrap items-center gap-3">
+                            <span class="font-bold text-red-700 text-sm"><i class="fa-solid fa-stop-circle"></i> 停工：</span>
+                            <select id="exception-machine" class="border-2 border-slate-300 rounded-lg px-2 py-1.5 text-sm font-black bg-white focus:border-blue-600 outline-none"><option value="ALL">全區</option><option value="A">A車</option><option value="B">B車</option></select>
+                            <input type="date" id="exception-date-input" class="border-2 border-slate-300 rounded-lg px-2 py-1.5 text-sm font-bold bg-white w-36 focus:border-blue-600 outline-none">
+                            <button onclick="addExceptionDate()" class="bg-red-50 text-red-700 border border-red-300 px-4 py-1.5 rounded-lg text-sm font-black hover:bg-red-100 transition shadow-sm">新增</button>
+                        </div>
+                        <div class="w-full mt-2 grid grid-cols-1 md:grid-cols-3 gap-2">
+                            <div id="exception-list-all" class="flex flex-wrap gap-1.5 empty:hidden bg-white p-2 rounded border border-red-200 min-h-[35px] shadow-sm"></div>
+                            <div id="exception-list-a" class="flex flex-wrap gap-1.5 empty:hidden bg-white p-2 rounded border border-orange-200 min-h-[35px] shadow-sm"></div>
+                            <div id="exception-list-b" class="flex flex-wrap gap-1.5 empty:hidden bg-white p-2 rounded border border-amber-200 min-h-[35px] shadow-sm"></div>
+                        </div>
+                    </div>
+                    <div class="p-5 bg-slate-50 rounded-xl border border-slate-200 flex flex-col gap-3 shadow-sm">
+                        <div class="flex flex-wrap items-center gap-3">
+                            <span class="font-black text-slate-700 text-sm"><i class="fa-solid fa-play-circle text-blue-600"></i> 加班：</span>
+                            <select id="extra-machine" class="border-2 border-slate-300 rounded-lg px-2 py-1.5 text-sm font-black bg-white focus:border-blue-600 outline-none"><option value="A">A車</option><option value="B">B車</option></select>
+                            <input type="date" id="extra-date-input" class="border-2 border-slate-300 rounded-lg px-2 py-1.5 text-sm font-bold bg-white w-36 focus:border-blue-600 outline-none">
+                            <button onclick="addExtraDate()" class="bg-blue-50 text-blue-700 border border-blue-300 px-4 py-1.5 rounded-lg text-sm font-black hover:bg-blue-100 transition shadow-sm">新增</button>
+                        </div>
+                        <div id="extra-list" class="flex flex-wrap gap-2 w-full mt-2 empty:hidden bg-white p-2 rounded border border-blue-200 min-h-[35px] shadow-sm"></div>
+                    </div>
                 </div>
-                <div class="grid grid-cols-2 md:grid-cols-5 gap-4 items-end text-sm">
-                    <div><label class="block text-slate-600 font-bold mb-1 text-xs">砂 (每拌合/斗仔)</label><input type="number" id="calc-sand-bucket" class="w-full border-2 border-slate-300 rounded-lg px-3 py-2 text-slate-700 outline-none focus:border-slate-500 font-bold" value="4"></div>
-                    <div><label class="block text-slate-600 font-bold mb-1 text-xs">水泥 (每拌合/斗仔)</label><input type="number" id="calc-cem-bucket" class="w-full border-2 border-slate-300 rounded-lg px-3 py-2 text-slate-700 outline-none focus:border-slate-500 font-bold" value="2"></div>
-                    <div><label class="block text-slate-600 font-bold mb-1 text-xs">斗仔單個容積 (公升L)</label><input type="number" id="calc-vol" class="w-full border-2 border-slate-300 rounded-lg px-3 py-2 text-slate-700 outline-none focus:border-slate-500 font-bold" value="20"></div>
-                    <div><label class="block text-slate-600 font-bold mb-1 text-xs">本日總拌合盤數</label><input type="number" id="calc-batches" class="w-full border-2 border-slate-300 rounded-lg px-3 py-2 text-slate-700 outline-none focus:border-slate-500 font-bold" value="100"></div>
-                    <div><button onclick="calculateMaterials()" class="w-full bg-slate-700 hover:bg-slate-800 text-white font-black py-2.5 rounded-lg shadow-md transition">換算理論申報量</button></div>
-                </div>
-                <div id="calc-result" class="mt-4 p-4 bg-slate-50 border border-slate-200 rounded-lg text-slate-700 hidden shadow-inner text-base font-bold"></div>
             </div>
 
+            <!-- 控制篩選列 -->
             <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-300 flex flex-col xl:flex-row justify-between items-center gap-5">
                 <div class="flex flex-wrap gap-3 items-center">
                     <div class="bg-slate-100 p-1.5 rounded-xl flex gap-1 mr-2 border border-slate-200">
-                        <button onclick="toggleView('table')" id="btn-view-table" class="px-5 py-2.5 rounded-lg text-base font-black bg-white text-slate-700 shadow-sm transition"><i class="fa-solid fa-list-check mr-2"></i> 稽核清單模式</button>
-                        <button onclick="toggleView('calendar')" id="btn-view-cal" class="px-5 py-2.5 rounded-lg text-base font-bold text-slate-600 hover:text-slate-800 transition"><i class="fa-solid fa-calendar-week mr-2"></i> 月曆看板模式</button>
+                        <button onclick="toggleView('table')" id="btn-view-table" class="px-5 py-2.5 rounded-lg text-base font-black bg-white text-slate-700 shadow-sm transition"><i class="fa-solid fa-list-check mr-2"></i> 稽核清單</button>
+                        <button onclick="toggleView('calendar')" id="btn-view-cal" class="px-5 py-2.5 rounded-lg text-base font-bold text-slate-500 hover:text-slate-800 transition"><i class="fa-solid fa-calendar-week mr-2"></i> 月曆看板</button>
                     </div>
                     <div class="flex gap-2">
                         <button onclick="filterData('ALL')" id="btn-ALL" class="px-5 py-2 rounded-lg text-sm font-black bg-slate-800 text-white shadow-md border border-slate-700">全區樁號</button>
@@ -226,68 +233,49 @@
                 </div>
                 
                 <div class="flex flex-wrap gap-2">
-                    <button onclick="openMatrixModal()" class="px-4 py-2.5 bg-white border-2 border-slate-200 text-slate-600 rounded-lg text-sm font-black hover:bg-slate-50 transition shadow-sm"><i class="fa-solid fa-border-all text-slate-400 mr-1.5"></i> 防呆矩陣雷達</button>
-                    <button onclick="openReconModal()" class="px-4 py-2.5 bg-white border-2 border-slate-200 text-slate-600 rounded-lg text-sm font-black hover:bg-slate-50 transition shadow-sm"><i class="fa-solid fa-scale-unbalanced text-slate-400 mr-1.5"></i> 數量申報勾稽</button>
-                    <button onclick="syncFromContractor()" id="btn-sync-csv" class="px-4 py-2.5 bg-white border-2 border-slate-200 text-slate-600 rounded-lg text-sm font-black hover:bg-slate-50 transition shadow-sm"><i class="fa-solid fa-cloud-arrow-down text-slate-400 mr-1.5"></i> 抓取日報同步</button>
-                    <button onclick="exportCSV()" class="px-4 py-2.5 bg-[#166534] text-white rounded-lg text-sm font-black shadow-md hover:bg-[#12532a] transition"><i class="fa-solid fa-file-csv mr-1.5"></i> 匯出品管 CSV</button>
+                    <button onclick="openMatrixModal()" class="px-4 py-2.5 bg-white border-2 border-slate-200 text-slate-600 rounded-lg text-sm font-black hover:bg-slate-50 transition shadow-sm"><i class="fa-solid fa-border-all text-slate-400 mr-1.5"></i> 防呆矩陣</button>
+                    <button onclick="openReconModal()" class="px-4 py-2.5 bg-white border-2 border-slate-200 text-slate-600 rounded-lg text-sm font-black hover:bg-slate-50 transition shadow-sm"><i class="fa-solid fa-scale-unbalanced text-slate-400 mr-1.5"></i> 數量勾稽</button>
+                    <button onclick="exportCSV()" class="px-4 py-2.5 bg-[#166534] text-white rounded-lg text-sm font-black shadow-md hover:bg-[#12532a] transition"><i class="fa-solid fa-file-csv mr-1.5"></i> 匯出 CSV</button>
                 </div>
             </div>
 
-            <div class="flex flex-wrap gap-4">
-                <div class="flex-1 p-3 bg-white rounded-xl border border-slate-200 flex flex-wrap gap-3 items-center">
-                    <span class="font-bold text-slate-600 text-sm flex items-center gap-1.5"><i class="fa-solid fa-calendar-xmark text-slate-400"></i> 停工設定：</span>
-                    <input type="date" id="exception-date-input" class="border border-slate-200 rounded-lg px-2 py-1 text-slate-600 text-sm outline-none focus:border-slate-400">
-                    <button onclick="addExceptionDate()" class="bg-slate-100 hover:bg-slate-200 text-slate-600 px-3 py-1.5 rounded-lg text-xs font-bold transition">新增</button>
-                    <div id="exception-list" class="flex flex-wrap gap-2 ml-1"></div>
-                </div>
-
-                <div class="flex-1 p-3 bg-white rounded-xl border border-slate-200 flex flex-wrap gap-3 items-center">
-                    <span class="font-bold text-slate-600 text-sm flex items-center gap-1.5"><i class="fa-solid fa-calendar-plus text-slate-400"></i> 加班設定：</span>
-                    <select id="extra-machine" class="border border-slate-200 rounded-lg px-2 py-1 text-slate-600 text-sm font-bold outline-none">
-                        <option value="B">B 車</option>
-                        <option value="A">A 車</option>
-                    </select>
-                    <input type="date" id="extra-date-input" class="border border-slate-200 rounded-lg px-2 py-1 text-slate-600 text-sm outline-none focus:border-slate-400">
-                    <button onclick="addExtraDate()" class="bg-slate-100 hover:bg-slate-200 text-slate-600 px-3 py-1.5 rounded-lg text-xs font-bold transition">新增</button>
-                    <div id="extra-list" class="flex flex-wrap gap-2 ml-1"></div>
-                </div>
-            </div>
-
-            <div id="table-view" class="bg-white shadow-xl rounded-2xl border-2 border-slate-100 overflow-x-auto">
-                <table class="w-full text-left border-collapse table-auto min-w-[1200px]">
-                    <thead class="table-header sticky top-0 z-10 shadow-sm border-b border-slate-200">
+            <!-- 🔥 表格檢視 (補回「數量」欄位) -->
+            <div id="table-view" class="bg-white shadow-xl rounded-2xl border-2 border-slate-100 overflow-x-auto relative">
+                <table class="w-full text-left border-collapse table-auto min-w-[1250px]">
+                    <thead class="table-header shadow-sm border-b-2 border-slate-300">
                         <tr>
-                            <th class="w-[80px] whitespace-nowrap">編號</th>
-                            <th class="w-[30%]">對應樁號 <i class="fa-solid fa-pen-to-square ml-1.5 opacity-50"></i></th>
-                            <th class="whitespace-nowrap bg-blue-50/50 text-blue-900"><i class="fa-solid fa-trowel-bricks opacity-60 mr-1.5"></i>取樣日(T)</th>
-                            <th class="whitespace-nowrap bg-slate-50 text-slate-600">拆模日(T+1)</th>
-                            <th class="whitespace-nowrap bg-orange-50 text-[#92400E]"><i class="fa-solid fa-truck-fast opacity-60 mr-1.5"></i>收件日(二/五)</th>
-                            <th class="whitespace-nowrap bg-green-50 text-[#065F46]"><i class="fa-solid fa-gavel opacity-60 mr-1.5"></i>抗壓日(T+28)</th>
-                            <th class="w-[20%] text-slate-400 font-medium">備註 / 狀態</th>
+                            <th class="w-[80px]">編號</th>
+                            <th class="w-[70px] text-[#1E3A8A]">數量</th>
+                            <th class="w-[28%] text-left pl-3">對應樁號 <i class="fa-solid fa-pen-to-square ml-1.5 opacity-50 text-xs"></i></th>
+                            <th class="w-[120px] bg-[#EFF6FF] text-[#1E3A8A]">取樣(T)</th>
+                            <th class="w-[120px] bg-[#F8FAFC] text-slate-600">拆模(T+1)</th>
+                            <th class="w-[120px] bg-[#FFF7ED] text-[#B45309]">收件(二/五)</th>
+                            <th class="w-[120px] bg-[#F0FDF4] text-[#166534]">抗壓(T+28)</th>
+                            <th class="w-[20%] text-left pl-3">備註 / 狀態</th>
                         </tr>
                     </thead>
-                    <tbody id="schedule-body" class="bg-white divide-y divide-slate-100"></tbody>
+                    <tbody id="schedule-body" class="bg-white divide-y divide-slate-200"></tbody>
                 </table>
             </div>
 
-            <div id="calendar-view" class="bg-white shadow-xl rounded-2xl p-6 hidden border border-slate-200">
-                <div class="flex justify-between items-center mb-6 sticky top-0 bg-white z-10 py-2">
-                    <button onclick="changeMonth(-1)" class="w-12 h-12 flex items-center justify-center bg-white border-2 border-slate-200 rounded-xl text-slate-500 hover:bg-slate-50 transition shadow-sm"><i class="fa-solid fa-chevron-left text-lg"></i></button>
-                    <h2 id="calendar-title" class="text-2xl md:text-3xl font-black text-slate-800 tracking-tighter">民國 115 年 5 月</h2>
-                    <button onclick="changeMonth(1)" class="w-12 h-12 flex items-center justify-center bg-white border-2 border-slate-200 rounded-xl text-slate-500 hover:bg-slate-50 transition shadow-sm"><i class="fa-solid fa-chevron-right text-lg"></i></button>
+            <!-- 月曆檢視 -->
+            <div id="calendar-view" class="bg-white shadow-xl rounded-2xl p-5 hidden border-2 border-slate-300 overflow-x-auto">
+                <div class="flex justify-between items-center mb-5 sticky top-0 bg-white z-10 py-2 min-w-[800px]">
+                    <button onclick="changeMonth(-1)" class="w-10 h-10 flex items-center justify-center bg-white border-2 border-slate-300 rounded-xl text-slate-600 hover:bg-slate-100 font-black shadow-sm transition"><i class="fa-solid fa-chevron-left text-lg"></i></button>
+                    <h2 id="calendar-title" class="text-2xl font-black text-slate-800">載入中...</h2>
+                    <button onclick="changeMonth(1)" class="w-10 h-10 flex items-center justify-center bg-white border-2 border-slate-300 rounded-xl text-slate-600 hover:bg-slate-100 font-black shadow-sm transition"><i class="fa-solid fa-chevron-right text-lg"></i></button>
                 </div>
-                
-                <div class="overflow-x-auto rounded-xl border-2 border-slate-100">
-                    <table class="w-full text-left border-collapse table-fixed min-w-[1100px]">
-                        <thead class="bg-slate-50 border-b-2 border-slate-200">
+                <div class="rounded-xl border-2 border-slate-300 overflow-hidden min-w-[800px] shadow-sm">
+                    <table class="w-full text-left border-collapse table-fixed" style="table-layout: fixed;">
+                        <thead class="bg-slate-100 border-b-2 border-slate-300">
                             <tr>
-                                <th class="p-4 text-center font-bold text-red-500 text-sm w-1/7">週日</th>
-                                <th class="p-4 text-center font-bold text-slate-600 text-sm w-1/7">週一</th>
-                                <th class="p-4 text-center font-bold text-slate-600 text-sm w-1/7">週二</th>
-                                <th class="p-4 text-center font-bold text-slate-600 text-sm w-1/7">週三</th>
-                                <th class="p-4 text-center font-bold text-slate-600 text-sm w-1/7">週四</th>
-                                <th class="p-4 text-center font-bold text-slate-600 text-sm w-1/7">週五</th>
-                                <th class="p-4 text-center font-bold text-red-500 text-sm w-1/7">週六</th>
+                                <th class="p-3 text-center font-black text-red-600 text-sm w-1/7">週日</th>
+                                <th class="p-3 text-center font-black text-slate-700 text-sm w-1/7">週一</th>
+                                <th class="p-3 text-center font-black text-slate-700 text-sm w-1/7">週二</th>
+                                <th class="p-3 text-center font-black text-slate-700 text-sm w-1/7">週三</th>
+                                <th class="p-3 text-center font-black text-slate-700 text-sm w-1/7">週四</th>
+                                <th class="p-3 text-center font-black text-slate-700 text-sm w-1/7">週五</th>
+                                <th class="p-3 text-center font-black text-red-600 text-sm w-1/7">週六</th>
                             </tr>
                         </thead>
                         <tbody id="calendar-body" class="bg-white"></tbody>
@@ -297,11 +285,11 @@
         </div>
 
         <!-- ========================================== -->
-        <!-- 視圖 2：混凝土抗壓強度 ACI 214 -->
+        <!-- 視圖 2：ACI 214 混凝土品質管制 (全幅表格版) -->
         <!-- ========================================== -->
-        <div id="view-concrete" class="space-y-6 hidden">
+        <div id="view-concrete" class="space-y-5 hidden">
             
-            <div class="bg-[#EFF6FF] p-6 rounded-2xl shadow-sm border border-blue-200 no-print">
+            <div class="bg-[#EFF6FF] p-5 rounded-2xl shadow-sm border border-blue-200 no-print">
                 <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-5 border-b border-blue-200 pb-4 gap-4">
                     <h3 class="font-black text-blue-900 text-xl flex items-center gap-3">
                         <i class="fa-solid fa-flask"></i> ACI 214 強度統計登錄
@@ -309,7 +297,7 @@
                     </h3>
                     <div class="flex flex-wrap items-center gap-3">
                         <div class="flex items-center gap-2 bg-white px-4 py-2 rounded-xl border border-blue-100 shadow-sm">
-                            <span class="text-sm font-black text-slate-600">分析範圍</span>
+                            <span class="text-sm font-black text-slate-600">圖表分析範圍</span>
                             <select id="concrete-zone-filter" onchange="calculateConcreteStats()" class="border-2 border-slate-200 rounded px-2 py-1 text-sm font-black bg-white outline-none cursor-pointer text-blue-800 focus:border-blue-500">
                                 <option value="ALL">全區整合統計</option>
                                 <option value="A_ALL">【A車總計】</option>
@@ -348,7 +336,7 @@
                         </select>
                     </div>
                     <div class="md:col-span-1">
-                        <label class="block text-slate-700 font-bold mb-1 text-sm">排程編號(如 A1)</label>
+                        <label class="block text-slate-700 font-bold mb-1 text-sm">排程編號 (如 A1)</label>
                         <input type="text" id="concrete-id" onchange="fetchPileInfo()" placeholder="輸入編號自動帶出" class="border-2 border-slate-300 rounded-lg px-2 py-2 font-bold text-blue-900 w-full bg-white outline-none focus:border-blue-500 shadow-sm text-center uppercase">
                     </div>
                     <div class="md:col-span-1">
@@ -375,26 +363,7 @@
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 xl:grid-cols-5 gap-6">
-                <div class="xl:col-span-3 bg-white p-5 rounded-2xl shadow-sm border border-slate-300 flex flex-col">
-                    <h3 class="font-black text-slate-800 text-lg mb-4 flex items-center gap-2 border-b border-slate-100 pb-3">
-                        <i class="fa-solid fa-map-location-dot text-[#1E3A8A]"></i> ACI 214 品質風險戰情地圖
-                    </h3>
-                    <div class="flex gap-3 text-xs font-black text-slate-600 bg-slate-50 px-3 py-2 rounded-lg border border-slate-200 shadow-inner flex-wrap items-center mb-3">
-                        <div class="flex items-center gap-1.5"><span class="w-3.5 h-3.5 rounded-full bg-[#166534] border border-[#14532D]"></span> 強度優良</div>
-                        <div class="flex items-center gap-1.5"><span class="w-3.5 h-3.5 rounded-full bg-[#B45309] border border-[#78350F]"></span> 邊緣警告</div>
-                        <div class="flex items-center gap-1.5"><span class="w-3.5 h-3.5 rounded-full bg-[#DC2626] border border-[#991B1B] animate-pulse"></span> 結構低於設計值</div>
-                    </div>
-                    <div id="concrete-map-container" class="map-container-style flex-1 min-h-[350px]">
-                        <div class="text-center p-10 text-slate-400 font-bold flex flex-col items-center gap-3"><i class="fa-solid fa-spinner fa-spin text-4xl text-blue-400"></i><span>載入地圖中...</span></div>
-                    </div>
-                </div>
-                
-                <div class="xl:col-span-2 flex flex-col">
-                    <div id="ai-report-wrapper" class="flex-1"></div>
-                </div>
-            </div>
-
+            <!-- 全幅展開的數據表格 -->
             <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-300">
                 <h3 class="font-black text-slate-800 text-lg mb-4 flex justify-between items-center border-b border-slate-100 pb-3">
                     <span class="flex items-center gap-2"><i class="fa-solid fa-table text-slate-400"></i> 強度檢驗紀錄明細</span>
@@ -423,8 +392,30 @@
                 </div>
             </div>
 
+            <!-- 戰情地圖與 AI 報告 -->
+            <div class="grid grid-cols-1 xl:grid-cols-5 gap-6">
+                <!-- 左側：戰情地圖 -->
+                <div class="xl:col-span-3 bg-white p-5 rounded-2xl shadow-sm border border-slate-300 flex flex-col">
+                    <h3 class="font-black text-slate-800 text-lg mb-4 flex items-center gap-2 border-b border-slate-100 pb-3">
+                        <i class="fa-solid fa-map-location-dot text-[#1E3A8A]"></i> ACI 214 品質風險戰情地圖
+                    </h3>
+                    <div class="flex gap-3 text-xs font-black text-slate-600 bg-slate-50 px-3 py-2 rounded-lg border border-slate-200 shadow-inner flex-wrap items-center mb-3">
+                        <div class="flex items-center gap-1.5"><span class="w-3.5 h-3.5 rounded-full bg-[#166534] border border-[#14532D]"></span> 強度優良</div>
+                        <div class="flex items-center gap-1.5"><span class="w-3.5 h-3.5 rounded-full bg-[#B45309] border border-[#78350F]"></span> 邊緣警告</div>
+                        <div class="flex items-center gap-1.5"><span class="w-3.5 h-3.5 rounded-full bg-[#DC2626] border border-[#991B1B] animate-pulse"></span> 結構低於設計值</div>
+                    </div>
+                    <div id="concrete-map-container" class="map-container-style flex-1 min-h-[350px]">
+                        <div class="text-center p-10 text-slate-400 font-bold flex flex-col items-center gap-3"><i class="fa-solid fa-spinner fa-spin text-4xl text-blue-400"></i><span>載入地圖中...</span></div>
+                    </div>
+                </div>
+                <!-- 右側：AI 報告 -->
+                <div class="xl:col-span-2 flex flex-col">
+                    <div id="ai-report-wrapper" class="flex-1"></div>
+                </div>
+            </div>
+
+            <!-- 圖表置於最下方 -->
             <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
-                <!-- X-bar Chart -->
                 <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-300 flex-1 flex flex-col">
                     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 border-b border-slate-100 pb-3 gap-2">
                         <h3 class="font-black text-slate-800 text-lg flex items-center gap-2"><i class="fa-solid fa-chart-area text-blue-600"></i> X-bar 管制圖 (平均強度變異)</h3>
@@ -432,7 +423,6 @@
                     </div>
                     <div class="relative w-full flex-1 min-h-[300px]"><canvas id="xBarChart"></canvas></div>
                 </div>
-                <!-- R Chart -->
                 <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-300 flex-1 flex flex-col">
                     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 border-b border-slate-100 pb-3 gap-2">
                         <h3 class="font-black text-slate-800 text-lg flex items-center gap-2"><i class="fa-solid fa-chart-line text-[#B45309]"></i> R 管制圖 (單組試體均勻度)</h3>
@@ -481,7 +471,7 @@
         </div>
     </div>
 
-    <!-- 🔥 新增：自定義檢測樁 Modal -->
+    <!-- 自定義檢測樁 Modal -->
     <div id="special-pile-modal" class="fixed inset-0 z-[100] flex items-center justify-center hidden bg-slate-900/60 backdrop-blur-sm transition-opacity px-4">
         <div class="bg-white rounded-3xl shadow-2xl max-w-lg w-full mx-4 overflow-hidden flex flex-col border-2 border-slate-300">
             <div class="p-5 border-b border-slate-300 flex justify-between items-center bg-white sticky top-0 z-10">
@@ -501,6 +491,7 @@
                             <option value="INTEGRITY">完整性試驗 (紫)</option>
                             <option value="INCLINOMETER">傾度/應力 (橘)</option>
                             <option value="BOTH">兩者皆有 (藍)</option>
+                            <option value="CANNOT_TEST">無法施作/塞管 (灰)</option>
                         </select>
                     </div>
                     <div class="col-span-1">
@@ -536,7 +527,7 @@
                 <button onclick="closeMatrixModal()" class="w-10 h-10 flex items-center justify-center rounded-full bg-slate-100 border-2 border-slate-300 text-slate-500 hover:bg-slate-200 transition"><i class="fa-solid fa-xmark text-xl"></i></button>
             </div>
             <div class="p-4 bg-slate-50 border-b border-slate-300 flex flex-wrap gap-5 items-center justify-between z-10 shadow-sm sticky top-0">
-                <div class="flex gap-5 text-sm font-black items-center">
+                <div class="flex gap-5 text-sm font-bold items-center">
                     <div class="flex items-center gap-2"><span class="w-5 h-5 block rounded bg-[#F8FAFC] border border-[#CBD5E1]"></span> <span class="text-slate-500">未登錄 (<span id="matrix-count-missing">0</span>)</span></div>
                     <div class="flex items-center gap-2"><span class="w-5 h-5 block rounded bg-[#F0F9FF] border border-[#1E3A8A]"></span> <span class="text-blue-800">已登錄 (<span id="matrix-count-ok">0</span>)</span></div>
                     <div class="flex items-center gap-2"><span class="w-5 h-5 block rounded bg-[#FEF2F2] border border-[#DC2626] shadow-[0_0_8px_rgba(220,38,38,0.3)]"></span> <span class="text-red-600">重複登錄 (<span id="matrix-count-error">0</span>)</span></div>
