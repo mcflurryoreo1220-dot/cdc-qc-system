@@ -3,13 +3,12 @@ import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gsta
 import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
 const firebaseConfig = { apiKey: "AIzaSyAp1ZVuW95Api3kaQUPgttESZ0RGTEi8H8", authDomain: "cdc-qc-system.firebaseapp.com", projectId: "cdc-qc-system", storageBucket: "cdc-qc-system.firebasestorage.app", messagingSenderId: "745920606237", appId: "1:745920606237:web:7fb9c22a84de208e6e56f4" };
-const GAS_API_URL = "https://script.google.com/macros/s/AKfycbx1aCB8jyqFnPrekpu3QIAIWCaIpAeRIVjJOkDxTpzjOhw9oAk86NO4f1YhL6TkiZQedA/exec";
 
 window.exceptionDates = []; window.exceptionA = []; window.exceptionB = [];
 window.extraWorkA = []; window.extraWorkB = []; 
 window.pileNumbers = {}; window.statusSample = {}; window.statusLab = {}; window.statusTest = {}; window.remarks = {}; window.contractorReports = {}; 
 
-// 🔥 新增 P408 無法施作，預設加入 55, 133 為完整性
+// 🔥 加入預設樁號 55, 133，以及 408 無法施作
 window.specialPilesData = { 
     '23': 'BOTH', '54': 'INCLINOMETER', '55': 'INTEGRITY', '100': 'BOTH', 
     '133': 'INTEGRITY', '135': 'INCLINOMETER', '174': 'BOTH', '201': 'INCLINOMETER', 
@@ -19,7 +18,6 @@ window.specialPilesData = {
 
 const scheduleData = []; let currentFilter = 'ALL'; let currentView = 'table'; let currentCalDate = new Date(2026, 4, 1); 
 window.concreteData = [];
-window.phaseSettings = { endA: '2026-12-31', endB: '2026-12-31' };
 
 const TOTAL_PILES_LIMIT = 613; let isCloudEnabled = false; let db, auth;
 const A2 = 1.023; const D4 = 2.574; const D3 = 0; 
@@ -45,9 +43,7 @@ const initFirebase = async () => {
                             });
                             window.specialPilesData = parsed;
                         }
-                        if(data.phaseSettings) window.phaseSettings = data.phaseSettings;
                     }
-                    window.syncPhaseUI();
                     window.refreshAll();
                 });
                 onSnapshot(doc(db, 'scheduleData', 'concreteState'), (snapshot) => {
@@ -69,8 +65,7 @@ window.saveDataToCloud = async () => {
                 exceptionDates: window.exceptionDates, exceptionA: window.exceptionA, exceptionB: window.exceptionB, 
                 extraWorkA: window.extraWorkA, extraWorkB: window.extraWorkB, 
                 pileNumbers: window.pileNumbers, statusSample: window.statusSample, statusLab: window.statusLab, statusTest: window.statusTest, remarks: window.remarks, contractorReports: window.contractorReports,
-                specialPilesDataStr: JSON.stringify(window.specialPilesData),
-                phaseSettings: window.phaseSettings
+                specialPilesDataStr: JSON.stringify(window.specialPilesData)
             }, { merge: true }); 
         } catch (err) {} 
     } 
@@ -84,19 +79,6 @@ window.toDateString = (d) => { const y=d.getFullYear(); const m=String(d.getMont
 window.formatMinguo = (d) => { const y=d.getFullYear()-1911; const m=String(d.getMonth()+1).padStart(2,'0'); const dt=String(d.getDate()).padStart(2,'0'); const day=["日","一","二","三","四","五","六"][d.getDay()]; return `${y}/${m}/${dt}(${day})`; };
 window.formatMinguoRaw = (d) => { const y=d.getFullYear()-1911; const m=String(d.getMonth()+1).padStart(2,'0'); const dt=String(d.getDate()).padStart(2,'0'); return `${y}/${m}/${dt}`; };
 const addDays = (d, days) => { let r=new Date(d); r.setDate(r.getDate()+days); return r; };
-
-window.updatePhaseSettings = () => {
-    window.phaseSettings.endA = document.getElementById('phase-end-a').value || '2026-12-31';
-    window.phaseSettings.endB = document.getElementById('phase-end-b').value || '2026-12-31';
-    window.saveDataToCloud();
-    window.refreshAll();
-    window.showModal("設定成功", "已更新工程退場日期，排程已重新推算完成！", "success");
-};
-
-window.syncPhaseUI = () => {
-    if(document.getElementById('phase-end-a')) document.getElementById('phase-end-a').value = window.phaseSettings.endA;
-    if(document.getElementById('phase-end-b')) document.getElementById('phase-end-b').value = window.phaseSettings.endB;
-};
 
 window.refreshAll = () => { 
     window.generateSchedule(); 
@@ -122,8 +104,8 @@ window.generateSchedule = () => {
             return { id: `${m}${c}`, machine: m, sampleDate: new Date(t), demoldDate: dem, collectDate: col, testDate: tes };
         };
 
-        if (d >= startDateA && dStr <= window.phaseSettings.endA) { if ((!isSun && !isExA) || window.extraWorkA.includes(dStr)) scheduleData.push(makeR('A', cA++, new Date(d))); }
-        if (d >= startDateB && dStr <= window.phaseSettings.endB) { if ((!isSun && !isExB) || window.extraWorkB.includes(dStr)) scheduleData.push(makeR('B', cB++, new Date(d))); }
+        if (d >= startDateA) { if ((!isSun && !isExA) || window.extraWorkA.includes(dStr)) scheduleData.push(makeR('A', cA++, new Date(d))); }
+        if (d >= startDateB) { if ((!isSun && !isExB) || window.extraWorkB.includes(dStr)) scheduleData.push(makeR('B', cB++, new Date(d))); }
     }
 };
 
@@ -185,13 +167,6 @@ window.updateDashboard = () => {
     const pilesAbEl = document.getElementById('prog-piles-ab'); if(pilesAbEl) pilesAbEl.innerText = `A: ${countA} | B: ${countB}`;
     const pilesTextEl = document.getElementById('prog-piles-text'); if(pilesTextEl) pilesTextEl.innerText = pilesCount;
     const pilesBarEl = document.getElementById('prog-piles-bar'); if(pilesBarEl) pilesBarEl.style.width = `${(pilesCount/TOTAL_PILES_LIMIT)*100}%`;
-
-    if (pilesCount > 0 && workedDays > 0) {
-        const avgRate = pilesCount / workedDays; const estDays = Math.ceil((TOTAL_PILES_LIMIT - pilesCount) / avgRate);
-        let simDate = new Date(); let added = 0; while(added < estDays) { simDate.setDate(simDate.getDate() + 1); const dStr = window.toDateString(simDate); if (simDate.getDay() !== 0 && !window.exceptionDates.includes(dStr)) added++; }
-        const preEl = document.getElementById('prediction-text');
-        if(preEl) preEl.innerHTML = `近期產能：約 <span class="bg-white px-2 py-0.5 rounded text-slate-800 shadow-sm border border-orange-100">${avgRate.toFixed(1)} 支/日</span>。剩餘約需 <b class="text-amber-800">${estDays}</b> 工作天，推估 <span class="bg-white px-2 py-0.5 rounded text-[#B45309] shadow-sm border border-orange-100">${window.formatMinguo(simDate).split(' ')[0]}</span> 完工！`;
-    }
 
     let cS=0, cL=0, cT=0; scheduleData.forEach(i => { if(window.statusSample[i.id]) cS++; if(window.statusLab[i.id]) cL++; if(window.statusTest[i.id]) cT++; });
     if(document.getElementById('prog-sample-text')) document.getElementById('prog-sample-text').innerText = cS; 
@@ -284,11 +259,10 @@ window.renderMap = () => {
         let specialDeco = '';
         const sType = window.specialPilesData[String(p.id)];
         if (sType) {
-            let strokeColor = '#3B82F6'; // BOTH
-            if (sType === 'INCLINOMETER') strokeColor = '#F59E0B'; // 橘
-            if (sType === 'INTEGRITY') strokeColor = '#8B5CF6'; // 紫
-            if (sType === 'CANNOT_TEST') strokeColor = '#94A3B8'; // 灰
-            
+            let strokeColor = '#3B82F6'; 
+            if (sType === 'INCLINOMETER') strokeColor = '#F59E0B'; 
+            if (sType === 'INTEGRITY') strokeColor = '#8B5CF6'; 
+            if (sType === 'CANNOT_TEST') strokeColor = '#94A3B8'; // 無法施作標灰
             specialDeco = `<circle cx="${p.x}" cy="${p.y}" r="110" fill="none" stroke="${strokeColor}" stroke-width="25" stroke-dasharray="40,20" class="animate-[spin_10s_linear_infinite]" style="transform-origin: ${p.x}px ${p.y}px"></circle><text x="${p.x}" y="${p.y-120}" font-size="80" fill="${strokeColor}" text-anchor="middle" font-weight="bold">★</text>`;
         }
         circlesHtml += `${specialDeco}<circle id="map-pile-${p.id}" class="pile-circle" cx="${p.x}" cy="${p.y}" r="60" fill="${p.fill}" stroke="${p.stroke}" stroke-width="15" onmouseover="showTooltip(event, '${p.id}', '${p.sDate}', '${p.lDate}', '${p.tDate}', '${p.textStatus}')" onmouseout="hideTooltip()"></circle>`; 
@@ -316,8 +290,52 @@ window.showTooltip = (evt, pile, sDate, lDate, tDate, status) => {
 window.hideTooltip = () => { const tooltip = document.getElementById('map-tooltip'); if(tooltip) tooltip.style.display = 'none'; };
 window.searchMapPile = () => { const val = document.getElementById('map-search-input').value.trim(); if (!val) return; const num = val.replace(/\D/g, ''); const circle = document.getElementById('map-pile-' + num); if (circle) { document.querySelectorAll('.pile-circle').forEach(c => c.classList.remove('highlight-pile')); circle.classList.add('highlight-pile'); circle.scrollIntoView({behavior: "smooth", block: "center"}); } else { window.showModal("搜尋失敗", `找不到樁號 P${num} 的座標紀錄。`, "error"); } };
 
-window.openSpecialPileModal = () => { window.renderSpecialPileList(); document.getElementById('special-pile-modal').classList.remove('hidden'); };
+// 🔥 自定義檢測樁 Modal & 動態前置作業提醒邏輯
+window.updateSpecialPilePrepInfo = () => {
+    const type = document.getElementById('new-special-type')?.value;
+    const infoBox = document.getElementById('special-pile-prep-info');
+    if(!infoBox || !type) return;
+
+    if (type === 'INTEGRITY' || type === 'BOTH') {
+        infoBox.className = "mt-3 p-3 bg-purple-50 border border-purple-200 rounded-lg shadow-sm";
+        infoBox.innerHTML = `
+            <h4 class="font-bold text-purple-800 text-sm mb-1"><i class="fa-solid fa-wave-square"></i> 完整性試驗 (超音波) 前置作業：</h4>
+            <ul class="list-disc list-inside text-xs text-purple-700 font-medium leading-relaxed">
+                <li>檢測前請務必確保 <b>PVC 導管暢通無阻塞</b>。</li>
+                <li>管內需 <b>完全注滿清水</b>，以作為超音波訊號傳遞之介質，利於儀器下放檢測。</li>
+            </ul>
+        `;
+        infoBox.style.display = 'block';
+    } else if (type === 'INCLINOMETER') {
+        infoBox.className = "mt-3 p-3 bg-amber-50 border border-amber-200 rounded-lg shadow-sm";
+        infoBox.innerHTML = `
+            <h4 class="font-bold text-amber-800 text-sm mb-1"><i class="fa-solid fa-ruler-combined"></i> 傾度管/應力計 裝設提醒：</h4>
+            <ul class="list-disc list-inside text-xs text-amber-700 font-medium leading-relaxed">
+                <li>請確認鋼筋籠下放時，感測儀器與線路包覆完整，避免開挖或澆置時損壞。</li>
+            </ul>
+        `;
+        infoBox.style.display = 'block';
+    } else if (type === 'CANNOT_TEST') {
+        infoBox.className = "mt-3 p-3 bg-slate-100 border border-slate-300 rounded-lg shadow-sm";
+        infoBox.innerHTML = `
+            <h4 class="font-bold text-slate-700 text-sm mb-1"><i class="fa-solid fa-ban"></i> 無法施作 / 異常標記：</h4>
+            <ul class="list-disc list-inside text-xs text-slate-600 font-medium leading-relaxed">
+                <li>將標記為無法施作（如：PVC管已嚴重阻塞或破損），並於戰情地圖上以<b class="text-slate-500">灰色</b>呈現。</li>
+            </ul>
+        `;
+        infoBox.style.display = 'block';
+    } else {
+        infoBox.style.display = 'none';
+    }
+};
+
+window.openSpecialPileModal = () => { 
+    window.renderSpecialPileList(); 
+    document.getElementById('special-pile-modal').classList.remove('hidden'); 
+    if(window.updateSpecialPilePrepInfo) window.updateSpecialPilePrepInfo(); // 初始化提醒狀態
+};
 window.closeSpecialPileModal = () => { document.getElementById('special-pile-modal').classList.add('hidden'); };
+
 window.renderSpecialPileList = () => {
     const tbody = document.getElementById('special-pile-list-body');
     if (!tbody) return;
@@ -494,9 +512,9 @@ window.updateExceptionUI = () => {
         container.appendChild(tag); 
     };
 
-    if(expAll) { expAll.innerHTML = '<span class="text-[11px] text-red-500 font-bold w-full">全區停機：</span>'; window.exceptionDates.forEach(val => renderExTag(expAll, 'ALL', val, '')); }
-    if(expA) { expA.innerHTML = '<span class="text-[11px] text-orange-500 font-bold w-full">A車停機：</span>'; window.exceptionA.forEach(val => renderExTag(expA, 'A', val, '')); }
-    if(expB) { expB.innerHTML = '<span class="text-[11px] text-amber-500 font-bold w-full">B車停機：</span>'; window.exceptionB.forEach(val => renderExTag(expB, 'B', val, '')); }
+    if(expAll) { expAll.innerHTML = '<span class="text-[11px] text-red-500 font-bold w-full">全區停工：</span>'; window.exceptionDates.forEach(val => renderExTag(expAll, 'ALL', val, '')); }
+    if(expA) { expA.innerHTML = '<span class="text-[11px] text-orange-500 font-bold w-full">A車停工：</span>'; window.exceptionA.forEach(val => renderExTag(expA, 'A', val, '')); }
+    if(expB) { expB.innerHTML = '<span class="text-[11px] text-amber-500 font-bold w-full">B車停工：</span>'; window.exceptionB.forEach(val => renderExTag(expB, 'B', val, '')); }
 };
 
 window.addExtraDate = () => { 
@@ -584,7 +602,7 @@ window.exportCSV = () => {
 };
 
 // ==========================================
-// 🔥 ACI 214 強度統計分析與風險戰情地圖
+// ACI 214 強度統計分析與風險戰情地圖
 // ==========================================
 const zoneMap = {
     'A_NORMAL': 'A車 (一般區)', 'A_POND_BC': 'A車 (滯洪池BC)',
@@ -703,14 +721,14 @@ window.renderConcreteUI = (CL, UCL, LCL, R_CL, R_UCL, fcPrime, data) => {
     tbody.innerHTML = '';
     if(document.getElementById('concrete-count')) document.getElementById('concrete-count').innerText = `總計: ${data.length} 組`;
     
-    if(data.length === 0) { tbody.innerHTML = `<tr><td colspan="10" class="p-8 text-center text-slate-500 font-bold">目前此區域尚無檢驗資料。</td></tr>`; }
+    if(data.length === 0) { tbody.innerHTML = `<tr><td colspan="11" class="p-8 text-center text-slate-500 font-bold">目前此區域尚無檢驗資料。</td></tr>`; }
     
     data.forEach(d => {
         const isFail = d.avg < fcPrime;
         const avgClass = isFail ? 'text-red-600 bg-red-50 border border-red-200 rounded px-2 py-1' : 'text-blue-700';
         const zLabel = zoneMap[d.zone] || d.zone || '未歸類';
         
-        // 🔥 動態抓取實際樁號
+        // 抓取打設排程中的實際樁號
         const actualPiles = window.pileNumbers[d.id] || '<span class="text-slate-300">-</span>';
         
         tbody.innerHTML += `<tr class="modern-row border-b divide-slate-100">
@@ -814,7 +832,7 @@ window.renderConcreteMap = (filteredData, targetFc) => {
             let strokeColor = '#3B82F6'; 
             if (sType === 'INCLINOMETER') strokeColor = '#F59E0B';
             if (sType === 'INTEGRITY') strokeColor = '#8B5CF6'; 
-            if (sType === 'CANNOT_TEST') strokeColor = '#94A3B8'; // 灰
+            if (sType === 'CANNOT_TEST') strokeColor = '#94A3B8'; // 無法施作標灰
             specialDeco = `<circle cx="${p.x}" cy="${p.y}" r="110" fill="none" stroke="${strokeColor}" stroke-width="25" stroke-dasharray="40,20" class="animate-[spin_10s_linear_infinite]" style="transform-origin: ${p.x}px ${p.y}px"></circle><text x="${p.x}" y="${p.y-120}" font-size="80" fill="${strokeColor}" text-anchor="middle" font-weight="bold">★</text>`;
         }
         let classes = p.alert ? 'pile-circle highlight-pile' : 'pile-circle';
@@ -861,7 +879,7 @@ const generateAIReport = (total, avg, target, min, passRate, sd, uclR, scope, cu
     else if (sd < 30) sdStr = '<span class="text-blue-600 font-black">正常 (標準差 15~30)</span>，變異度符合一般施工規範要求。';
     else sdStr = '<span class="text-amber-600 font-black">偏高 (標準差 > 30)</span>，顯示該區段波動顯著，建議查核施工穩定度。';
     
-    // 1. 均勻度指標與 R 管制圖分析 (🔥 精準異常定位)
+    // 1. 均勻度指標與 R 管制圖分析
     const rOutliers = currentData.filter(d => d.range > uclR);
     let rangeWarning = '';
     if(rOutliers.length > 0) {
@@ -884,7 +902,7 @@ const generateAIReport = (total, avg, target, min, passRate, sd, uclR, scope, cu
         reportHtml += `<p class="mb-3 text-[#1E3A8A] text-[14px]">🌧️ <b>天氣變因分析：</b> 雨天澆置共 ${rainyRecords.length} 組，強度皆有達標，現場雨天防護措施執行確實。</p>`;
     }
 
-    // 3. X-bar 管制圖分析 (🔥 預拌廠穩定度分析)
+    // 3. X-bar 管制圖分析 (預拌廠穩定度分析)
     const X_bar_bar = avg;
     const UCL_X = X_bar_bar + (A2 * (uclR / D4));
     const LCL_X = X_bar_bar - (A2 * (uclR / D4));
@@ -947,5 +965,44 @@ const attachMapEvents = (svg, viewBoxStr) => {
 
 window.openGuideModal = () => { const m = document.getElementById('guide-modal'); if(m) m.classList.remove('hidden'); };
 window.closeGuideModal = () => { const m = document.getElementById('guide-modal'); if(m) m.classList.add('hidden'); };
+
+// 🔥 實作動態前置作業提醒面板
+window.updateSpecialPilePrepInfo = () => {
+    const type = document.getElementById('new-special-type')?.value;
+    const infoBox = document.getElementById('special-pile-prep-info');
+    if(!infoBox || !type) return;
+
+    if (type === 'INTEGRITY' || type === 'BOTH') {
+        infoBox.className = "mt-3 p-3 bg-purple-50 border border-purple-200 rounded-lg shadow-sm";
+        infoBox.innerHTML = `
+            <h4 class="font-bold text-purple-800 text-sm mb-1"><i class="fa-solid fa-wave-square"></i> 完整性試驗 (超音波) 前置作業：</h4>
+            <ul class="list-disc list-inside text-xs text-purple-700 font-medium leading-relaxed">
+                <li>檢測前請務必確保 <b>PVC 導管暢通無阻塞</b>。</li>
+                <li>管內需 <b>完全注滿清水</b>，以作為超音波訊號傳遞之介質，利於儀器下放檢測。</li>
+            </ul>
+        `;
+        infoBox.style.display = 'block';
+    } else if (type === 'INCLINOMETER') {
+        infoBox.className = "mt-3 p-3 bg-amber-50 border border-amber-200 rounded-lg shadow-sm";
+        infoBox.innerHTML = `
+            <h4 class="font-bold text-amber-800 text-sm mb-1"><i class="fa-solid fa-ruler-combined"></i> 傾度管/應力計 裝設提醒：</h4>
+            <ul class="list-disc list-inside text-xs text-amber-700 font-medium leading-relaxed">
+                <li>請確認鋼筋籠下放時，感測儀器與線路包覆完整，避免開挖或澆置時損壞。</li>
+            </ul>
+        `;
+        infoBox.style.display = 'block';
+    } else if (type === 'CANNOT_TEST') {
+        infoBox.className = "mt-3 p-3 bg-slate-100 border border-slate-300 rounded-lg shadow-sm";
+        infoBox.innerHTML = `
+            <h4 class="font-bold text-slate-700 text-sm mb-1"><i class="fa-solid fa-ban"></i> 無法施作 / 異常標記：</h4>
+            <ul class="list-disc list-inside text-xs text-slate-600 font-medium leading-relaxed">
+                <li>將標記為無法施作（如：PVC管已嚴重阻塞或破損），並於戰情地圖上以<b class="text-slate-500">灰色</b>呈現。</li>
+            </ul>
+        `;
+        infoBox.style.display = 'block';
+    } else {
+        infoBox.style.display = 'none';
+    }
+};
 
 initFirebase();
